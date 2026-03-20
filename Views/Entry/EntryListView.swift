@@ -164,7 +164,7 @@ struct EntryListView: View {
     // MARK: - Filter Bar
 
     private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView([.horizontal], showsIndicators: false) {
             HStack(spacing: 8) {
                 filterChip(label: "tümü", filter: .none)
                 filterChip(label: "bugün", filter: .dailyNice)

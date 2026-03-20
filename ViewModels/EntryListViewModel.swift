@@ -26,7 +26,7 @@ enum EntryFilter: Equatable {
         case .caylak: return "?a=caylaklar"
         case .author(let name): return "?a=search&author=\(name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name)"
         case .search(let keywords): return "?a=find&keywords=\(keywords.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? keywords)"
-        case .nice: return "?a=nice"
+        case .nice: return "?a=dailynice"
         case .niceWeek: return "?a=nice&period=week"
         case .niceMonth: return "?a=nice&period=month"
         case .nice3Months: return "?a=nice&period=3months"
