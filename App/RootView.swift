@@ -20,10 +20,14 @@ struct RootView: View {
                 ZStack {
                     Color(red: 51/255, green: 51/255, blue: 51/255).ignoresSafeArea()
 
-                    Image("splash")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 120)
+                    GeometryReader { geo in
+                        Image("splash")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                    }
+                    .ignoresSafeArea()
 
                     if didFail {
                         VStack(spacing: 16) {

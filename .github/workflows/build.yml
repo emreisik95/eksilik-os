@@ -1,0 +1,55 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project EksilikApp.xcodeproj \
+            -scheme EksilikApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project EksilikApp.xcodeproj \
+            -scheme EksilikApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: SwiftLint
+        run: |
+          if command -v swiftlint &> /dev/null; then
+            swiftlint lint --reporter github-actions-logging
+          else
+            echo "SwiftLint not installed, skipping"
+          fi
