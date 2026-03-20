@@ -6,6 +6,8 @@ final class UserPreferences: ObservableObject {
     @AppStorage("openLinksInSafari") var openLinksInSafari: Bool = true
     @AppStorage("hideEntriesEnabled") var hideEntriesEnabled: Bool = false
     @AppStorage("visibleHomeTabs") var visibleHomeTabsData: Data = Data()
+    @AppStorage("homeTabBarPosition") var homeTabBarPosition: String = "bottom"  // "top" or "bottom"
+    @AppStorage("baseURL") var baseURL: String = "https://eksisozluk.com"
 
     var visibleHomeTabs: [String] {
         get {

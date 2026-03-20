@@ -46,9 +46,9 @@ enum HTMLContentRenderer {
 
     /// Expand hidden bkz stars: <sup><a data-query="topic">*</a></sup> → (bkz: topic)
     private static func expandStarLinks(_ html: String) -> String {
-        // Match <sup><a ... data-query="topic name" ...>*</a></sup>
+        // Match <sup class="ab"><a ... data-query="topic name" ...>*</a></sup>
         guard let regex = try? NSRegularExpression(
-            pattern: #"<sup>\s*<a\s+[^>]*data-query\s*=\s*"([^"]*)"[^>]*>\s*\*\s*</a>\s*</sup>"#,
+            pattern: #"<sup[^>]*>\s*<a\s+[^>]*data-query\s*=\s*"([^"]*)"[^>]*>\s*\*\s*</a>\s*</sup>"#,
             options: [.caseInsensitive, .dotMatchesLineSeparators]
         ) else { return html }
 
@@ -84,7 +84,7 @@ enum HTMLContentRenderer {
         return regex.stringByReplacingMatches(
             in: html,
             range: range,
-            withTemplate: "$1$2 →$3"
+            withTemplate: "$1$2 ↗$3"
         )
     }
 }

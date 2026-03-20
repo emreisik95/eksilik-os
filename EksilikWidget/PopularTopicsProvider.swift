@@ -4,14 +4,20 @@ import SwiftUI
 struct TopicEntry: TimelineEntry {
     let date: Date
     let topics: [WidgetTopic]
+    let source: WidgetSource
+    let theme: WidgetTheme
+    let username: String?
 
     static let placeholder = TopicEntry(
         date: Date(),
         topics: [
-            WidgetTopic(title: "Loading...", entryCount: "", link: ""),
-            WidgetTopic(title: "Loading...", entryCount: "", link: ""),
-            WidgetTopic(title: "Loading...", entryCount: "", link: ""),
-        ]
+            WidgetTopic(title: "yükleniyor...", entryCount: "", link: ""),
+            WidgetTopic(title: "yükleniyor...", entryCount: "", link: ""),
+            WidgetTopic(title: "yükleniyor...", entryCount: "", link: ""),
+        ],
+        source: .gundem,
+        theme: .dark,
+        username: nil
     )
 }
 
@@ -22,87 +28,126 @@ struct WidgetTopic: Identifiable {
     let link: String
 }
 
-struct PopularTopicsProvider: TimelineProvider {
+struct TopicsProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> TopicEntry {
         .placeholder
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (TopicEntry) -> Void) {
-        if context.isPreview {
-            completion(.placeholder)
-            return
-        }
-        fetchTopics { entry in
-            completion(entry)
-        }
+    func snapshot(for intent: EksilikWidgetIntent, in context: Context) async -> TopicEntry {
+        if context.isPreview { return .placeholder }
+        return await fetchEntry(for: intent)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<TopicEntry>) -> Void) {
-        fetchTopics { entry in
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
-            let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-            completion(timeline)
-        }
+    func timeline(for intent: EksilikWidgetIntent, in context: Context) async -> Timeline<TopicEntry> {
+        let entry = await fetchEntry(for: intent)
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 
-    private func fetchTopics(completion: @escaping (TopicEntry) -> Void) {
-        guard let url = URL(string: "https://eksisozluk.com/basliklar/m/populer") else {
-            completion(.placeholder)
-            return
+    private func fetchEntry(for intent: EksilikWidgetIntent) async -> TopicEntry {
+        let urlString: String
+        switch intent.source {
+        case .gundem:
+            urlString = "https://eksisozluk.com/basliklar/gundem"
+        case .bugun:
+            urlString = "https://eksisozluk.com/basliklar/bugun/1"
+        case .debe:
+            urlString = "https://eksisozluk.com/debe"
+        case .caylaklar:
+            urlString = "https://eksisozluk.com/basliklar/caylaklar/bugun"
+        case .user:
+            let nick = (intent.username ?? "").trimmingCharacters(in: .whitespaces)
+            if nick.isEmpty {
+                return TopicEntry(date: Date(), topics: [WidgetTopic(title: "kullanıcı adı giriniz", entryCount: "", link: "")], source: intent.source, theme: intent.theme, username: nick)
+            }
+            let encoded = nick.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? nick
+            urlString = "https://eksisozluk.com/son-entryleri?nick=\(encoded)"
         }
+
+        guard let url = URL(string: urlString) else { return .placeholder }
 
         var request = URLRequest(url: url)
-        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 10
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            guard let data, let html = String(data: data, encoding: .utf8) else {
-                completion(.placeholder)
-                return
-            }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            guard let html = String(data: data, encoding: .utf8) else { return .placeholder }
 
-            let topics = WidgetHTMLParser.parseTopics(html: html)
-            let entry = TopicEntry(date: Date(), topics: topics)
-            completion(entry)
-        }.resume()
+            let topics: [WidgetTopic]
+            if intent.source == .debe {
+                topics = WidgetHTMLParser.parseDebeTopics(html: html)
+            } else if intent.source == .user {
+                topics = WidgetHTMLParser.parseUserEntries(html: html)
+            } else {
+                topics = WidgetHTMLParser.parseTopics(html: html)
+            }
+            return TopicEntry(date: Date(), topics: topics, source: intent.source, theme: intent.theme, username: intent.username)
+        } catch {
+            return .placeholder
+        }
     }
 }
 
 enum WidgetHTMLParser {
     static func parseTopics(html: String) -> [WidgetTopic] {
-        // Lightweight regex-based parsing for widget (no Kanna dependency in widget)
         var topics: [WidgetTopic] = []
-
-        // Match <a href="/slug--id">title<small>count</small></a> pattern
         let pattern = #"<a href="(/[^"]+)"[^>]*>\s*(.*?)\s*(?:<small>([^<]*)</small>)?\s*</a>"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
-            return []
-        }
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else { return [] }
 
         let nsHTML = html as NSString
-        // Find the topic-list section first
-        guard let listRange = nsHTML.range(of: "topic-list").location != NSNotFound
-                ? nsHTML.range(of: "topic-list") : nil else {
-            return []
-        }
-
+        guard nsHTML.range(of: "topic-list").location != NSNotFound else { return [] }
+        let listRange = nsHTML.range(of: "topic-list")
         let searchRange = NSRange(location: listRange.location, length: nsHTML.length - listRange.location)
         let matches = regex.matches(in: html, range: searchRange)
 
         for match in matches.prefix(15) {
             let link = nsHTML.substring(with: match.range(at: 1))
-            var title = nsHTML.substring(with: match.range(at: 2))
+            let title = nsHTML.substring(with: match.range(at: 2))
                 .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             let count = match.range(at: 3).location != NSNotFound
                 ? nsHTML.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespacesAndNewlines)
                 : ""
-
             if !title.isEmpty && link.hasPrefix("/") {
                 topics.append(WidgetTopic(title: title, entryCount: count, link: link))
             }
         }
+        return topics
+    }
 
+    static func parseDebeTopics(html: String) -> [WidgetTopic] {
+        var topics: [WidgetTopic] = []
+        let pattern = #"<a href="(/entry/\d+\?debe=true)"[^>]*>\s*<span class="caption">([^<]+)</span>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [] }
+        let nsHTML = html as NSString
+        let matches = regex.matches(in: html, range: NSRange(location: 0, length: nsHTML.length))
+
+        for match in matches.prefix(15) {
+            let link = nsHTML.substring(with: match.range(at: 1))
+            let title = nsHTML.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !title.isEmpty {
+                topics.append(WidgetTopic(title: title, entryCount: "", link: link))
+            }
+        }
+        return topics
+    }
+
+    static func parseUserEntries(html: String) -> [WidgetTopic] {
+        var topics: [WidgetTopic] = []
+        // Parse h1 titles from user entry pages
+        let pattern = #"<h1[^>]*data-title="([^"]*)"[^>]*data-slug="([^"]*)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [] }
+        let nsHTML = html as NSString
+        let matches = regex.matches(in: html, range: NSRange(location: 0, length: nsHTML.length))
+
+        for match in matches.prefix(15) {
+            let title = nsHTML.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+            let slug = nsHTML.substring(with: match.range(at: 2))
+            if !title.isEmpty {
+                topics.append(WidgetTopic(title: title, entryCount: "", link: "/\(slug)"))
+            }
+        }
         return topics
     }
 }

@@ -5,20 +5,20 @@ struct TabCustomizationView: View {
     @EnvironmentObject var preferences: UserPreferences
 
     private let allTabs: [(String, String)] = [
-        ("gundem", "popular"),
-        ("bugun", "today"),
+        ("gündem", "popular"),
+        ("bugün", "today"),
         ("debe", "debe"),
-        ("tarihte bugun", "todayInHistory"),
+        ("tarihte bugün", "todayInHistory"),
         ("son", "latest"),
         ("takip", "following"),
         ("kenar", "kenar"),
-        ("caylaklar", "caylaklar"),
-        ("cop", "cop"),
+        ("çaylaklar", "caylaklar"),
+        ("çöp", "cop"),
     ]
 
     var body: some View {
         List {
-            Section(footer: Text("hicbiri secilmezse tumu gosterilir")) {
+            Section(footer: Text("hiçbiri seçilmezse tümü gösterilir")) {
                 ForEach(allTabs, id: \.1) { tab in
                     Button {
                         toggleTab(tab.1)

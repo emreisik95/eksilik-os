@@ -6,6 +6,18 @@ struct WidgetTopicView: View {
 
     @Environment(\.widgetFamily) var family
 
+    private var theme: WidgetTheme { entry.theme }
+
+    private var sourceLabel: String {
+        switch entry.source {
+        case .gundem: return "gündem"
+        case .bugun: return "bugün"
+        case .debe: return "debe"
+        case .caylaklar: return "çaylaklar"
+        case .user: return entry.username ?? "kullanıcı"
+        }
+    }
+
     var body: some View {
         switch family {
         case .systemSmall:
@@ -21,33 +33,36 @@ struct WidgetTopicView: View {
 
     private var smallView: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("eksilik")
-                .font(.caption2.bold())
-                .foregroundColor(.green)
+            HStack {
+                Text("ek$ilik")
+                    .font(.caption2.bold())
+                    .foregroundColor(theme.accentColor)
+                Spacer()
+            }
 
             ForEach(entry.topics.prefix(3)) { topic in
                 Link(destination: deepLink(for: topic)) {
                     Text(topic.title)
                         .font(.caption)
                         .lineLimit(1)
-                        .foregroundColor(.primary)
+                        .foregroundColor(theme.textColor)
                 }
             }
 
             Spacer(minLength: 0)
         }
         .padding(12)
-        .widgetBackground()
+        .themedBackground(theme: theme)
     }
 
     private var mediumView: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text("eksilik")
+                Text("ek$ilik")
                     .font(.caption.bold())
-                    .foregroundColor(.green)
+                    .foregroundColor(theme.accentColor)
                 Spacer()
-                Text("gundem")
+                Text(sourceLabel)
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -58,12 +73,12 @@ struct WidgetTopicView: View {
                         Text(topic.title)
                             .font(.caption)
                             .lineLimit(1)
-                            .foregroundColor(.primary)
+                            .foregroundColor(theme.textColor)
                         Spacer()
                         if !topic.entryCount.isEmpty {
                             Text(topic.entryCount)
                                 .font(.caption2)
-                                .foregroundColor(.green)
+                                .foregroundColor(theme.accentColor)
                         }
                     }
                 }
@@ -72,17 +87,17 @@ struct WidgetTopicView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .widgetBackground()
+        .themedBackground(theme: theme)
     }
 
     private var largeView: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
-                Text("eksilik")
+                Text("ek$ilik")
                     .font(.caption.bold())
-                    .foregroundColor(.green)
+                    .foregroundColor(theme.accentColor)
                 Spacer()
-                Text("gundem")
+                Text(sourceLabel)
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -94,12 +109,12 @@ struct WidgetTopicView: View {
                         Text(topic.title)
                             .font(.caption)
                             .lineLimit(1)
-                            .foregroundColor(.primary)
+                            .foregroundColor(theme.textColor)
                         Spacer()
                         if !topic.entryCount.isEmpty {
                             Text(topic.entryCount)
                                 .font(.caption2)
-                                .foregroundColor(.green)
+                                .foregroundColor(theme.accentColor)
                         }
                     }
                 }
@@ -109,7 +124,7 @@ struct WidgetTopicView: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .widgetBackground()
+        .themedBackground(theme: theme)
     }
 
     private func deepLink(for topic: WidgetTopic) -> URL {
@@ -120,11 +135,11 @@ struct WidgetTopicView: View {
 
 extension View {
     @ViewBuilder
-    func widgetBackground() -> some View {
+    func themedBackground(theme: WidgetTheme) -> some View {
         if #available(iOSApplicationExtension 17.0, *) {
-            self.containerBackground(.background, for: .widget)
+            self.containerBackground(theme.bgColor, for: .widget)
         } else {
-            self.background(Color(.systemBackground))
+            self.background(theme.bgColor)
         }
     }
 }

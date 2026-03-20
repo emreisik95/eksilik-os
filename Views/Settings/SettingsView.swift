@@ -33,8 +33,25 @@ struct SettingsView: View {
                 .listRowBackground(themeManager.current.cellPrimaryColor)
 
                 Section("ana sayfa sekmeleri") {
-                    NavigationLink("sekmeleri duzenle") {
+                    NavigationLink("sekmeleri düzenle") {
                         TabCustomizationView()
+                    }
+
+                    Picker("sekme çubuğu konumu", selection: $preferences.homeTabBarPosition) {
+                        Text("üstte").tag("top")
+                        Text("altta").tag("bottom")
+                    }
+                }
+                .listRowBackground(themeManager.current.cellPrimaryColor)
+
+                Section("gelişmiş") {
+                    HStack {
+                        Text("sunucu adresi")
+                        Spacer()
+                        TextField("https://eksisozluk.com", text: $preferences.baseURL)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(.gray)
+                            .font(.caption)
                     }
                 }
                 .listRowBackground(themeManager.current.cellPrimaryColor)
@@ -49,13 +66,13 @@ struct SettingsView: View {
                 } else {
                     Section("hesap") {
                         NavigationLink("tercihler") {
-                            EksiWebView(url: URL(string: "https://eksisozluk.com/ayarlar/tercihler")!)
+                            EksiWebView(url: URL(string: "\(preferences.baseURL)/ayarlar/tercihler")!)
                                 .navigationTitle("tercihler")
                                 .navigationBarTitleDisplayMode(.inline)
                         }
-                        NavigationLink("takip / engellenmisler") {
-                            EksiWebView(url: URL(string: "https://eksisozluk.com/takip-engellenmis")!)
-                                .navigationTitle("takip / engellenmisler")
+                        NavigationLink("takip / engellenmişler") {
+                            EksiWebView(url: URL(string: "\(preferences.baseURL)/takip-engellenmis")!)
+                                .navigationTitle("takip / engellenmişler")
                                 .navigationBarTitleDisplayMode(.inline)
                         }
                     }

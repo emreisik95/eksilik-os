@@ -38,6 +38,79 @@ struct HomeTabView: View {
         return Array((1999...current).reversed())
     }()
 
+    var body: some View {
+        NavigationStack(path: $nav.path) {
+            VStack(spacing: 0) {
+                // Top position
+                if preferences.homeTabBarPosition == "top" {
+                    tabBar
+                    if selectedTab == .todayInHistory { yearPickerBar }
+                }
+
+                // Content
+                if selectedTab == .debe {
+                    DebeView()
+                } else if selectedTab == .todayInHistory {
+                    TopicListView(listType: selectedTab, year: selectedYear)
+                        .id("todayInHistory-\(selectedYear ?? 0)")
+                } else {
+                    TopicListView(listType: selectedTab)
+                        .id(selectedTab)
+                }
+
+                // Bottom position
+                if preferences.homeTabBarPosition == "bottom" {
+                    if selectedTab == .todayInHistory { yearPickerBar }
+                    tabBar
+                }
+            }
+            .background(themeManager.current.backgroundColor.ignoresSafeArea())
+            .navigationTitle(L10n.Home.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: Route.self) { route in
+                destinationView(for: route)
+            }
+        }
+        .environmentObject(nav)
+        .onChange(of: session.isLoggedIn) { _ in
+            if !session.isLoggedIn && [.latest, .following, .kenar, .cop].contains(selectedTab) {
+                selectedTab = .popular
+            }
+        }
+    }
+
+    // MARK: - Tab Bar
+
+    private var tabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(tabs, id: \.1) { tab in
+                    Button {
+                        selectedTab = tab.1
+                    } label: {
+                        Text(tab.0)
+                            .font(.subheadline.weight(selectedTab == tab.1 ? .bold : .regular))
+                            .foregroundColor(selectedTab == tab.1
+                                ? themeManager.current.labelColor
+                                : .gray)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                    }
+                    .overlay(alignment: preferences.homeTabBarPosition == "bottom" ? .top : .bottom) {
+                        if selectedTab == tab.1 {
+                            Rectangle()
+                                .fill(themeManager.current.accentColor)
+                                .frame(height: 2)
+                        }
+                    }
+                }
+            }
+        }
+        .background(themeManager.current.backgroundColor)
+    }
+
+    // MARK: - Year Picker
+
     private var yearPickerBar: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
@@ -71,65 +144,6 @@ struct HomeTabView: View {
                 if let year = selectedYear {
                     proxy.scrollTo(year, anchor: .center)
                 }
-            }
-        }
-    }
-
-    var body: some View {
-        NavigationStack(path: $nav.path) {
-            VStack(spacing: 0) {
-                if selectedTab == .debe {
-                    DebeView()
-                } else if selectedTab == .todayInHistory {
-                    TopicListView(listType: selectedTab, year: selectedYear)
-                        .id("todayInHistory-\(selectedYear ?? 0)")
-                } else {
-                    TopicListView(listType: selectedTab)
-                        .id(selectedTab)
-                }
-
-                if selectedTab == .todayInHistory {
-                    yearPickerBar
-                }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        ForEach(tabs, id: \.1) { tab in
-                            Button {
-                                selectedTab = tab.1
-                            } label: {
-                                Text(tab.0)
-                                    .font(.subheadline.weight(selectedTab == tab.1 ? .bold : .regular))
-                                    .foregroundColor(selectedTab == tab.1
-                                        ? themeManager.current.labelColor
-                                        : .gray)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 10)
-                            }
-                            .overlay(alignment: .top) {
-                                if selectedTab == tab.1 {
-                                    Rectangle()
-                                        .fill(themeManager.current.accentColor)
-                                        .frame(height: 2)
-                                }
-                            }
-                        }
-                    }
-                }
-                .background(themeManager.current.backgroundColor)
-            }
-            .background(themeManager.current.backgroundColor.ignoresSafeArea())
-            .navigationTitle(L10n.Home.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(for: Route.self) { route in
-                destinationView(for: route)
-            }
-        }
-        .environmentObject(nav)
-        .onChange(of: session.isLoggedIn) { _ in
-            // Reset to safe tab if current tab requires login and user logged out
-            if !session.isLoggedIn && [.latest, .following, .kenar, .cop].contains(selectedTab) {
-                selectedTab = .popular
             }
         }
     }

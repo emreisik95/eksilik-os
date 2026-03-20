@@ -1,7 +1,9 @@
 import Foundation
 
 struct EksiRouter {
-    static let baseURL = "https://eksisozluk.com"
+    static var baseURL: String {
+        UserDefaults.standard.string(forKey: "baseURL") ?? "https://eksisozluk.com"
+    }
 
     static let defaultHeaders: [String: String] = [
         "X-Requested-With": "XMLHttpRequest",
