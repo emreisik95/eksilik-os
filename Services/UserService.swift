@@ -10,9 +10,9 @@ struct UserService {
         return UserProfileParser.parse(html: html)
     }
 
-    func fetchProfileEntries(username: String, filter: String) async throws -> [UserProfile.ProfileEntry] {
-        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
-        let html = try await client.fetchHTML(for: .profileEntries(username: encoded, filter: filter))
+    func fetchProfileEntries(username: String, filter: String, page: Int = 1) async throws -> [UserProfile.ProfileEntry] {
+        let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? username
+        let html = try await client.fetchHTML(for: .profileEntries(username: encoded, filter: filter, page: page))
         return UserProfileParser.parseProfileEntries(html: html)
     }
 

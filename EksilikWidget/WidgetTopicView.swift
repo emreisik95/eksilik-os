@@ -72,7 +72,7 @@ struct WidgetTopicView: View {
                     HStack {
                         Text(topic.title)
                             .font(.caption)
-                            .lineLimit(1)
+                            .lineLimit(2)
                             .foregroundColor(theme.textColor)
                         Spacer()
                         if !topic.entryCount.isEmpty {
@@ -82,6 +82,7 @@ struct WidgetTopicView: View {
                         }
                     }
                 }
+                Divider()
             }
 
             Spacer(minLength: 0)
@@ -108,7 +109,7 @@ struct WidgetTopicView: View {
                     HStack {
                         Text(topic.title)
                             .font(.caption)
-                            .lineLimit(1)
+                            .lineLimit(2)
                             .foregroundColor(theme.textColor)
                         Spacer()
                         if !topic.entryCount.isEmpty {

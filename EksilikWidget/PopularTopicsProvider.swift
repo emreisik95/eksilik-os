@@ -61,7 +61,7 @@ struct TopicsProvider: AppIntentTimelineProvider {
                 return TopicEntry(date: Date(), topics: [WidgetTopic(title: "kullanıcı adı giriniz", entryCount: "", link: "")], source: intent.source, theme: intent.theme, username: nick)
             }
             let encoded = nick.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? nick
-            urlString = "https://eksisozluk.com/son-entryleri?nick=\(encoded)"
+            urlString = "https://eksisozluk.com/biri/\(encoded)"
         }
 
         guard let url = URL(string: urlString) else { return .placeholder }
@@ -134,18 +134,34 @@ enum WidgetHTMLParser {
     }
 
     static func parseUserEntries(html: String) -> [WidgetTopic] {
+        // Parse from the profile page's quick-index topic list (gündem topics the user contributed to)
+        // These are in the left sidebar: <a href="/slug--id?a=popular">title <small>count</small></a>
         var topics: [WidgetTopic] = []
-        // Parse h1 titles from user entry pages
-        let pattern = #"<h1[^>]*data-title="([^"]*)"[^>]*data-slug="([^"]*)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return [] }
-        let nsHTML = html as NSString
-        let matches = regex.matches(in: html, range: NSRange(location: 0, length: nsHTML.length))
 
-        for match in matches.prefix(15) {
-            let title = nsHTML.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
-            let slug = nsHTML.substring(with: match.range(at: 2))
-            if !title.isEmpty {
-                topics.append(WidgetTopic(title: title, entryCount: "", link: "/\(slug)"))
+        // Find quick-index section
+        let nsHTML = html as NSString
+        guard let indexRange = nsHTML.range(of: "quick-index").location != NSNotFound
+                ? nsHTML.range(of: "quick-index") : nil else {
+            // Fallback: try topic-list
+            return parseTopics(html: html)
+        }
+
+        let pattern = #"<a href="(/[^"]+)"[^>]*>\s*(.*?)\s*(?:<small>([^<]*)</small>)?\s*</a>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else { return [] }
+
+        let searchRange = NSRange(location: indexRange.location, length: nsHTML.length - indexRange.location)
+        let matches = regex.matches(in: html, range: searchRange)
+
+        for match in matches.prefix(10) {
+            let link = nsHTML.substring(with: match.range(at: 1))
+            let title = nsHTML.substring(with: match.range(at: 2))
+                .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let count = match.range(at: 3).location != NSNotFound
+                ? nsHTML.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespacesAndNewlines)
+                : ""
+            if !title.isEmpty && link.hasPrefix("/") {
+                topics.append(WidgetTopic(title: title, entryCount: count, link: link))
             }
         }
         return topics

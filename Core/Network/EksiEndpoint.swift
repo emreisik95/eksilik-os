@@ -46,7 +46,7 @@ enum EksiEndpoint {
 
     // User
     case profile(username: String)
-    case profileEntries(username: String, filter: String)
+    case profileEntries(username: String, filter: String, page: Int = 1)
     case blockUser
 
     // Messages
@@ -102,7 +102,9 @@ enum EksiEndpoint {
         case .channelFollow(let slug): return "/kanal/takip-et"
         case .channelUnfollow(let slug): return "/kanal/takip-birak"
         case .profile(let username): return "/biri/\(username)"
-        case .profileEntries(let username, let filter): return "/\(filter)?nick=\(username)"
+        case .profileEntries(let username, let filter, let page):
+            let ts = Int(Date().timeIntervalSince1970 * 1000)
+            return "/\(filter)?nick=\(username)&p=\(page)&_=\(ts)"
         case .blockUser: return "/userrelation/addrelation"
         case .messages(let page):
             if let page { return "/mesaj?p=\(page)" }

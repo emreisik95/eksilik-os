@@ -5,8 +5,11 @@ import UIKit
 final class UserProfileViewModel: ObservableObject {
     @Published var profile: UserProfile?
     @Published var isLoading = false
+    @Published var isLoadingMore = false
     @Published var error: String?
     @Published var selectedTab: ProfileTab = .entries
+    private var currentPage = 1
+    private var currentFilter = "son-entryleri"
 
     enum ProfileTab: String, CaseIterable {
         case entries = "son-entryleri"
@@ -64,12 +67,32 @@ final class UserProfileViewModel: ObservableObject {
     }
 
     private func loadEntries(filter: String) async {
+        currentFilter = filter
+        currentPage = 1
         do {
-            let entries = try await userService.fetchProfileEntries(username: username, filter: filter)
+            let entries = try await userService.fetchProfileEntries(username: username, filter: filter, page: 1)
             profile?.entries = preParseEntries(entries)
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    func loadMoreEntries() async {
+        guard !isLoadingMore else { return }
+        isLoadingMore = true
+        currentPage += 1
+        do {
+            let entries = try await userService.fetchProfileEntries(username: username, filter: currentFilter, page: currentPage)
+            let parsed = preParseEntries(entries)
+            if parsed.isEmpty {
+                currentPage -= 1
+            } else {
+                profile?.entries.append(contentsOf: parsed)
+            }
+        } catch {
+            currentPage -= 1
+        }
+        isLoadingMore = false
     }
 
     func vote(for entry: UserProfile.ProfileEntry, rate: Int) async {

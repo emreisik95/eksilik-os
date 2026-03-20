@@ -84,6 +84,21 @@ struct ProfileView: View {
                             profileEntryRow(entry)
                             Divider().overlay(themeManager.current.separatorColor)
                         }
+
+                        // Load more
+                        Button {
+                            Task { await viewModel.loadMoreEntries() }
+                        } label: {
+                            if viewModel.isLoadingMore {
+                                ProgressView()
+                                    .padding()
+                            } else {
+                                Text("daha fazla göster")
+                                    .font(.subheadline)
+                                    .foregroundColor(themeManager.current.accentColor)
+                                    .padding()
+                            }
+                        }
                     }
                 }
             }
