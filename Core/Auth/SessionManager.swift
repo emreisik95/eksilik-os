@@ -10,10 +10,12 @@ final class SessionManager: ObservableObject {
     @Published var hasUnreadMessages: Bool = false
     @Published var hasUnreadEvents: Bool = false
     @Published private(set) var csrfToken: String?
+    @Published var isPaidMember: Bool = false
 
     private init() {
         isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
         username = UserDefaults.standard.string(forKey: "username")
+        isPaidMember = UserDefaults.standard.bool(forKey: "isPaidMember")
     }
 
     func updateFromHTML(_ html: String) {
@@ -30,7 +32,15 @@ final class SessionManager: ObservableObject {
         hasUnreadEvents = state.hasUnreadEvents
         csrfToken = state.csrfToken
 
+        // Detect paid membership: free users see subscription prompts
+        if state.isLoggedIn {
+            isPaidMember = !html.contains("open-subscription-popup") && !html.contains("reklamsız üyeliğe")
+        } else {
+            isPaidMember = false
+        }
+
         UserDefaults.standard.set(state.isLoggedIn, forKey: "isLoggedIn")
+        UserDefaults.standard.set(isPaidMember, forKey: "isPaidMember")
         if let name = state.username {
             UserDefaults.standard.set(name, forKey: "username")
         }
@@ -54,7 +64,9 @@ final class SessionManager: ObservableObject {
         hasUnreadMessages = false
         hasUnreadEvents = false
         csrfToken = nil
+        isPaidMember = false
         UserDefaults.standard.set(false, forKey: "isLoggedIn")
+        UserDefaults.standard.set(false, forKey: "isPaidMember")
         UserDefaults.standard.removeObject(forKey: "username")
     }
 }

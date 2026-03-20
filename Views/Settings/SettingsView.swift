@@ -32,6 +32,13 @@ struct SettingsView: View {
                 }
                 .listRowBackground(themeManager.current.cellPrimaryColor)
 
+                Section("ana sayfa sekmeleri") {
+                    NavigationLink("sekmeleri duzenle") {
+                        TabCustomizationView()
+                    }
+                }
+                .listRowBackground(themeManager.current.cellPrimaryColor)
+
                 if !session.isLoggedIn {
                     Section {
                         NavigationLink(L10n.Settings.login) {

@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeTabView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var preferences: UserPreferences
     @StateObject private var nav = NavigationCoordinator()
     @State private var selectedTab: TopicListViewModel.ListType = .popular
     @State private var selectedYear: Int? = nil
@@ -24,6 +25,10 @@ struct HomeTabView: View {
         list.append((L10n.Home.caylaklar, .caylaklar))
         if session.isLoggedIn {
             list.append((L10n.Home.cop, .cop))
+        }
+        let visible = preferences.visibleHomeTabs
+        if !visible.isEmpty {
+            list = list.filter { visible.contains($0.1.rawValue) }
         }
         return list
     }
@@ -73,6 +78,20 @@ struct HomeTabView: View {
     var body: some View {
         NavigationStack(path: $nav.path) {
             VStack(spacing: 0) {
+                if selectedTab == .debe {
+                    DebeView()
+                } else if selectedTab == .todayInHistory {
+                    TopicListView(listType: selectedTab, year: selectedYear)
+                        .id("todayInHistory-\(selectedYear ?? 0)")
+                } else {
+                    TopicListView(listType: selectedTab)
+                        .id(selectedTab)
+                }
+
+                if selectedTab == .todayInHistory {
+                    yearPickerBar
+                }
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
                         ForEach(tabs, id: \.1) { tab in
@@ -87,7 +106,7 @@ struct HomeTabView: View {
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 10)
                             }
-                            .overlay(alignment: .bottom) {
+                            .overlay(alignment: .top) {
                                 if selectedTab == tab.1 {
                                     Rectangle()
                                         .fill(themeManager.current.accentColor)
@@ -98,20 +117,6 @@ struct HomeTabView: View {
                     }
                 }
                 .background(themeManager.current.backgroundColor)
-
-                if selectedTab == .todayInHistory {
-                    yearPickerBar
-                }
-
-                if selectedTab == .debe {
-                    DebeView()
-                } else if selectedTab == .todayInHistory {
-                    TopicListView(listType: selectedTab, year: selectedYear)
-                        .id("todayInHistory-\(selectedYear ?? 0)")
-                } else {
-                    TopicListView(listType: selectedTab)
-                        .id(selectedTab)
-                }
             }
             .background(themeManager.current.backgroundColor.ignoresSafeArea())
             .navigationTitle(L10n.Home.title)

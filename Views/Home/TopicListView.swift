@@ -15,7 +15,29 @@ struct TopicListView: View {
     var body: some View {
         Group {
             if viewModel.isLoading && viewModel.topics.isEmpty {
-                LoadingView()
+                List {
+                    ForEach(0..<12, id: \.self) { i in
+                        HStack {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(themeManager.current.cellSecondaryColor)
+                                .frame(height: 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(width: CGFloat.random(in: 150...280))
+                            Spacer()
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(themeManager.current.cellSecondaryColor)
+                                .frame(width: 36, height: 22)
+                        }
+                        .padding(.vertical, 2)
+                        .listRowBackground(
+                            i % 2 == 0
+                            ? themeManager.current.cellPrimaryColor
+                            : themeManager.current.cellSecondaryColor
+                        )
+                    }
+                }
+                .listStyle(.plain)
+                .redacted(reason: .placeholder)
             } else if let error = viewModel.error, viewModel.topics.isEmpty {
                 ErrorView(message: error) {
                     print("🔄 Retry tapped for \(viewModel.listType)")

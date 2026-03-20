@@ -7,6 +7,7 @@ struct EntryListView: View {
     let title: String
     @State private var showSearchAlert = false
     @State private var searchKeywords = ""
+    @AppStorage("hasSeenFilterHint") private var hasSeenFilterHint = false
 
     init(link: String, title: String) {
         _viewModel = StateObject(wrappedValue: EntryListViewModel(link: link))
@@ -16,7 +17,35 @@ struct EntryListView: View {
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading && viewModel.entries.isEmpty {
-                LoadingView()
+                List {
+                    ForEach(0..<5, id: \.self) { i in
+                        VStack(alignment: .leading, spacing: 10) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(themeManager.current.cellSecondaryColor)
+                                .frame(height: 12)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(themeManager.current.cellSecondaryColor)
+                                .frame(height: 12)
+                                .frame(maxWidth: 250)
+                            HStack {
+                                Circle()
+                                    .fill(themeManager.current.cellSecondaryColor)
+                                    .frame(width: 20, height: 20)
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(themeManager.current.cellSecondaryColor)
+                                    .frame(width: 80, height: 10)
+                                Spacer()
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(themeManager.current.cellSecondaryColor)
+                                    .frame(width: 100, height: 10)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                        .listRowBackground(themeManager.current.cellPrimaryColor)
+                    }
+                }
+                .listStyle(.plain)
+                .redacted(reason: .placeholder)
             } else if let error = viewModel.error, viewModel.entries.isEmpty {
                 ErrorView(
                     message: error,
@@ -70,6 +99,27 @@ struct EntryListView: View {
 
             // Always visible: filter bar + pagination
             filterBar
+                .overlay(alignment: .trailing) {
+                    if !hasSeenFilterHint {
+                        HStack(spacing: 4) {
+                            Text("kaydır")
+                                .font(.caption2)
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                        }
+                        .foregroundColor(themeManager.current.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(themeManager.current.backgroundColor.opacity(0.9))
+                        .cornerRadius(8)
+                        .padding(.trailing, 4)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation { hasSeenFilterHint = true }
+                            }
+                        }
+                    }
+                }
 
             if viewModel.pagination.totalPages > 1 {
                 PaginationView(
@@ -157,9 +207,11 @@ struct EntryListView: View {
     private var sukelaMenu: some View {
         Menu {
             Button("son 24 saat") { Task { await viewModel.applyFilter(.nice) } }
-            Button("son 1 hafta") { Task { await viewModel.applyFilter(.niceWeek) } }
-            Button("son 1 ay") { Task { await viewModel.applyFilter(.niceMonth) } }
-            Button("son 3 ay") { Task { await viewModel.applyFilter(.nice3Months) } }
+            if session.isPaidMember {
+                Button("son 1 hafta") { Task { await viewModel.applyFilter(.niceWeek) } }
+                Button("son 1 ay") { Task { await viewModel.applyFilter(.niceMonth) } }
+                Button("son 3 ay") { Task { await viewModel.applyFilter(.nice3Months) } }
+            }
             Button("tümü") { Task { await viewModel.applyFilter(.niceAllTime) } }
         } label: {
             filterChipLabel(
