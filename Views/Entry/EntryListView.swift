@@ -24,6 +24,21 @@ struct EntryListView: View {
                 ) {
                     Task { await viewModel.loadEntries() }
                 }
+            } else if viewModel.entries.isEmpty && viewModel.activeFilter != .none {
+                VStack(spacing: 12) {
+                    Image(systemName: "tray")
+                        .font(.title)
+                        .foregroundColor(.gray)
+                    Text("bu filtrede entry bulunamadı")
+                        .foregroundColor(.gray)
+                        .font(.subheadline)
+                    Button("tümüne dön") {
+                        Task { await viewModel.applyFilter(.none) }
+                    }
+                    .foregroundColor(themeManager.current.accentColor)
+                    .font(.subheadline)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.entries.isEmpty {
                 EmptyStateView(message: L10n.Entry.noEntries)
             } else {
