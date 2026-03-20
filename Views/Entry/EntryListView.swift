@@ -15,8 +15,6 @@ struct EntryListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            filterBar
-
             if viewModel.isLoading && viewModel.entries.isEmpty {
                 LoadingView()
             } else if let error = viewModel.error, viewModel.entries.isEmpty {
@@ -47,13 +45,22 @@ struct EntryListView: View {
                     }
                 }
                 .listStyle(.plain)
+            }
 
-                if viewModel.pagination.totalPages > 1 {
-                    PaginationView(
-                        pagination: viewModel.pagination,
-                        onPageChange: { page in Task { await viewModel.goToPage(page) } }
-                    )
-                }
+            // Loading overlay when switching filters
+            if viewModel.isLoading && !viewModel.entries.isEmpty {
+                ProgressView()
+                    .padding(6)
+            }
+
+            // Always visible: filter bar + pagination
+            filterBar
+
+            if viewModel.pagination.totalPages > 1 {
+                PaginationView(
+                    pagination: viewModel.pagination,
+                    onPageChange: { page in Task { await viewModel.goToPage(page) } }
+                )
             }
         }
         .background(themeManager.current.backgroundColor.ignoresSafeArea())
@@ -77,13 +84,13 @@ struct EntryListView: View {
                 }
             }
         }
-        .alert("baslikta ara", isPresented: $showSearchAlert) {
+        .alert("başlıkta ara", isPresented: $showSearchAlert) {
             TextField("aranacak kelime...", text: $searchKeywords)
             Button("ara") {
                 guard !searchKeywords.trimmingCharacters(in: .whitespaces).isEmpty else { return }
                 Task { await viewModel.applyFilter(.search(searchKeywords)) }
             }
-            Button("vazgec", role: .cancel) { }
+            Button("vazgeç", role: .cancel) { }
         }
         .task { await viewModel.loadEntries() }
         .refreshable { await viewModel.loadEntries() }
@@ -93,17 +100,14 @@ struct EntryListView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                filterChip(label: "tumu", filter: .none)
-                filterChip(label: "bugun", filter: .dailyNice)
-
-                // sukela sub-menu
+            HStack(spacing: 8) {
+                filterChip(label: "tümü", filter: .none)
+                filterChip(label: "bugün", filter: .dailyNice)
                 sukelaMenu
-
-                filterChip(label: "eksi seyler", filter: .eksiseyler)
+                filterChip(label: "ekşi şeyler", filter: .eksiseyler)
                 filterChip(label: "linkler", filter: .links)
-                filterChip(label: "gorseller", filter: .images)
-                filterChip(label: "caylaklar", filter: .caylak)
+                filterChip(label: "görseller", filter: .images)
+                filterChip(label: "çaylaklar", filter: .caylak)
 
                 if session.isLoggedIn {
                     Button {
@@ -114,10 +118,7 @@ struct EntryListView: View {
                     } label: {
                         filterChipLabel(
                             label: "benimkiler",
-                            isActive: {
-                                if case .author = viewModel.activeFilter { return true }
-                                return false
-                            }()
+                            isActive: { if case .author = viewModel.activeFilter { return true }; return false }()
                         )
                     }
                 }
@@ -127,16 +128,13 @@ struct EntryListView: View {
                     showSearchAlert = true
                 } label: {
                     filterChipLabel(
-                        label: "baslikta ara",
-                        isActive: {
-                            if case .search = viewModel.activeFilter { return true }
-                            return false
-                        }()
+                        label: "başlıkta ara",
+                        isActive: { if case .search = viewModel.activeFilter { return true }; return false }()
                     )
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
         }
         .background(themeManager.current.backgroundColor)
     }
@@ -147,10 +145,10 @@ struct EntryListView: View {
             Button("son 1 hafta") { Task { await viewModel.applyFilter(.niceWeek) } }
             Button("son 1 ay") { Task { await viewModel.applyFilter(.niceMonth) } }
             Button("son 3 ay") { Task { await viewModel.applyFilter(.nice3Months) } }
-            Button("tumu") { Task { await viewModel.applyFilter(.niceAllTime) } }
+            Button("tümü") { Task { await viewModel.applyFilter(.niceAllTime) } }
         } label: {
             filterChipLabel(
-                label: "sukela",
+                label: "şükela",
                 isActive: [.nice, .niceWeek, .niceMonth, .nice3Months, .niceAllTime].contains(viewModel.activeFilter)
             )
         }
@@ -166,14 +164,14 @@ struct EntryListView: View {
 
     private func filterChipLabel(label: String, isActive: Bool) -> some View {
         Text(label)
-            .font(.caption.weight(isActive ? .bold : .regular))
+            .font(.subheadline.weight(isActive ? .semibold : .regular))
             .foregroundColor(isActive
                 ? themeManager.current.backgroundColor
                 : themeManager.current.labelColor)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 14)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(isActive
                         ? themeManager.current.accentColor
                         : themeManager.current.cellSecondaryColor)

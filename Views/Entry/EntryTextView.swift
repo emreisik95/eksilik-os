@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import SafariServices
 
 struct EntryTextView: UIViewRepresentable {
     let attributedText: NSAttributedString?
@@ -77,9 +78,13 @@ struct EntryTextView: UIViewRepresentable {
                 return false
             }
 
-            // External links — open in Safari
+            // External links — open in-app browser
             if link.hasPrefix("http://") || link.hasPrefix("https://") {
-                UIApplication.shared.open(URL)
+                let safari = SFSafariViewController(url: URL)
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let root = windowScene.windows.first?.rootViewController {
+                    root.present(safari, animated: true)
+                }
                 return false
             }
 

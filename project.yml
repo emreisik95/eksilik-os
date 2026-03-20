@@ -30,6 +30,7 @@ targets:
     dependencies:
       - package: Kanna
       - package: KeychainAccess
+      - target: EksilikWidget
     info:
       path: EksilikApp-Info.plist
       properties:
@@ -67,7 +68,7 @@ targets:
   EksilikWidget:
     type: app-extension
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources:
       - path: EksilikWidget
     info:

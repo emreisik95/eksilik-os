@@ -3,6 +3,7 @@ import SwiftUI
 struct DebeView: View {
     @StateObject private var viewModel = DebeViewModel()
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var preferences: UserPreferences
 
     var body: some View {
         Group {
@@ -32,7 +33,7 @@ struct DebeView: View {
                         } label: {
                             HStack {
                                 Text(entry.topicTitle)
-                                    .font(.subheadline)
+                                    .font(.system(size: CGFloat(preferences.selectedFontSize)))
                                     .foregroundColor(themeManager.current.labelColor)
                                     .multilineTextAlignment(.leading)
                                 Spacer()
