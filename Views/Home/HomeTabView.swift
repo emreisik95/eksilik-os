@@ -89,7 +89,7 @@ struct HomeTabView: View {
                         selectedTab = tab.1
                     } label: {
                         Text(tab.0)
-                            .font(.subheadline.weight(selectedTab == tab.1 ? .bold : .regular))
+                            .font(.system(size: CGFloat(preferences.selectedFontSize - 1), weight: selectedTab == tab.1 ? .bold : .regular))
                             .foregroundColor(selectedTab == tab.1
                                 ? themeManager.current.labelColor
                                 : .gray)
