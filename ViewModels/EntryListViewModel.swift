@@ -76,8 +76,9 @@ final class EntryListViewModel: ObservableObject {
     /// Apply a filter and reload entries
     func applyFilter(_ filter: EntryFilter) async {
         activeFilter = filter
-        // Strip any existing query params from base link to get clean slug
-        let base = baseTopicLink.components(separatedBy: "?").first ?? baseTopicLink
+        // Use the parsed slug if available (clean, no query params)
+        // Fall back to stripping query params from base link
+        let base = !topicSlug.isEmpty ? topicSlug : (baseTopicLink.components(separatedBy: "?").first ?? baseTopicLink)
         topicLink = base + filter.queryString
         await loadEntries()
     }

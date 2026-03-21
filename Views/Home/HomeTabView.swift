@@ -82,31 +82,48 @@ struct HomeTabView: View {
     // MARK: - Tab Bar
 
     private var tabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(tabs, id: \.1) { tab in
-                    Button {
-                        selectedTab = tab.1
-                    } label: {
-                        Text(tab.0)
-                            .font(.system(size: CGFloat(preferences.selectedFontSize - 1), weight: selectedTab == tab.1 ? .bold : .regular))
-                            .foregroundColor(selectedTab == tab.1
-                                ? themeManager.current.labelColor
-                                : .gray)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
+        Group {
+            if tabs.count <= 5 {
+                // Few tabs: fill width evenly
+                HStack(spacing: 0) {
+                    ForEach(tabs, id: \.1) { tab in
+                        tabButton(tab)
+                            .frame(maxWidth: .infinity)
                     }
-                    .overlay(alignment: preferences.homeTabBarPosition == "bottom" ? .top : .bottom) {
-                        if selectedTab == tab.1 {
-                            Rectangle()
-                                .fill(themeManager.current.accentColor)
-                                .frame(height: 2)
+                }
+            } else {
+                // Many tabs: scroll
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {
+                        ForEach(tabs, id: \.1) { tab in
+                            tabButton(tab)
                         }
                     }
                 }
             }
         }
         .background(themeManager.current.backgroundColor)
+    }
+
+    private func tabButton(_ tab: (String, TopicListViewModel.ListType)) -> some View {
+        Button {
+            selectedTab = tab.1
+        } label: {
+            Text(tab.0)
+                .font(.system(size: CGFloat(preferences.selectedFontSize - 1), weight: selectedTab == tab.1 ? .bold : .regular))
+                .foregroundColor(selectedTab == tab.1
+                    ? themeManager.current.labelColor
+                    : .gray)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+        }
+        .overlay(alignment: preferences.homeTabBarPosition == "bottom" ? .top : .bottom) {
+            if selectedTab == tab.1 {
+                Rectangle()
+                    .fill(themeManager.current.accentColor)
+                    .frame(height: 2)
+            }
+        }
     }
 
     // MARK: - Year Picker
