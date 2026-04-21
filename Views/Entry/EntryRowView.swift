@@ -13,51 +13,78 @@ struct EntryRowView: View {
     @EnvironmentObject var nav: NavigationCoordinator
     @State private var showActions = false
     @State private var pendingRoute: Route?
+    @State private var showLightbox = false
+    @State private var lightboxIndex = 0
+    @State private var lightboxImages: [String] = []
+
+    private var secondaryTextColor: Color {
+        themeManager.current.dateColor.opacity(0.65)
+    }
+
+    private var actionButtonColor: Color {
+        themeManager.current.dateColor.opacity(0.5)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Entry content with internal link handling
-            EntryTextView(attributedText: entry.parsedContent, onInternalLink: { path in
-                let route = resolveInternalLink(path)
-                nav.push(route)
-            })
+        VStack(alignment: .leading, spacing: 0) {
+            // Entry content
+            VStack(alignment: .leading, spacing: 12) {
+                EntryTextView(
+                    attributedText: entry.parsedContent,
+                    onInternalLink: { path in
+                        let route = resolveInternalLink(path)
+                        nav.push(route)
+                    },
+                    onImageLink: { imageURL in
+                        print("📸 Opening lightbox for: \(imageURL)")
+                        lightboxImages = [imageURL]
+                        lightboxIndex = 0
+                        showLightbox = true
+                    }
+                )
 
-            // Inline images
-            if !entry.imageURLs.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(entry.imageURLs, id: \.self) { urlStr in
-                            if let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    RoundedRectangle(cornerRadius: 6).fill(Color.gray.opacity(0.2))
-                                }
-                                .frame(width: 160, height: 120)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                // Inline images
+                if !entry.imageURLs.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
+                                CookieImage(url: urlStr)
+                                    .scaledToFill()
+                                    .frame(width: 160, height: 120)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        lightboxImages = entry.imageURLs
+                                        lightboxIndex = index
+                                        showLightbox = true
+                                    }
                             }
                         }
                     }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
 
-            // Author + date row
-            HStack(alignment: .bottom) {
+            // Footer: Author info + Date/ID
+            HStack(alignment: .center, spacing: 0) {
+                // Author
                 Button {
                     nav.push(Route.profile(username: entry.author.nick))
                 } label: {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         if let avatarURL = entry.author.avatarURL, let url = URL(string: avatarURL) {
                             AsyncImage(url: url) { image in
                                 image.resizable().scaledToFill()
                             } placeholder: {
-                                Color.gray.opacity(0.3)
+                                Circle().fill(Color.gray.opacity(0.3))
                             }
-                            .frame(width: 20, height: 20)
+                            .frame(width: 24, height: 24)
                             .clipShape(Circle())
                         }
                         Text(entry.author.nick)
-                            .font(.caption.weight(.medium))
+                            .font(.subheadline.weight(.medium))
                             .foregroundColor(themeManager.current.accentColor)
                     }
                 }
@@ -65,63 +92,92 @@ struct EntryRowView: View {
 
                 Spacer()
 
+                // Date + Entry ID
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(entry.date)
-                        .font(.caption2)
-                        .foregroundColor(themeManager.current.dateColor)
+                        .font(.caption)
+                        .foregroundColor(secondaryTextColor)
                     Text("#\(entry.id)")
                         .font(.caption2)
-                        .foregroundColor(.gray.opacity(0.6))
+                        .foregroundColor(secondaryTextColor.opacity(0.7))
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 10)
 
-            // Action bar
-            HStack(spacing: 20) {
+            // Divider above actions
+            Rectangle()
+                .fill(themeManager.current.separatorColor.opacity(0.15))
+                .frame(height: 1)
+                .padding(.horizontal, 16)
+
+            // Action buttons
+            HStack(spacing: 0) {
+                // Favorite
                 Button(action: onFavorite) {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 5) {
                         Image(systemName: entry.isFavorited ? "star.fill" : "star")
+                            .font(.system(size: 15))
                         Text("\(entry.favoriteCount)")
-                            .font(.caption2)
+                            .font(.subheadline)
                     }
-                    .foregroundColor(entry.isFavorited ? .yellow : .gray)
+                    .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
                 }
                 .buttonStyle(.plain)
+                .frame(minWidth: 50, minHeight: 40)
 
+                // Upvote
                 if session.isLoggedIn && entry.author.nick != session.username {
                     Button(action: onUpvote) {
-                        Image(systemName: entry.voteState == .upvoted ? "chevron.up.circle.fill" : "chevron.up.circle")
-                            .foregroundColor(entry.voteState == .upvoted ? themeManager.current.accentColor : .gray)
+                        Image(systemName: entry.voteState == .upvoted ? "chevron.up.circle.fill" : "chevron.up")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(entry.voteState == .upvoted ? themeManager.current.accentColor : actionButtonColor)
                     }
                     .buttonStyle(.plain)
+                    .frame(minWidth: 40, minHeight: 40)
 
+                    // Downvote
                     Button(action: onDownvote) {
-                        Image(systemName: entry.voteState == .downvoted ? "chevron.down.circle.fill" : "chevron.down.circle")
-                            .foregroundColor(entry.voteState == .downvoted ? .red : .gray)
+                        Image(systemName: entry.voteState == .downvoted ? "chevron.down.circle.fill" : "chevron.down")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
                     }
                     .buttonStyle(.plain)
+                    .frame(minWidth: 40, minHeight: 40)
                 }
 
                 Spacer()
 
+                // Share
                 Button {
                     shareItems([entry.shareURL])
                 } label: {
                     Image(systemName: "square.and.arrow.up")
-                        .foregroundColor(.gray)
+                        .font(.system(size: 14))
+                        .foregroundColor(actionButtonColor)
                 }
                 .buttonStyle(.plain)
+                .frame(minWidth: 40, minHeight: 40)
 
+                // More actions
                 Button {
                     showActions = true
                 } label: {
                     Image(systemName: "ellipsis")
-                        .foregroundColor(.gray)
+                        .font(.system(size: 14))
+                        .foregroundColor(actionButtonColor)
                 }
                 .buttonStyle(.plain)
+                .frame(minWidth: 40, minHeight: 40)
             }
-            .font(.caption)
+            .padding(.horizontal, 12)
+
+            // Entry separator
+            Rectangle()
+                .fill(themeManager.current.separatorColor.opacity(0.25))
+                .frame(height: 6)
         }
-        .padding(.vertical, 6)
+        .background(themeManager.current.cellPrimaryColor)
         .confirmationDialog("", isPresented: $showActions) {
             // Share
             Button(L10n.Entry.shareLink) {
@@ -159,6 +215,13 @@ struct EntryRowView: View {
                 nav.push(route)
                 pendingRoute = nil
             }
+        }
+        .fullScreenCover(isPresented: $showLightbox) {
+            ImageLightboxView(
+                imageURLs: lightboxImages,
+                selectedIndex: $lightboxIndex,
+                isPresented: $showLightbox
+            )
         }
     }
 

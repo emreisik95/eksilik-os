@@ -3,6 +3,7 @@ import SwiftUI
 struct EntryListView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var preferences: UserPreferences
     @StateObject private var viewModel: EntryListViewModel
     let title: String
     @State private var showSearchAlert = false
@@ -80,12 +81,9 @@ struct EntryListView: View {
                             onUpvote: { Task { await viewModel.vote(for: entry, rate: 1) } },
                             onDownvote: { Task { await viewModel.vote(for: entry, rate: -1) } }
                         )
-                        .listRowBackground(
-                            index % 2 == 0
-                            ? themeManager.current.cellPrimaryColor
-                            : themeManager.current.cellSecondaryColor
-                        )
-                        .listRowSeparatorTint(themeManager.current.separatorColor)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(themeManager.current.backgroundColor)
+                        .listRowSeparator(.hidden)
                     }
                 }
                 .listStyle(.plain)
@@ -139,12 +137,21 @@ struct EntryListView: View {
                     .foregroundColor(themeManager.current.labelColor)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: UIScreen.main.bounds.width - 160)
             }
             if session.isLoggedIn {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(value: Route.composeEntry(topicLink: viewModel.topicLink)) {
-                        Image(systemName: "square.and.pencil")
+                    HStack(spacing: 16) {
+                        Button {
+                            Task { await viewModel.toggleTracking() }
+                        } label: {
+                            Image(systemName: viewModel.isTracked ? "bell.fill" : "bell")
+                                .foregroundColor(viewModel.isTracked ? themeManager.current.accentColor : .gray)
+                        }
+
+                        NavigationLink(value: Route.composeEntry(topicLink: viewModel.topicLink)) {
+                            Image(systemName: "square.and.pencil")
+                        }
                     }
                 }
             }
@@ -157,22 +164,25 @@ struct EntryListView: View {
             }
             Button("vazgeç", role: .cancel) { }
         }
-        .task { await viewModel.loadEntries() }
+        .task {
+            guard viewModel.entries.isEmpty else { return }
+            await viewModel.loadEntries()
+        }
         .refreshable { await viewModel.loadEntries() }
     }
 
     // MARK: - Filter Bar
 
     private var filterBar: some View {
-        ScrollView([.horizontal], showsIndicators: false) {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                filterChip(label: "tümü", filter: .none)
-                filterChip(label: "bugün", filter: .dailyNice)
+                filterChip(label: "tümü", icon: "list.bullet", filter: .none)
+                filterChip(label: "bugün", icon: "sun.max", filter: .dailyNice)
                 sukelaMenu
-                filterChip(label: "ekşi şeyler", filter: .eksiseyler)
-                filterChip(label: "linkler", filter: .links)
-                filterChip(label: "görseller", filter: .images)
-                filterChip(label: "çaylaklar", filter: .caylak)
+                filterChip(label: "ekşi şeyler", icon: "drop.fill", filter: .eksiseyler)
+                filterChip(label: "linkler", icon: "link", filter: .links)
+                filterChip(label: "görseller", icon: "photo", filter: .images)
+                filterChip(label: "çaylaklar", icon: "leaf", filter: .caylak)
 
                 if session.isLoggedIn {
                     Button {
@@ -183,6 +193,7 @@ struct EntryListView: View {
                     } label: {
                         filterChipLabel(
                             label: "benimkiler",
+                            icon: "person.fill",
                             isActive: { if case .author = viewModel.activeFilter { return true }; return false }()
                         )
                     }
@@ -194,6 +205,7 @@ struct EntryListView: View {
                 } label: {
                     filterChipLabel(
                         label: "başlıkta ara",
+                        icon: "magnifyingglass",
                         isActive: { if case .search = viewModel.activeFilter { return true }; return false }()
                     )
                 }
@@ -201,7 +213,19 @@ struct EntryListView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
+        .frame(height: 52)
         .background(themeManager.current.backgroundColor)
+    }
+
+    private var sukelaLabel: String {
+        switch viewModel.activeFilter {
+        case .nice: return "şükela 24 saat"
+        case .niceWeek: return "şükela 1 hafta"
+        case .niceMonth: return "şükela 1 ay"
+        case .nice3Months: return "şükela 3 ay"
+        case .niceAllTime: return "şükela tümü"
+        default: return "şükela"
+        }
     }
 
     private var sukelaMenu: some View {
@@ -215,33 +239,43 @@ struct EntryListView: View {
             Button("tümü") { Task { await viewModel.applyFilter(.niceAllTime) } }
         } label: {
             filterChipLabel(
-                label: "şükela",
+                label: sukelaLabel,
+                icon: "star.fill",
                 isActive: [.nice, .niceWeek, .niceMonth, .nice3Months, .niceAllTime].contains(viewModel.activeFilter)
             )
         }
     }
 
-    private func filterChip(label: String, filter: EntryFilter) -> some View {
+    private func filterChip(label: String, icon: String, filter: EntryFilter) -> some View {
         Button {
             Task { await viewModel.applyFilter(filter) }
         } label: {
-            filterChipLabel(label: label, isActive: viewModel.activeFilter == filter)
+            filterChipLabel(label: label, icon: icon, isActive: viewModel.activeFilter == filter)
         }
     }
 
-    private func filterChipLabel(label: String, isActive: Bool) -> some View {
-        Text(label)
-            .font(.subheadline.weight(isActive ? .semibold : .regular))
-            .foregroundColor(isActive
-                ? themeManager.current.backgroundColor
-                : themeManager.current.labelColor)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isActive
-                        ? themeManager.current.accentColor
-                        : themeManager.current.cellSecondaryColor)
-            )
+    @ViewBuilder
+    private func filterChipLabel(label: String, icon: String = "", isActive: Bool) -> some View {
+        Group {
+            if preferences.useIconFilters && !icon.isEmpty {
+                Image(systemName: icon)
+                    .font(.body.weight(isActive ? .semibold : .regular))
+            } else {
+                Text(label)
+                    .font(.subheadline.weight(isActive ? .semibold : .regular))
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+        }
+        .foregroundColor(isActive
+            ? themeManager.current.backgroundColor
+            : themeManager.current.labelColor)
+        .padding(.horizontal, preferences.useIconFilters && !icon.isEmpty ? 12 : 14)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(isActive
+                    ? themeManager.current.accentColor
+                    : themeManager.current.cellSecondaryColor)
+        )
     }
 }
