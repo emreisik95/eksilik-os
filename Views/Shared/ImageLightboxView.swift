@@ -2,8 +2,13 @@ import SwiftUI
 
 struct ImageLightboxView: View {
     let imageURLs: [String]
-    @Binding var selectedIndex: Int
-    @Binding var isPresented: Bool
+    @State private var selectedIndex: Int
+    @Environment(\.dismiss) private var dismiss
+
+    init(presentation: ImageGalleryPresentation) {
+        imageURLs = presentation.imageURLs
+        _selectedIndex = State(initialValue: presentation.initialIndex)
+    }
 
     private var normalizedURLs: [String] {
         ImageURLNormalizer.normalizeStrings(imageURLs)
@@ -43,7 +48,7 @@ struct ImageLightboxView: View {
                     }
                     Spacer()
                     Button {
-                        isPresented = false
+                        dismiss()
                     } label: {
                         Image(systemName: "xmark")
                             .font(.body.bold())

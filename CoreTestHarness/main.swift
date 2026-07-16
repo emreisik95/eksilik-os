@@ -178,6 +178,27 @@ private struct Harness {
         expect(ImageURLNormalizer.isImageURL("https://cdn.example.com/a.webp?size=large"), "query strings should not hide image extensions")
         expect(ImageURLNormalizer.normalize("javascript:alert(1)") == nil, "non-network image URLs should be rejected")
 
+        let gallery = ImageGalleryPresentation(
+            imageURLs: [
+                "//cdn.example.com/first.png",
+                "https://cdn.example.com/second.jpg",
+                "//cdn.example.com/first.png",
+            ],
+            initialIndex: 99
+        )
+        expect(
+            gallery?.imageURLs == [
+                "https://cdn.example.com/first.png",
+                "https://cdn.example.com/second.jpg",
+            ],
+            "a gallery presentation should carry normalized images as one value"
+        )
+        expect(gallery?.initialIndex == 1, "a gallery presentation should clamp its initial selection")
+        expect(
+            ImageGalleryPresentation(imageURLs: ["", "javascript:alert(1)"], initialIndex: 0) == nil,
+            "an empty normalized image set should not present a gallery"
+        )
+
         let html = """
         <a href="https://cdn.example.com/first.png">first</a>
         <img src="//cdn.example.com/second.jpg">

@@ -7,15 +7,13 @@ struct EntryRowView: View {
     let onFavorite: () -> Void
     let onUpvote: () -> Void
     let onDownvote: () -> Void
+    let onOpenImages: ([String], Int) -> Void
 
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @EnvironmentObject var nav: NavigationCoordinator
     @State private var showActions = false
     @State private var pendingRoute: Route?
-    @State private var showLightbox = false
-    @State private var lightboxIndex = 0
-    @State private var lightboxImages: [String] = []
 
     private var secondaryTextColor: Color {
         themeManager.current.dateColor.opacity(0.65)
@@ -36,10 +34,7 @@ struct EntryRowView: View {
                         nav.push(route)
                     },
                     onImageLink: { imageURL in
-                        print("📸 Opening lightbox for: \(imageURL)")
-                        lightboxImages = [imageURL]
-                        lightboxIndex = 0
-                        showLightbox = true
+                        onOpenImages([imageURL], 0)
                     }
                 )
 
@@ -53,9 +48,7 @@ struct EntryRowView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        lightboxImages = entry.imageURLs
-                                        lightboxIndex = index
-                                        showLightbox = true
+                                        onOpenImages(entry.imageURLs, index)
                                     }
                             }
                         }
@@ -210,13 +203,6 @@ struct EntryRowView: View {
                 nav.push(route)
                 pendingRoute = nil
             }
-        }
-        .fullScreenCover(isPresented: $showLightbox) {
-            ImageLightboxView(
-                imageURLs: lightboxImages,
-                selectedIndex: $lightboxIndex,
-                isPresented: $showLightbox
-            )
         }
         .task(id: entry.id) {
             await ImagePipeline.shared.prefetch(entry.imageURLs + [entry.author.avatarURL].compactMap { $0 })

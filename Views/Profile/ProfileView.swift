@@ -5,9 +5,7 @@ struct ProfileView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @State private var entryToDelete: UserProfile.ProfileEntry?
-    @State private var showLightbox = false
-    @State private var lightboxIndex = 0
-    @State private var lightboxImages: [String] = []
+    @State private var galleryPresentation: ImageGalleryPresentation?
     /// When true, wraps in NavigationStack (tab root). When false, used as push destination.
     var isRoot: Bool = false
 
@@ -46,12 +44,8 @@ struct ProfileView: View {
         .navigationTitle(viewModel.profile?.nick ?? viewModel.username)
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadProfile() }
-        .fullScreenCover(isPresented: $showLightbox) {
-            ImageLightboxView(
-                imageURLs: lightboxImages,
-                selectedIndex: $lightboxIndex,
-                isPresented: $showLightbox
-            )
+        .fullScreenCover(item: $galleryPresentation) { presentation in
+            ImageLightboxView(presentation: presentation)
         }
         .confirmationDialog("entry'i sil", isPresented: Binding(
             get: { entryToDelete != nil },
@@ -359,9 +353,10 @@ struct ProfileView: View {
     }
 
     private func openLightbox(images: [String], index: Int) {
-        lightboxImages = images
-        lightboxIndex = index
-        showLightbox = true
+        galleryPresentation = ImageGalleryPresentation(
+            imageURLs: images,
+            initialIndex: index
+        )
     }
 
 }

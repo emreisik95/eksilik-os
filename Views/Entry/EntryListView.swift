@@ -9,6 +9,7 @@ struct EntryListView: View {
     @State private var showSearchAlert = false
     @State private var searchKeywords = ""
     @State private var showDownloadOptions = false
+    @State private var galleryPresentation: ImageGalleryPresentation?
     @AppStorage("hasSeenFilterHint") private var hasSeenFilterHint = false
 
     init(link: String, title: String) {
@@ -52,7 +53,13 @@ struct EntryListView: View {
                             isEven: index % 2 == 0,
                             onFavorite: { Task { await viewModel.toggleFavorite(for: entry) } },
                             onUpvote: { Task { await viewModel.vote(for: entry, rate: 1) } },
-                            onDownvote: { Task { await viewModel.vote(for: entry, rate: -1) } }
+                            onDownvote: { Task { await viewModel.vote(for: entry, rate: -1) } },
+                            onOpenImages: { imageURLs, index in
+                                galleryPresentation = ImageGalleryPresentation(
+                                    imageURLs: imageURLs,
+                                    initialIndex: index
+                                )
+                            }
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(themeManager.current.backgroundColor)
@@ -151,6 +158,9 @@ struct EntryListView: View {
                 request: viewModel.offlineRequest,
                 totalPages: viewModel.offlineTotalPages
             )
+        }
+        .fullScreenCover(item: $galleryPresentation) { presentation in
+            ImageLightboxView(presentation: presentation)
         }
         .task {
             guard viewModel.entries.isEmpty else { return }

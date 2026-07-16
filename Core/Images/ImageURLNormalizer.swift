@@ -48,3 +48,17 @@ enum ImageURLNormalizer {
             .replacingOccurrences(of: "&#39;", with: "'")
     }
 }
+
+struct ImageGalleryPresentation: Identifiable, Equatable {
+    let id = UUID()
+    let imageURLs: [String]
+    let initialIndex: Int
+
+    init?(imageURLs: [String], initialIndex: Int) {
+        let normalizedURLs = ImageURLNormalizer.normalizeStrings(imageURLs)
+        guard !normalizedURLs.isEmpty else { return nil }
+
+        self.imageURLs = normalizedURLs
+        self.initialIndex = min(max(initialIndex, 0), normalizedURLs.count - 1)
+    }
+}

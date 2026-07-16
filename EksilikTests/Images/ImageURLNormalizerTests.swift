@@ -36,4 +36,28 @@ final class ImageURLNormalizerTests: XCTestCase {
             "https://cdn.example.com/second.jpg",
         ])
     }
+
+    func testGalleryPresentationCarriesNormalizedImagesAndClampedSelectionAtomically() throws {
+        let presentation = try XCTUnwrap(ImageGalleryPresentation(
+            imageURLs: [
+                "//cdn.example.com/first.png",
+                "https://cdn.example.com/second.jpg",
+                "//cdn.example.com/first.png",
+            ],
+            initialIndex: 99
+        ))
+
+        XCTAssertEqual(presentation.imageURLs, [
+            "https://cdn.example.com/first.png",
+            "https://cdn.example.com/second.jpg",
+        ])
+        XCTAssertEqual(presentation.initialIndex, 1)
+    }
+
+    func testGalleryPresentationRejectsAnEmptyImageSet() {
+        XCTAssertNil(ImageGalleryPresentation(
+            imageURLs: ["", "javascript:alert(1)"],
+            initialIndex: 0
+        ))
+    }
 }
