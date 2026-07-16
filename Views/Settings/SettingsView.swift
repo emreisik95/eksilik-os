@@ -44,13 +44,19 @@ struct SettingsView: View {
                 .listRowBackground(themeManager.current.cellPrimaryColor)
 
                 Section("ana sayfa sekmeleri") {
-                    NavigationLink("sekmeleri düzenle") {
-                        TabCustomizationView()
+                    NavigationLink {
+                        HomeNavigationStylePickerView()
+                    } label: {
+                        HStack {
+                            Text("navigasyon görünümü")
+                            Spacer()
+                            Text(preferences.homeNavigationStyle.name)
+                                .foregroundColor(.gray)
+                        }
                     }
 
-                    Picker("sekme çubuğu konumu", selection: $preferences.homeTabBarPosition) {
-                        Text("üstte").tag("top")
-                        Text("altta").tag("bottom")
+                    NavigationLink("sekmeleri düzenle") {
+                        TabCustomizationView()
                     }
                 }
                 .listRowBackground(themeManager.current.cellPrimaryColor)

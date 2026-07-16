@@ -254,6 +254,92 @@ private struct Harness {
         )
     }
 
+    mutating func runHomeNavigationChecks() {
+        expect(
+            HomeNavigationStyle.allCases.count == 5,
+            "settings should expose five genuinely different home navigation styles"
+        )
+        expect(
+            Set(HomeNavigationStyle.allCases.map(\.rawValue)).count == HomeNavigationStyle.allCases.count,
+            "home navigation styles should have unique stable storage values"
+        )
+        expect(
+            HomeNavigationStyle.resolve(storedValue: nil, legacyPosition: nil) == .floatingDock,
+            "fresh installs should use the floating dock"
+        )
+        expect(
+            HomeNavigationStyle.resolve(storedValue: nil, legacyPosition: "bottom") == .classicBottom,
+            "the legacy bottom preference should migrate to the classic bottom bar"
+        )
+        expect(
+            HomeNavigationStyle.resolve(storedValue: nil, legacyPosition: "top") == .topRail,
+            "the legacy top preference should migrate to the top rail"
+        )
+        expect(
+            HomeNavigationStyle.resolve(storedValue: "future-navigation", legacyPosition: "bottom") == .floatingDock,
+            "unknown new navigation values should use the safe modern default"
+        )
+
+        let defaultIDs = HomeTabCatalog.defaultOrder
+        expect(defaultIDs.count == 9, "the home tab catalog should include every supported topic list")
+        expect(Set(defaultIDs).count == defaultIDs.count, "home tab identifiers should be unique")
+
+        let normalized = HomeTabCatalog.normalizedOrder(["today", "future", "today"])
+        expect(normalized.first == "today", "a stored custom tab should keep its leading position")
+        expect(!normalized.contains("future"), "unknown stored tabs should be removed")
+        expect(Set(normalized) == Set(defaultIDs), "missing known tabs should be appended during migration")
+
+        let moved = HomeTabCatalog.moving(
+            defaultIDs,
+            fromOffsets: IndexSet(integer: 0),
+            toOffset: 3
+        )
+        expect(
+            Array(moved.prefix(3)) == ["today", "debe", "popular"],
+            "dragging the first tab after the third should preserve SwiftUI move semantics"
+        )
+
+        let loggedOutTabs = HomeTabCatalog.availableTabs(
+            order: ["latest", "today", "popular"],
+            visible: ["latest", "today", "popular"],
+            isLoggedIn: false
+        )
+        expect(
+            Array(loggedOutTabs.map(\.id).prefix(2)) == ["today", "popular"],
+            "logged-out navigation should hide account-only tabs without losing the custom order"
+        )
+        expect(
+            HomeTabCatalog.availableTabs(
+                order: defaultIDs,
+                visible: ["following"],
+                isLoggedIn: false
+            ).map(\.id) == ["popular"],
+            "an unavailable visible selection should fall back to a usable public tab"
+        )
+
+        let swipeIDs = ["popular", "today", "debe"]
+        expect(
+            HomeNavigationPolicy.adjacentTabID(in: swipeIDs, selected: "popular", step: 1) == "today",
+            "a left swipe should select the next visible tab"
+        )
+        expect(
+            HomeNavigationPolicy.adjacentTabID(in: swipeIDs, selected: "today", step: -1) == "popular",
+            "a right swipe should select the previous visible tab"
+        )
+        expect(
+            HomeNavigationPolicy.adjacentTabID(in: swipeIDs, selected: "popular", step: -1) == "popular",
+            "swiping before the first tab should stay at the boundary"
+        )
+        expect(
+            HomeNavigationPolicy.step(horizontal: 42, vertical: 38) == nil,
+            "short diagonal drags should not trigger a tab change"
+        )
+        expect(
+            HomeNavigationPolicy.step(horizontal: -92, vertical: 18) == 1,
+            "a decisive left drag should request the next tab"
+        )
+    }
+
     mutating func runSearchPresentationChecks() {
         expect(
             SearchPresentation.state(
@@ -515,6 +601,7 @@ harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
 harness.runEntryLayoutStyleChecks()
+harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 await harness.runOfflinePlanningChecks()
