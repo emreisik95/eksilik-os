@@ -12,8 +12,12 @@ struct EntryRowView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @EnvironmentObject var nav: NavigationCoordinator
+    @EnvironmentObject var preferences: UserPreferences
     @State private var showActions = false
     @State private var pendingRoute: Route?
+
+    private var style: EntryLayoutStyle { preferences.entryLayoutStyle }
+    private var presentation: EntryLayoutPresentation { style.presentation }
 
     private var secondaryTextColor: Color {
         themeManager.current.dateColor.opacity(0.65)
@@ -24,189 +28,333 @@ struct EntryRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Entry content
-            VStack(alignment: .leading, spacing: 12) {
-                EntryTextView(
-                    attributedText: entry.parsedContent,
-                    onInternalLink: { path in
-                        let route = resolveInternalLink(path)
-                        nav.push(route)
-                    },
-                    onImageLink: { imageURL in
-                        onOpenImages([imageURL], 0)
-                    }
-                )
-
-                // Inline images
-                if !entry.imageURLs.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
-                                CachedRemoteImage(url: urlStr)
-                                    .frame(width: 160, height: 120)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        onOpenImages(entry.imageURLs, index)
-                                    }
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
-
-            // Footer: Author info + Date/ID
-            HStack(alignment: .center, spacing: 0) {
-                // Author
-                Button {
-                    nav.push(Route.profile(username: entry.author.nick))
-                } label: {
-                    HStack(spacing: 8) {
-                        if let avatarURL = entry.author.avatarURL {
-                            CachedRemoteImage(url: avatarURL)
-                            .frame(width: 24, height: 24)
-                            .clipShape(Circle())
-                        }
-                        Text(entry.author.nick)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundColor(themeManager.current.accentColor)
-                    }
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-
-                // Date + Entry ID
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(entry.date)
-                        .font(.caption)
-                        .foregroundColor(secondaryTextColor)
-                    Text("#\(entry.id)")
-                        .font(.caption2)
-                        .foregroundColor(secondaryTextColor.opacity(0.7))
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 10)
-
-            // Divider above actions
-            Rectangle()
-                .fill(themeManager.current.separatorColor.opacity(0.15))
-                .frame(height: 1)
-                .padding(.horizontal, 16)
-
-            // Action buttons
-            HStack(spacing: 0) {
-                // Favorite
-                Button(action: onFavorite) {
-                    HStack(spacing: 5) {
-                        Image(systemName: entry.isFavorited ? "star.fill" : "star")
-                            .font(.system(size: 15))
-                        Text("\(entry.favoriteCount)")
-                            .font(.subheadline)
-                    }
-                    .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
-                }
-                .buttonStyle(.plain)
-                .frame(minWidth: 50, minHeight: 40)
-
-                // Upvote
-                if session.isLoggedIn && entry.author.nick != session.username {
-                    Button(action: onUpvote) {
-                        Image(systemName: entry.voteState == .upvoted ? "chevron.up.circle.fill" : "chevron.up")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(entry.voteState == .upvoted ? themeManager.current.accentColor : actionButtonColor)
-                    }
-                    .buttonStyle(.plain)
-                    .frame(minWidth: 40, minHeight: 40)
-
-                    // Downvote
-                    Button(action: onDownvote) {
-                        Image(systemName: entry.voteState == .downvoted ? "chevron.down.circle.fill" : "chevron.down")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
-                    }
-                    .buttonStyle(.plain)
-                    .frame(minWidth: 40, minHeight: 40)
-                }
-
-                Spacer()
-
+        rowContainer
+            .confirmationDialog("", isPresented: $showActions) {
                 // Share
-                Button {
+                Button(L10n.Entry.shareLink) {
                     shareItems([entry.shareURL])
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 14))
-                        .foregroundColor(actionButtonColor)
                 }
-                .buttonStyle(.plain)
-                .frame(minWidth: 40, minHeight: 40)
-
-                // More actions
-                Button {
-                    showActions = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14))
-                        .foregroundColor(actionButtonColor)
+                Button(L10n.Entry.shareScreenshot) {
+                    shareEntryScreenshot()
                 }
-                .buttonStyle(.plain)
-                .frame(minWidth: 40, minHeight: 40)
-            }
-            .padding(.horizontal, 12)
-
-            // Entry separator
-            Rectangle()
-                .fill(themeManager.current.separatorColor.opacity(0.25))
-                .frame(height: 6)
-        }
-        .background(themeManager.current.cellPrimaryColor)
-        .confirmationDialog("", isPresented: $showActions) {
-            // Share
-            Button(L10n.Entry.shareLink) {
-                shareItems([entry.shareURL])
-            }
-            Button(L10n.Entry.shareScreenshot) {
-                shareEntryScreenshot()
-            }
-            Button(L10n.Entry.copyEntry) {
-                UIPasteboard.general.string = entry.contentHTML.strippingHTML
-            }
-
-            // Actions requiring login
-            if session.isLoggedIn {
-                Button(L10n.Entry.sendMessage) {
-                    pendingRoute = .composeMessage(to: entry.author.nick, subject: "#\(entry.id)")
+                Button(L10n.Entry.copyEntry) {
+                    UIPasteboard.general.string = entry.contentHTML.strippingHTML
                 }
-                Button(L10n.Entry.blockAuthor, role: .destructive) {
-                    if let url = URL(string: "https://eksisozluk.com/entry/\(entry.id)") {
+
+                // Actions requiring login
+                if session.isLoggedIn {
+                    Button(L10n.Entry.sendMessage) {
+                        pendingRoute = .composeMessage(to: entry.author.nick, subject: "#\(entry.id)")
+                    }
+                    Button(L10n.Entry.blockAuthor, role: .destructive) {
+                        if let url = URL(string: "https://eksisozluk.com/entry/\(entry.id)") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                }
+
+                Button(L10n.Entry.modlog) {
+                    if let url = URL(string: "https://eksisozluk.com/entry/\(entry.id)/modlog") {
                         UIApplication.shared.open(url)
                     }
                 }
-            }
 
-            Button(L10n.Entry.modlog) {
-                if let url = URL(string: "https://eksisozluk.com/entry/\(entry.id)/modlog") {
-                    UIApplication.shared.open(url)
+                Button(L10n.Entry.cancel, role: .cancel) {}
+            }
+            .onChange(of: pendingRoute) { route in
+                if let route {
+                    nav.push(route)
+                    pendingRoute = nil
                 }
             }
+            .task(id: entry.id) {
+                await ImagePipeline.shared.prefetch(entry.imageURLs + [entry.author.avatarURL].compactMap { $0 })
+            }
+    }
 
-            Button(L10n.Entry.cancel, role: .cancel) {}
+    @ViewBuilder
+    private var rowContainer: some View {
+        if presentation.container == .card {
+            rowContents
+                .background(themeManager.current.cellPrimaryColor)
+                .clipShape(RoundedRectangle(
+                    cornerRadius: CGFloat(presentation.cornerRadius),
+                    style: .continuous
+                ))
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: CGFloat(presentation.cornerRadius),
+                        style: .continuous
+                    )
+                    .stroke(themeManager.current.separatorColor.opacity(0.18), lineWidth: 1)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(themeManager.current.backgroundColor)
+        } else {
+            rowContents
+                .background(rowBackgroundColor)
         }
-        .onChange(of: pendingRoute) { route in
-            if let route {
-                nav.push(route)
-                pendingRoute = nil
+    }
+
+    private var rowContents: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: CGFloat(presentation.contentSpacing)) {
+                metadataBeforeContent
+                entryContent
+                metadataAfterContent
+            }
+            .padding(.horizontal, CGFloat(presentation.horizontalPadding))
+            .padding(.vertical, CGFloat(presentation.verticalPadding))
+
+            if presentation.actionStyle != .quiet {
+                actionDivider
+            }
+
+            actionBar
+
+            if presentation.container == .fullWidth && presentation.separatorHeight > 0 {
+                Rectangle()
+                    .fill(themeManager.current.separatorColor.opacity(0.25))
+                    .frame(height: CGFloat(presentation.separatorHeight))
             }
         }
-        .task(id: entry.id) {
-            await ImagePipeline.shared.prefetch(entry.imageURLs + [entry.author.avatarURL].compactMap { $0 })
+    }
+
+    private var rowBackgroundColor: Color {
+        if (style == .compact || style == .minimal) && !isEven {
+            return themeManager.current.cellSecondaryColor
         }
+        return themeManager.current.cellPrimaryColor
+    }
+
+    private var entryContent: some View {
+        VStack(alignment: .leading, spacing: max(8, CGFloat(presentation.contentSpacing) - 4)) {
+            EntryTextView(
+                attributedText: entry.parsedContent,
+                onInternalLink: { path in
+                    nav.push(resolveInternalLink(path))
+                },
+                onImageLink: { imageURL in
+                    onOpenImages([imageURL], 0)
+                }
+            )
+
+            if !entry.imageURLs.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
+                            CachedRemoteImage(url: urlStr)
+                                .frame(width: imageSize.width, height: imageSize.height)
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onOpenImages(entry.imageURLs, index)
+                                }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var imageSize: CGSize {
+        switch style {
+        case .compact, .minimal: return CGSize(width: 132, height: 96)
+        case .comfortable, .focus: return CGSize(width: 184, height: 132)
+        default: return CGSize(width: 160, height: 120)
+        }
+    }
+
+    @ViewBuilder
+    private var metadataBeforeContent: some View {
+        switch presentation.metadataPlacement {
+        case .authorHeader:
+            standardMetadataRow
+            metadataDivider
+        case .metadataHeader:
+            dateHeader
+            metadataDivider
+        case .footer, .inlineFooter:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var metadataAfterContent: some View {
+        switch presentation.metadataPlacement {
+        case .footer:
+            standardMetadataRow
+        case .inlineFooter:
+            inlineMetadataRow
+        case .authorHeader:
+            dateHeader
+        case .metadataHeader:
+            authorButton
+        }
+    }
+
+    private var standardMetadataRow: some View {
+        HStack(alignment: .center, spacing: 10) {
+            authorButton
+            Spacer(minLength: 12)
+            dateBlock
+        }
+    }
+
+    private var inlineMetadataRow: some View {
+        HStack(spacing: 8) {
+            authorButton
+            Spacer(minLength: 8)
+            Text("\(entry.date) · #\(entry.id)")
+                .font(.caption2)
+                .foregroundColor(secondaryTextColor)
+                .lineLimit(1)
+        }
+    }
+
+    private var dateHeader: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "clock")
+                .font(.caption2)
+            Text(entry.date)
+            Text("#\(entry.id)")
+            Spacer()
+        }
+        .font(.caption)
+        .foregroundColor(secondaryTextColor)
+    }
+
+    private var dateBlock: some View {
+        VStack(alignment: .trailing, spacing: 2) {
+            Text(entry.date)
+                .font(.caption)
+            Text("#\(entry.id)")
+                .font(.caption2)
+                .opacity(0.7)
+        }
+        .foregroundColor(secondaryTextColor)
+    }
+
+    private var authorButton: some View {
+        Button {
+            nav.push(Route.profile(username: entry.author.nick))
+        } label: {
+            HStack(spacing: presentation.showsAvatar ? 8 : 0) {
+                if presentation.showsAvatar, let avatarURL = entry.author.avatarURL {
+                    CachedRemoteImage(url: avatarURL)
+                        .frame(width: avatarSize, height: avatarSize)
+                        .clipShape(Circle())
+                }
+                Text(entry.author.nick)
+                    .font(authorFont)
+                    .foregroundColor(themeManager.current.accentColor)
+            }
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: 32)
+    }
+
+    private var avatarSize: CGFloat {
+        style == .comfortable || style == .authorFirst ? 28 : 24
+    }
+
+    private var authorFont: Font {
+        style == .authorFirst ? .body.weight(.semibold) : .subheadline.weight(.medium)
+    }
+
+    private var metadataDivider: some View {
+        Rectangle()
+            .fill(themeManager.current.separatorColor.opacity(0.14))
+            .frame(height: 1)
+    }
+
+    private var actionDivider: some View {
+        Rectangle()
+            .fill(themeManager.current.separatorColor.opacity(0.15))
+            .frame(height: 1)
+            .padding(.horizontal, CGFloat(presentation.horizontalPadding))
+    }
+
+    private var actionBar: some View {
+        HStack(spacing: presentation.actionStyle == .standard ? 0 : 4) {
+            Button(action: onFavorite) {
+                HStack(spacing: 5) {
+                    Image(systemName: entry.isFavorited ? "star.fill" : "star")
+                        .font(.system(size: actionIconSize))
+                    Text("\(entry.favoriteCount)")
+                        .font(.subheadline)
+                }
+                .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
+            }
+            .buttonStyle(.plain)
+            .frame(minWidth: 52, minHeight: actionHeight)
+
+            if session.isLoggedIn && entry.author.nick != session.username {
+                Button(action: onUpvote) {
+                    Image(systemName: entry.voteState == .upvoted
+                        ? "chevron.up.circle.fill"
+                        : "chevron.up")
+                        .font(.system(size: actionIconSize, weight: .medium))
+                        .foregroundColor(entry.voteState == .upvoted
+                            ? themeManager.current.accentColor
+                            : actionButtonColor)
+                }
+                .buttonStyle(.plain)
+                .frame(minWidth: 48, minHeight: actionHeight)
+
+                Button(action: onDownvote) {
+                    Image(systemName: entry.voteState == .downvoted
+                        ? "chevron.down.circle.fill"
+                        : "chevron.down")
+                        .font(.system(size: actionIconSize, weight: .medium))
+                        .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
+                }
+                .buttonStyle(.plain)
+                .frame(minWidth: 48, minHeight: actionHeight)
+            }
+
+            Spacer()
+
+            Button {
+                shareItems([entry.shareURL])
+            } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: actionIconSize))
+                    .foregroundColor(actionButtonColor)
+            }
+            .buttonStyle(.plain)
+            .frame(minWidth: 48, minHeight: actionHeight)
+
+            Button {
+                showActions = true
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: actionIconSize))
+                    .foregroundColor(actionButtonColor)
+            }
+            .buttonStyle(.plain)
+            .frame(minWidth: 48, minHeight: actionHeight)
+        }
+        .padding(.horizontal, presentation.actionStyle == .quiet
+            ? CGFloat(presentation.horizontalPadding)
+            : 10)
+        .background(
+            presentation.actionStyle == .quiet
+                ? themeManager.current.cellSecondaryColor.opacity(0.72)
+                : Color.clear
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.horizontal, presentation.actionStyle == .quiet ? 12 : 0)
+        .padding(.bottom, presentation.actionStyle == .quiet ? 12 : 0)
+    }
+
+    private var actionHeight: CGFloat {
+        presentation.actionStyle == .quiet ? 50 : 46
+    }
+
+    private var actionIconSize: CGFloat {
+        presentation.actionStyle == .compact ? 16 : 17
     }
 
     private func resolveInternalLink(_ path: String) -> Route {

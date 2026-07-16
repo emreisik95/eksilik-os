@@ -46,9 +46,11 @@ struct OfflineTopicView: View {
                             .listRowInsets(EdgeInsets())
                             .listRowSeparator(.hidden)
                             .listRowBackground(
-                                index.isMultiple(of: 2)
-                                    ? themeManager.current.cellPrimaryColor
-                                    : themeManager.current.cellSecondaryColor
+                                preferences.entryLayoutStyle.presentation.container == .card
+                                    ? themeManager.current.backgroundColor
+                                    : (index.isMultiple(of: 2)
+                                        ? themeManager.current.cellPrimaryColor
+                                        : themeManager.current.cellSecondaryColor)
                             )
                             .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                 readToggleButton(rendered)
@@ -117,8 +119,41 @@ struct OfflineTopicView: View {
         )
     }
 
+    @ViewBuilder
     private func offlineEntry(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        if preferences.entryLayoutStyle.presentation.container == .card {
+            offlineEntryContents(rendered, isRead: isRead)
+                .background(themeManager.current.cellPrimaryColor)
+                .clipShape(RoundedRectangle(
+                    cornerRadius: CGFloat(preferences.entryLayoutStyle.presentation.cornerRadius),
+                    style: .continuous
+                ))
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: CGFloat(preferences.entryLayoutStyle.presentation.cornerRadius),
+                        style: .continuous
+                    )
+                    .stroke(themeManager.current.separatorColor.opacity(0.18), lineWidth: 1)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+        } else {
+            offlineEntryContents(rendered, isRead: isRead)
+        }
+    }
+
+    private func offlineEntryContents(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        let presentation = preferences.entryLayoutStyle.presentation
+
+        return VStack(alignment: .leading, spacing: CGFloat(presentation.contentSpacing)) {
+            if presentation.metadataPlacement == .authorHeader {
+                offlineStandardMetadata(rendered, isRead: isRead)
+                offlineMetadataDivider
+            } else if presentation.metadataPlacement == .metadataHeader {
+                offlineDateHeader(rendered)
+                offlineMetadataDivider
+            }
+
             EntryTextView(attributedText: rendered.attributedContent)
 
             if !rendered.localImageURLs.isEmpty {
@@ -126,8 +161,8 @@ struct OfflineTopicView: View {
                     HStack(spacing: 8) {
                         ForEach(Array(rendered.localImageURLs.enumerated()), id: \.element) { index, url in
                             LocalFileImage(url: url, contentMode: .fill)
-                                .frame(width: 160, height: 120)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .frame(width: offlineImageSize.width, height: offlineImageSize.height)
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     galleryURLs = rendered.localImageURLs
@@ -139,33 +174,99 @@ struct OfflineTopicView: View {
                 }
             }
 
-            HStack(spacing: 8) {
-                if let avatar = rendered.localAvatarURL {
-                    LocalFileImage(url: avatar, contentMode: .fill)
-                        .frame(width: 24, height: 24)
-                        .clipShape(Circle())
-                }
-                Text(rendered.entry.authorNick)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundColor(themeManager.current.accentColor)
-                if isRead {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundColor(themeManager.current.accentColor)
-                        .accessibilityLabel("okundu")
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(rendered.entry.date)
-                    Text("#\(rendered.entry.id)")
-                }
-                .font(.caption2)
-                .foregroundColor(themeManager.current.dateColor)
+            switch presentation.metadataPlacement {
+            case .footer:
+                offlineStandardMetadata(rendered, isRead: isRead)
+            case .inlineFooter:
+                offlineInlineMetadata(rendered, isRead: isRead)
+            case .authorHeader:
+                offlineDateHeader(rendered)
+            case .metadataHeader:
+                offlineAuthor(rendered, isRead: isRead)
             }
         }
-        .padding(16)
+        .padding(.horizontal, CGFloat(presentation.horizontalPadding))
+        .padding(.vertical, CGFloat(presentation.verticalPadding))
         .opacity(isRead ? 0.58 : 1)
         .animation(.easeOut(duration: 0.2), value: isRead)
+    }
+
+    private var offlineImageSize: CGSize {
+        switch preferences.entryLayoutStyle {
+        case .compact, .minimal: return CGSize(width: 132, height: 96)
+        case .comfortable, .focus: return CGSize(width: 184, height: 132)
+        default: return CGSize(width: 160, height: 120)
+        }
+    }
+
+    private func offlineStandardMetadata(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        HStack(spacing: 10) {
+            offlineAuthor(rendered, isRead: isRead)
+            Spacer(minLength: 12)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(rendered.entry.date)
+                Text("#\(rendered.entry.id)")
+            }
+            .font(.caption2)
+            .foregroundColor(themeManager.current.dateColor)
+        }
+    }
+
+    private func offlineInlineMetadata(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        HStack(spacing: 8) {
+            offlineAuthor(rendered, isRead: isRead)
+            Spacer(minLength: 8)
+            Text("\(rendered.entry.date) · #\(rendered.entry.id)")
+                .font(.caption2)
+                .foregroundColor(themeManager.current.dateColor)
+                .lineLimit(1)
+        }
+    }
+
+    private func offlineDateHeader(_ rendered: OfflineRenderedEntry) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "clock")
+                .font(.caption2)
+            Text(rendered.entry.date)
+            Text("#\(rendered.entry.id)")
+            Spacer()
+        }
+        .font(.caption)
+        .foregroundColor(themeManager.current.dateColor)
+    }
+
+    private func offlineAuthor(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        HStack(spacing: preferences.entryLayoutStyle.presentation.showsAvatar ? 8 : 0) {
+            if preferences.entryLayoutStyle.presentation.showsAvatar,
+               let avatar = rendered.localAvatarURL {
+                LocalFileImage(url: avatar, contentMode: .fill)
+                    .frame(width: offlineAvatarSize, height: offlineAvatarSize)
+                    .clipShape(Circle())
+            }
+            Text(rendered.entry.authorNick)
+                .font(preferences.entryLayoutStyle == .authorFirst
+                    ? .body.weight(.semibold)
+                    : .subheadline.weight(.medium))
+                .foregroundColor(themeManager.current.accentColor)
+            if isRead {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundColor(themeManager.current.accentColor)
+                    .accessibilityLabel("okundu")
+            }
+        }
+    }
+
+    private var offlineAvatarSize: CGFloat {
+        preferences.entryLayoutStyle == .comfortable || preferences.entryLayoutStyle == .authorFirst
+            ? 28
+            : 24
+    }
+
+    private var offlineMetadataDivider: some View {
+        Rectangle()
+            .fill(themeManager.current.separatorColor.opacity(0.14))
+            .frame(height: 1)
     }
 
     private func readToggleButton(_ rendered: OfflineRenderedEntry) -> some View {

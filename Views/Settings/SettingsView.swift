@@ -14,6 +14,17 @@ struct SettingsView: View {
                         ThemePickerView()
                     }
 
+                    NavigationLink {
+                        EntryLayoutPickerView()
+                    } label: {
+                        HStack {
+                            Text("entry görünümü")
+                            Spacer()
+                            Text(preferences.entryLayoutStyle.name)
+                                .foregroundColor(.gray)
+                        }
+                    }
+
                     Stepper(L10n.Settings.fontSize(preferences.selectedFontSize), value: $preferences.selectedFontSize, in: 10...24)
                 }
                 .listRowBackground(themeManager.current.cellPrimaryColor)

@@ -202,6 +202,39 @@ private struct Harness {
         expect(merged.map(\.id) == ["1", "2", "3"], "page append should keep order and remove duplicate topics")
     }
 
+    mutating func runEntryLayoutStyleChecks() {
+        expect(EntryLayoutStyle.allCases.count == 8, "settings should expose exactly eight entry layouts")
+        expect(
+            Set(EntryLayoutStyle.allCases.map(\.rawValue)).count == EntryLayoutStyle.allCases.count,
+            "each entry layout should have a stable unique storage value"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: nil) == .classic,
+            "a missing entry layout preference should use the classic layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: "future-layout") == .classic,
+            "an unknown entry layout preference should safely use the classic layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: EntryLayoutStyle.authorFirst.rawValue) == .authorFirst,
+            "a stored entry layout should round-trip"
+        )
+        expect(
+            EntryLayoutStyle.compact.presentation.verticalPadding
+                < EntryLayoutStyle.comfortable.presentation.verticalPadding,
+            "compact and comfortable layouts should have meaningfully different density"
+        )
+        expect(
+            EntryLayoutStyle.card.presentation.container == .card,
+            "the card layout should opt into an inset card container"
+        )
+        expect(
+            !EntryLayoutStyle.minimal.presentation.showsAvatar,
+            "the minimal layout should remove the author avatar"
+        )
+    }
+
     mutating func runSearchPresentationChecks() {
         expect(
             SearchPresentation.state(
@@ -462,6 +495,7 @@ private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
+harness.runEntryLayoutStyleChecks()
 harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 await harness.runOfflinePlanningChecks()
