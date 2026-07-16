@@ -59,10 +59,52 @@ private struct Harness {
         expect(entryPage.entries.first?.id == "999", "entry ID should come from permalink")
         expect(entryPage.entries.first?.author.nick == "yazar1", "entry author should be parsed")
     }
+
+    mutating func runTopicRequestChecks() {
+        let today = TopicRequest(link: "/ornek-baslik--42?day=2026-07-16")
+        expect(
+            today.settingPage(8).pathAndQuery == "ornek-baslik--42?day=2026-07-16&p=8",
+            "changing page should preserve today's entry scope"
+        )
+
+        let nice = TopicRequest(link: "/ornek-baslik--42?a=nice&period=week&p=2")
+        expect(
+            nice.settingPage(9).pathAndQuery == "ornek-baslik--42?a=nice&period=week&p=9",
+            "changing page should preserve the selected nice period"
+        )
+
+        let duplicatePage = TopicRequest(link: "/ornek?p=1&a=search&author=test&p=3")
+            .settingPage(4)
+            .pathAndQuery
+        expect(
+            duplicatePage.components(separatedBy: "p=").count - 1 == 1,
+            "changing page should remove duplicate page query items"
+        )
+        expect(duplicatePage.contains("a=search"), "changing page should preserve the search mode")
+        expect(duplicatePage.contains("author=test"), "changing page should preserve the author")
+
+        let absolute = TopicRequest(link: "https://eksisozluk.com/ornek--42?a=find&keywords=swift")
+        expect(
+            absolute.pathAndQuery == "ornek--42?a=find&keywords=swift",
+            "absolute links should normalize to a relative request"
+        )
+
+        let encoded = today.applying(filter: .author("a&b"))
+        expect(
+            encoded.pathAndQuery == "ornek-baslik--42?a=search&author=a%26b",
+            "filter values should be percent encoded as one query value"
+        )
+
+        expect(
+            EksiEndpoint.popularPage(page: 3).path == "/basliklar/gundem?p=3",
+            "agenda pagination should request the selected page"
+        )
+    }
 }
 
 private var harness = Harness()
 harness.runBaselineParserChecks()
+harness.runTopicRequestChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

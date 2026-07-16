@@ -3,25 +3,15 @@ import Foundation
 struct EntryService {
     private let client = HTTPClient.shared
 
-    func fetchEntries(link: String) async throws -> EntryPageParser.ParsedPage {
-        let cleanLink = link.replacingOccurrences(of: "https://eksisozluk.com/", with: "")
-            .replacingOccurrences(of: "https://eksisozluk.com", with: "")
-        let html = try await client.fetchHTML(for: .topic(slug: cleanLink, page: nil))
+    func fetchEntries(request: TopicRequest) async throws -> EntryPageParser.ParsedPage {
+        let html = try await client.fetchHTML(for: .topic(slug: request.pathAndQuery, page: nil))
         let username = await SessionManager.shared.username
         await SessionManager.shared.updateFromHTML(html)
         return EntryPageParser.parse(html: html, currentUsername: username)
     }
 
-    func fetchEntriesAtPage(link: String, page: Int) async throws -> EntryPageParser.ParsedPage {
-        let cleanLink = link.replacingOccurrences(of: "https://eksisozluk.com/", with: "")
-            .replacingOccurrences(of: "https://eksisozluk.com", with: "")
-
-        let separator = cleanLink.contains("?") ? "&" : "?"
-        let fullLink = "\(cleanLink)\(separator)p=\(page)"
-        let html = try await client.fetchHTML(for: .topic(slug: fullLink, page: nil))
-        let username = await SessionManager.shared.username
-        await SessionManager.shared.updateFromHTML(html)
-        return EntryPageParser.parse(html: html, currentUsername: username)
+    func fetchEntriesAtPage(request: TopicRequest, page: Int) async throws -> EntryPageParser.ParsedPage {
+        try await fetchEntries(request: request.settingPage(page))
     }
 
     func favorite(entryId: String) async throws {

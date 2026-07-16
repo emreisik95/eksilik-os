@@ -3,6 +3,7 @@ import Foundation
 enum EksiEndpoint {
     // Topic lists
     case popular
+    case popularPage(page: Int)
     case today(page: Int)
     case todayInHistory(year: Int? = nil)
     case events
@@ -64,6 +65,7 @@ enum EksiEndpoint {
     var path: String {
         switch self {
         case .popular: return "/basliklar/gundem"
+        case .popularPage(let page): return "/basliklar/gundem?p=\(max(1, page))"
         case .today(let page): return "/basliklar/bugun/\(page)"
         case .todayInHistory(let year):
             if let year { return "/basliklar/tarihte-bugun?year=\(year)" }

@@ -1,58 +1,6 @@
 import Foundation
 import UIKit
 
-enum EntryFilter: Equatable {
-    case none
-    case dailyNice
-    case eksiseyler
-    case links
-    case images
-    case caylak
-    case author(String)
-    case search(String)
-    case nice
-    case niceWeek
-    case niceMonth
-    case nice3Months
-    case niceAllTime
-
-    var queryString: String {
-        switch self {
-        case .none: return ""
-        case .dailyNice: return "?a=dailynice"
-        case .eksiseyler: return "?a=eksiseyler"
-        case .links: return "?a=find&keywords=http%3a%2f%2f"
-        case .images: return "?a=gorseller"
-        case .caylak: return "?a=caylaklar"
-        case .author(let name): return "?a=search&author=\(name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name)"
-        case .search(let keywords): return "?a=find&keywords=\(keywords.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? keywords)"
-        case .nice: return "?a=dailynice"
-        case .niceWeek: return "?a=nice&period=week"
-        case .niceMonth: return "?a=nice&period=month"
-        case .nice3Months: return "?a=nice&period=3months"
-        case .niceAllTime: return "?a=nice&period=alltime"
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .none: return "tumu"
-        case .dailyNice: return "bugun"
-        case .eksiseyler: return "eksi seyler'de"
-        case .links: return "linkler"
-        case .images: return "gorseller"
-        case .caylak: return "caylaklar"
-        case .author: return "benimkiler"
-        case .search: return "baslikta ara"
-        case .nice: return "son 24 saat"
-        case .niceWeek: return "son 1 hafta"
-        case .niceMonth: return "son 1 ay"
-        case .nice3Months: return "son 3 ay"
-        case .niceAllTime: return "tumu"
-        }
-    }
-}
-
 @MainActor
 final class EntryListViewModel: ObservableObject {
     @Published var title = ""
@@ -64,60 +12,79 @@ final class EntryListViewModel: ObservableObject {
     @Published var activeFilter: EntryFilter = .none
 
     private let entryService = EntryService()
-    var topicLink: String
-    private(set) var baseTopicLink: String
+    var topicLink: String { currentRequest.settingPage(nil).pathAndQuery }
+    private var currentRequest: TopicRequest
     private var topicSlug = ""
+    private var loadGeneration = UUID()
 
     init(link: String) {
-        self.topicLink = link
-        self.baseTopicLink = link
+        self.currentRequest = TopicRequest(link: link)
     }
 
     /// Apply a filter and reload entries
     func applyFilter(_ filter: EntryFilter) async {
         activeFilter = filter
-        // Use the parsed slug if available (clean, no query params)
-        // Fall back to stripping query params from base link
-        let base = !topicSlug.isEmpty ? topicSlug : (baseTopicLink.components(separatedBy: "?").first ?? baseTopicLink)
-        topicLink = base + filter.queryString
+        if !topicSlug.isEmpty {
+            currentRequest = currentRequest.replacingPath(topicSlug)
+        }
+        currentRequest = currentRequest.applying(filter: filter)
         await loadEntries()
     }
 
     func loadEntries() async {
-        print("📋 loadTopics called for entries")
+        let generation = UUID()
+        loadGeneration = generation
         isLoading = true
         error = nil
 
         do {
-            let page = try await entryService.fetchEntries(link: topicLink)
+            let page = try await entryService.fetchEntries(request: currentRequest)
+            guard loadGeneration == generation else { return }
             title = page.title
             pagination = page.pagination
             topicSlug = page.slug
+            if !page.slug.isEmpty {
+                currentRequest = currentRequest.replacingPath(page.slug)
+            }
             showAllLinks = page.showAllLinks
             entries = preParseEntries(page.entries)
         } catch {
-            print("📋 loadEntries error: \(error)")
+            guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
         }
 
-        isLoading = false
+        if loadGeneration == generation {
+            isLoading = false
+        }
     }
 
     func goToPage(_ page: Int) async {
+        let generation = UUID()
+        loadGeneration = generation
         isLoading = true
         error = nil
 
         do {
-            let result = try await entryService.fetchEntriesAtPage(link: topicLink, page: page)
+            let requestedPage = currentRequest.settingPage(page)
+            let result = try await entryService.fetchEntriesAtPage(request: currentRequest, page: page)
+            guard loadGeneration == generation else { return }
+            currentRequest = requestedPage
             title = result.title
             pagination = result.pagination
+            topicSlug = result.slug
+            if !result.slug.isEmpty {
+                currentRequest = currentRequest.replacingPath(result.slug)
+            }
             showAllLinks = result.showAllLinks
             entries = preParseEntries(result.entries)
         } catch {
+            guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
         }
 
-        isLoading = false
+        if loadGeneration == generation {
+            isLoading = false
+        }
     }
 
     /// Pre-parse HTML content to NSAttributedString before displaying
