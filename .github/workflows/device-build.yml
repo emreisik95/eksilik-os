@@ -1,0 +1,60 @@
+name: Build Device Artifact
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: device-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  device-build:
+    name: Build unsigned iPhone app
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build for iPhone
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project EksilikApp.xcodeproj \
+            -scheme EksilikApp \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/EksilikDeviceBuild" \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY='' | xcpretty
+
+      - name: Package device app
+        run: |
+          APP_PATH="$RUNNER_TEMP/EksilikDeviceBuild/Build/Products/Debug-iphoneos/EksilikApp.app"
+          test -d "$APP_PATH"
+          test -d "$APP_PATH/PlugIns/EksilikWidget.appex"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = "com.eksilik.app"
+          tar -C "$(dirname "$APP_PATH")" -czf "$RUNNER_TEMP/EksilikApp-unsigned.tar.gz" "$(basename "$APP_PATH")"
+
+      - name: Upload device artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EksilikApp-unsigned
+          path: ${{ runner.temp }}/EksilikApp-unsigned.tar.gz
+          if-no-files-found: error
+          retention-days: 3
