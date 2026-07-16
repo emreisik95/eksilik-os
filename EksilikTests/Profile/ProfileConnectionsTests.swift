@@ -27,6 +27,7 @@ final class ProfileConnectionsTests: XCTestCase {
             <a id="buddy-link" class="relation-link buddy-list-link remove-relation">takip ediliyor</a>
           </li>
           <li>
+            <img src="//ekstat.com/img/default-profile-picture-dark.svg" alt="ottoviii">
             <a id="follows-nick" href="/biri/ottoviii">ottoviii</a>
             <a id="buddy-link" class="relation-link buddy-list-link">takip et</a>
           </li>
@@ -43,6 +44,7 @@ final class ProfileConnectionsTests: XCTestCase {
         XCTAssertEqual(people.first?.isFollowing, true)
         XCTAssertEqual(people.last?.followsYou, false)
         XCTAssertEqual(people.last?.isFollowing, false)
+        XCTAssertNil(people.last?.avatarURL)
     }
 
     func testConnectionParserIgnoresNavigationAndMalformedLinks() {

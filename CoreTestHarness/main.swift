@@ -434,7 +434,10 @@ private struct Harness {
             <a id="follows-nick" href="/biri/altere-ses">altere ses</a>
             <a id="buddy-link" class="relation-link buddy-list-link remove-relation">takip ediliyor</a>
           </li>
-          <li><a id="follows-nick" href="/biri/ottoviii">ottoviii</a></li>
+          <li>
+            <img src="//ekstat.com/img/default-profile-picture-dark.svg" alt="ottoviii">
+            <a id="follows-nick" href="/biri/ottoviii">ottoviii</a>
+          </li>
           <li><a id="follows-nick" href="/biri/altere-ses">altere ses</a></li>
         </ul>
         """
@@ -446,6 +449,7 @@ private struct Harness {
         )
         expect(people.first?.followsYou == true, "reverse-follow state should be retained")
         expect(people.first?.isFollowing == true, "current following state should be retained")
+        expect(people.last?.avatarURL == nil, "site default SVG avatars should use the native placeholder")
         expect(
             EksiEndpoint.profileConnections(path: "/takipci/sherlockun-besinci-sezonu").path
                 == "/takipci/sherlockun-besinci-sezonu",
