@@ -1,5 +1,9 @@
 import XCTest
+#if canImport(EksilikApp)
 @testable import EksilikApp
+#else
+@testable import EksilikCore
+#endif
 
 final class AuthParserTests: XCTestCase {
 

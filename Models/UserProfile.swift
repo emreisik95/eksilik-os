@@ -1,5 +1,4 @@
 import Foundation
-import UIKit
 
 struct UserProfile {
     let nick: String
