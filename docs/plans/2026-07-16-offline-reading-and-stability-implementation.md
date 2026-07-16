@@ -121,7 +121,7 @@
 **Steps:**
 1. Recreate one fixed-identifier background session at launch with a delegate, launch events, shared cookies, two host connections, and discretionary scheduling.
 2. Encode topic/page/media metadata in each task description so callbacks recover after process termination.
-3. Schedule page 1 first, parse total pages, queue the bounded remaining set together, persist each completed page immediately, and queue discovered images.
+3. Use the total page count already parsed by the topic screen, clamp the requested limit, queue every selected page together, persist each completed page immediately, and queue discovered images.
 4. Implement progress, bounded retry, cancellation, relaunch reconciliation, permanent file movement, and background completion-handler delivery on the main thread.
 5. Allow `RootView` to reach the application and offline library when bootstrap networking fails.
 6. Run core tests, Swift parse checks, and XcodeGen generation.
