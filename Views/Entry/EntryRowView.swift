@@ -241,32 +241,31 @@ struct EntryRowView: View {
     }
 
     private var readerLayout: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("ENTRY \(entry.id)")
-                    .font(.caption2.weight(.semibold))
-                    .tracking(1.3)
-                    .foregroundColor(secondaryTextColor)
-                Spacer()
-                favoriteIconButton
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("ENTRY \(entry.id)")
+                        .font(.caption2.weight(.semibold))
+                        .tracking(1.3)
+                        .foregroundColor(secondaryTextColor)
+                    Spacer()
+                    Image(systemName: "book.closed")
+                        .foregroundColor(secondaryTextColor)
+                }
+                entryContent
+                HStack(spacing: 10) {
+                    Rectangle()
+                        .fill(themeManager.current.accentColor)
+                        .frame(width: 28, height: 2)
+                    authorNameButton(font: .caption.weight(.semibold))
+                    Text("· \(entry.date)")
+                        .font(.caption)
+                        .foregroundColor(secondaryTextColor)
+                }
             }
-            entryContent
-            HStack(spacing: 10) {
-                Rectangle()
-                    .fill(themeManager.current.accentColor)
-                    .frame(width: 28, height: 2)
-                authorNameButton(font: .caption.weight(.semibold))
-                Text("· \(entry.date)")
-                    .font(.caption)
-                    .foregroundColor(secondaryTextColor)
-                Spacer()
-                shareButton
-                moreButton
-            }
-        }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 24)
-        .overlay(alignment: .bottom) {
+            .padding(.horizontal, 22)
+            .padding(.vertical, 24)
+            actionBar
             layoutSeparator(height: 8)
         }
     }
@@ -300,23 +299,20 @@ struct EntryRowView: View {
     }
 
     private var minimalLayout: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            entryContent
-            HStack(spacing: 6) {
-                authorNameButton(font: .caption.weight(.semibold))
-                Text("· \(entry.date)")
-                    .font(.caption2)
-                    .foregroundColor(secondaryTextColor)
-                    .lineLimit(1)
-                Spacer()
-                favoriteIconButton
-                shareButton
-                moreButton
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 15) {
+                entryContent
+                HStack(spacing: 6) {
+                    authorNameButton(font: .caption.weight(.semibold))
+                    Text("· \(entry.date)")
+                        .font(.caption2)
+                        .foregroundColor(secondaryTextColor)
+                        .lineLimit(1)
+                }
             }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 18)
-        .overlay(alignment: .bottom) {
+            .padding(.horizontal, 16)
+            .padding(.top, 18)
+            actionBar
             layoutSeparator(height: 1)
         }
     }
@@ -609,6 +605,13 @@ struct EntryRowView: View {
                         .foregroundColor(entry.voteState == .upvoted
                             ? themeManager.current.accentColor
                             : actionButtonColor)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onDownvote) {
+                    Label("eksi", systemImage: entry.voteState == .downvoted ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                        .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
                         .frame(maxWidth: .infinity, minHeight: 48)
                 }
                 .buttonStyle(.plain)

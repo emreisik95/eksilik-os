@@ -259,7 +259,7 @@ struct OfflineTopicView: View {
                 Spacer()
                 Label("indirildi", systemImage: "checkmark.circle.fill")
                 Spacer()
-                Label("okundu", systemImage: isRead ? "eye.fill" : "eye")
+                Label(isRead ? "okundu" : "okunmadı", systemImage: isRead ? "eye.fill" : "eye")
             }
             .font(.caption.weight(.semibold))
             .foregroundColor(themeManager.current.dateColor)
