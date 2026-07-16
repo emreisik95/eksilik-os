@@ -310,7 +310,7 @@ private struct HomeNavigationPreview: View {
         includesLabel: Bool
     ) -> some View {
         VStack(spacing: 3) {
-            Image(systemName: selected ? "\(tab.systemImage).fill" : tab.systemImage)
+            Image(systemName: previewSymbol(for: tab, selected: selected))
                 .font(.system(size: 12, weight: .semibold))
             if includesLabel {
                 Text(tab.name)
@@ -320,5 +320,10 @@ private struct HomeNavigationPreview: View {
         }
         .foregroundColor(selected ? themeManager.current.accentColor : .secondary)
         .frame(minHeight: 40)
+    }
+
+    private func previewSymbol(for tab: HomeTabDefinition, selected: Bool) -> String {
+        guard selected else { return tab.systemImage }
+        return tab.systemImage == "calendar" ? "calendar.circle.fill" : "\(tab.systemImage).fill"
     }
 }
