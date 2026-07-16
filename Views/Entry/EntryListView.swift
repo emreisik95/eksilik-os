@@ -18,35 +18,7 @@ struct EntryListView: View {
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading && viewModel.entries.isEmpty {
-                List {
-                    ForEach(0..<5, id: \.self) { i in
-                        VStack(alignment: .leading, spacing: 10) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(height: 12)
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(height: 12)
-                                .frame(maxWidth: 250)
-                            HStack {
-                                Circle()
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 20, height: 20)
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 80, height: 10)
-                                Spacer()
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 100, height: 10)
-                            }
-                        }
-                        .padding(.vertical, 6)
-                        .listRowBackground(themeManager.current.cellPrimaryColor)
-                    }
-                }
-                .listStyle(.plain)
-                .redacted(reason: .placeholder)
+                EntryListSkeletonView()
             } else if let error = viewModel.error, viewModel.entries.isEmpty {
                 ErrorView(
                     message: error,

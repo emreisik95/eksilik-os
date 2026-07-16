@@ -31,7 +31,7 @@ struct ProfileView: View {
             themeManager.current.backgroundColor.ignoresSafeArea()
 
             if viewModel.isLoading && viewModel.profile == nil {
-                LoadingView()
+                ProfileSkeletonView()
             } else if let profile = viewModel.profile {
                 profileContent(profile)
             } else if let error = viewModel.error {

@@ -36,14 +36,12 @@ struct SearchView: View {
                 // Skeleton loading when channels loading
                 if viewModel.query.isEmpty && viewModel.channels.isEmpty {
                     Section {
-                        ForEach(0..<8, id: \.self) { _ in
+                        ForEach(0..<8, id: \.self) { index in
                             HStack {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 100, height: 16)
+                                StableSkeletonBlock()
+                                    .frame(width: CGFloat(90 + (index % 3) * 18), height: 16)
                                 Spacer()
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
+                                StableSkeletonBlock()
                                     .frame(width: 60, height: 14)
                             }
                             .padding(.vertical, 4)

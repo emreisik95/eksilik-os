@@ -4,11 +4,14 @@ import Foundation
 final class TopicListViewModel: ObservableObject {
     @Published var topics: [Topic] = []
     @Published var isLoading = false
+    @Published var isLoadingMore = false
+    @Published var hasMore = false
     @Published var error: String?
     @Published var pagination: Pagination = .empty
 
     private let topicService = TopicService()
-    private let blockedStore: BlockedTopicStore
+    private var blockedStore: BlockedTopicStore?
+    private var loadGeneration = UUID()
 
     enum ListType: String {
         case popular, today, todayInHistory, following, latest, debe, kenar, caylaklar, cop
@@ -18,89 +21,101 @@ final class TopicListViewModel: ObservableObject {
     private var currentPage = 1
     var year: Int?
 
-    init(listType: ListType, blockedStore: BlockedTopicStore) {
+    init(listType: ListType) {
         self.listType = listType
+    }
+
+    func configure(blockedStore: BlockedTopicStore) {
         self.blockedStore = blockedStore
+        topics.removeAll { blockedStore.isBlocked($0.title) }
     }
 
     func loadTopics() async {
-        print("loadTopics called for \(listType)")
+        let generation = UUID()
+        loadGeneration = generation
         isLoading = true
+        isLoadingMore = false
         error = nil
         currentPage = 1
 
-        let filter: (String) -> Bool = { [blockedStore] title in
-            blockedStore.isBlocked(title)
+        let filter: (String) -> Bool = { [weak blockedStore] title in
+            blockedStore?.isBlocked(title) ?? false
         }
 
         do {
-            switch listType {
-            case .popular:
-                topics = try await topicService.fetchPopularTopics(isBlocked: filter)
-            case .today:
-                topics = try await topicService.fetchTodayTopics(page: 1, isBlocked: filter)
-            case .todayInHistory:
-                topics = try await topicService.fetchFromEndpoint(.todayInHistory(year: year), isBlocked: filter)
-            case .following:
-                topics = try await topicService.fetchFromEndpoint(.following, isBlocked: filter)
-            case .latest:
-                topics = try await topicService.fetchFromEndpoint(.latest, isBlocked: filter)
-            case .debe:
-                topics = try await topicService.fetchFromEndpoint(.debe, isBlocked: filter)
-            case .kenar:
-                topics = try await topicService.fetchFromEndpoint(.kenar, isBlocked: filter)
-            case .caylaklar:
-                topics = try await topicService.fetchFromEndpoint(.caylaklar, isBlocked: filter)
-            case .cop:
-                topics = try await topicService.fetchFromEndpoint(.cop, isBlocked: filter)
-            }
+            let result = try await fetchPage(1, isBlocked: filter)
+            guard loadGeneration == generation else { return }
+            topics = TopicPageMerger.merge(existing: [], incoming: result.topics)
+            pagination = result.pagination
+            hasMore = result.pagination.hasNextPage && !result.topics.isEmpty
         } catch {
-            print("loadTopics error: \(error)")
+            guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
         }
 
-        isLoading = false
-        print("loadTopics done, \(topics.count) topics, error=\(self.error ?? "nil")")
+        if loadGeneration == generation {
+            isLoading = false
+        }
     }
 
     func loadMore() async {
-        guard !isLoading else { return }
-        currentPage += 1
+        guard hasMore, !isLoading, !isLoadingMore else { return }
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+        let nextPage = currentPage + 1
 
-        let filter: (String) -> Bool = { [blockedStore] title in
-            blockedStore.isBlocked(title)
+        let filter: (String) -> Bool = { [weak blockedStore] title in
+            blockedStore?.isBlocked(title) ?? false
         }
 
         do {
-            let newTopics: [Topic]
-            switch listType {
-            case .popular:
-                newTopics = try await topicService.fetchPopularTopics(isBlocked: filter)
-            case .today:
-                newTopics = try await topicService.fetchTodayTopics(page: currentPage, isBlocked: filter)
-            case .todayInHistory:
-                newTopics = try await topicService.fetchFromEndpoint(.todayInHistory(year: year), isBlocked: filter)
-            case .following:
-                newTopics = try await topicService.fetchFromEndpoint(.following, isBlocked: filter)
-            case .latest:
-                newTopics = try await topicService.fetchFromEndpoint(.latest, isBlocked: filter)
-            case .debe:
-                newTopics = try await topicService.fetchFromEndpoint(.debe, isBlocked: filter)
-            case .kenar:
-                return
-            case .caylaklar:
-                return
-            case .cop:
-                return
-            }
-            topics.append(contentsOf: newTopics)
+            let result = try await fetchPage(nextPage, isBlocked: filter)
+            let merged = TopicPageMerger.merge(existing: topics, incoming: result.topics)
+            let addedCount = merged.count - topics.count
+            topics = merged
+            currentPage = nextPage
+            pagination = result.pagination
+            hasMore = addedCount > 0 && result.pagination.hasNextPage
         } catch {
-            currentPage -= 1
+            self.error = error.localizedDescription
         }
     }
 
     func blockTopic(_ title: String) {
-        blockedStore.block(title)
+        blockedStore?.block(title)
         topics.removeAll { $0.title == title }
+    }
+
+    private func fetchPage(
+        _ page: Int,
+        isBlocked: @escaping (String) -> Bool
+    ) async throws -> (topics: [Topic], pagination: Pagination) {
+        switch listType {
+        case .popular:
+            return try await topicService.fetchPopularTopicsPaginated(page: page, isBlocked: isBlocked)
+        case .today:
+            return try await topicService.fetchTodayTopicsPaginated(page: page, isBlocked: isBlocked)
+        case .todayInHistory:
+            let topics = try await topicService.fetchFromEndpoint(.todayInHistory(year: year), isBlocked: isBlocked)
+            return (topics, .empty)
+        case .following:
+            let topics = try await topicService.fetchFromEndpoint(.following, isBlocked: isBlocked)
+            return (topics, .empty)
+        case .latest:
+            let topics = try await topicService.fetchFromEndpoint(.latest, isBlocked: isBlocked)
+            return (topics, .empty)
+        case .debe:
+            let topics = try await topicService.fetchFromEndpoint(.debe, isBlocked: isBlocked)
+            return (topics, .empty)
+        case .kenar:
+            let topics = try await topicService.fetchFromEndpoint(.kenar, isBlocked: isBlocked)
+            return (topics, .empty)
+        case .caylaklar:
+            let topics = try await topicService.fetchFromEndpoint(.caylaklar, isBlocked: isBlocked)
+            return (topics, .empty)
+        case .cop:
+            let topics = try await topicService.fetchFromEndpoint(.cop, isBlocked: isBlocked)
+            return (topics, .empty)
+        }
     }
 }

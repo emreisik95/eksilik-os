@@ -27,6 +27,7 @@ let package = Package(
                 "Core/Parsing/UserProfileParser.swift",
                 "Core/Network/EksiEndpoint.swift",
                 "Core/Network/TopicRequest.swift",
+                "Core/Loading/SkeletonLayout.swift",
                 "Models/Author.swift",
                 "Models/Entry.swift",
                 "Models/EntryFilter.swift",

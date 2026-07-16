@@ -100,11 +100,33 @@ private struct Harness {
             "agenda pagination should request the selected page"
         )
     }
+
+    mutating func runStableLoadingChecks() {
+        let firstPass = (0..<24).map(SkeletonLayout.topicTitleFraction(row:))
+        let secondPass = (0..<24).map(SkeletonLayout.topicTitleFraction(row:))
+        expect(firstPass == secondPass, "skeleton widths should stay stable across renders")
+        expect(
+            firstPass.allSatisfy { (0.45...0.90).contains($0) },
+            "topic skeleton widths should remain within the intended layout"
+        )
+
+        let existing = [
+            Topic(id: "1", title: "bir", slug: "bir", entryCount: "1", link: "/bir"),
+            Topic(id: "2", title: "iki", slug: "iki", entryCount: "2", link: "/iki"),
+        ]
+        let incoming = [
+            Topic(id: "2", title: "iki", slug: "iki", entryCount: "2", link: "/iki"),
+            Topic(id: "3", title: "uc", slug: "uc", entryCount: "3", link: "/uc"),
+        ]
+        let merged = TopicPageMerger.merge(existing: existing, incoming: incoming)
+        expect(merged.map(\.id) == ["1", "2", "3"], "page append should keep order and remove duplicate topics")
+    }
 }
 
 private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
+harness.runStableLoadingChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")
