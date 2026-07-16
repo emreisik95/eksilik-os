@@ -48,6 +48,7 @@ enum EksiEndpoint {
     // User
     case profile(username: String)
     case profileEntries(username: String, filter: String, page: Int = 1)
+    case profileConnections(path: String)
     case blockUser
 
     // Messages
@@ -111,6 +112,8 @@ enum EksiEndpoint {
         case .profileEntries(let username, let filter, let page):
             let ts = Int(Date().timeIntervalSince1970 * 1000)
             return "/\(filter)?nick=\(username)&p=\(page)&_=\(ts)"
+        case .profileConnections(let path):
+            return "/" + path.drop(while: { $0 == "/" })
         case .blockUser: return "/userrelation/addrelation"
         case .messages(let page):
             if let page { return "/mesaj?p=\(page)" }

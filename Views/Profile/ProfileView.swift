@@ -174,22 +174,20 @@ struct ProfileView: View {
             }
 
             // Stats row
-            HStack(spacing: 12) {
-                if profile.entryCount > 0 {
-                    Text(L10n.Profile.entryCount(profile.entryCount))
-                        .font(.caption)
-                        .foregroundColor(themeManager.current.labelColor)
-                }
-                if profile.followerCount > 0 {
-                    Text(L10n.Profile.followerCount(profile.followerCount))
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                if profile.followingCount > 0 {
-                    Text(L10n.Profile.followingCount(profile.followingCount))
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
+            HStack(spacing: 8) {
+                profileStat(value: profile.entryCount, label: "entry")
+                profileStat(
+                    value: profile.followerCount,
+                    label: "takipçi",
+                    path: profile.followerLink,
+                    destinationTitle: "takipçiler"
+                )
+                profileStat(
+                    value: profile.followingCount,
+                    label: "takip",
+                    path: profile.followingLink,
+                    destinationTitle: "takip ettikleri"
+                )
             }
 
             // Join date
@@ -203,6 +201,46 @@ struct ProfileView: View {
                 .foregroundColor(.gray)
             }
         }
+    }
+
+    @ViewBuilder
+    private func profileStat(
+        value: Int,
+        label: String,
+        path: String? = nil,
+        destinationTitle: String = ""
+    ) -> some View {
+        if let path {
+            NavigationLink {
+                ProfileConnectionsView(path: path, title: destinationTitle)
+            } label: {
+                profileStatLabel(value: value, label: label, isActionable: true)
+            }
+            .buttonStyle(.plain)
+        } else {
+            profileStatLabel(value: value, label: label, isActionable: false)
+        }
+    }
+
+    private func profileStatLabel(value: Int, label: String, isActionable: Bool) -> some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 4) {
+                Text("\(value)")
+                    .font(.headline)
+                if isActionable {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.bold())
+                }
+            }
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .foregroundColor(isActionable ? themeManager.current.accentColor : themeManager.current.labelColor)
+        .frame(maxWidth: .infinity, minHeight: 58)
+        .background(themeManager.current.cellPrimaryColor)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Tab Picker

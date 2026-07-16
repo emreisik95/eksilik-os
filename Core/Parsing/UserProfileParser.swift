@@ -38,6 +38,12 @@ struct UserProfileParser {
         let entryCount = Int(doc.at_css("span#entry-count-total")?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
         let followerCount = Int(doc.at_css("span#user-follower-count")?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
         let followingCount = Int(doc.at_css("span#user-following-count")?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "") ?? 0
+        let followerLink = doc.css("a[href]")
+            .first { $0.at_css("#user-follower-count") != nil }?["href"]
+            .flatMap(safeRelativePath)
+        let followingLink = doc.css("a[href]")
+            .first { $0.at_css("#user-following-count") != nil }?["href"]
+            .flatMap(safeRelativePath)
 
         // Join date — div.recorddate text content (e.g. "şubat 1999")
         var joinDate: String?
@@ -58,6 +64,8 @@ struct UserProfileParser {
             entryCount: entryCount,
             followerCount: followerCount,
             followingCount: followingCount,
+            followerLink: followerLink,
+            followingLink: followingLink,
             joinDate: joinDate,
             entries: [] // Entries loaded separately via tab endpoints
         )
@@ -157,5 +165,10 @@ struct UserProfileParser {
     private static func emptyProfile() -> UserProfile {
         UserProfile(nick: "", avatarURL: nil, bio: nil, isVerified: false, badges: [], entryCount: 0,
                     followerCount: 0, followingCount: 0, joinDate: nil, entries: [])
+    }
+
+    private static func safeRelativePath(_ value: String) -> String? {
+        guard value.hasPrefix("/"), !value.hasPrefix("//") else { return nil }
+        return value
     }
 }

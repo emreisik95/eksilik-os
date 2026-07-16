@@ -408,6 +408,50 @@ private struct Harness {
         expect(merged.map(\.id) == ["1", "2"], "profile pagination should not append duplicate entries")
         expect(merged.first?.contentHTML == "ilk", "profile pagination should keep the first entry value")
     }
+
+    mutating func runProfileConnectionChecks() {
+        let profileHTML = """
+        <h1 id="user-profile-title" data-nick="sherlockun besinci sezonu"></h1>
+        <ul id="user-entry-stats">
+          <li><a href="/takipci/sherlockun-besinci-sezonu"><span id="user-follower-count">35</span> takipçi</a></li>
+          <li><a href="/takip/sherlockun-besinci-sezonu"><span id="user-following-count">8</span> takip</a></li>
+        </ul>
+        """
+        let profile = UserProfileParser.parse(html: profileHTML)
+        expect(
+            profile.followerLink == "/takipci/sherlockun-besinci-sezonu",
+            "profile parsing should retain the server follower link"
+        )
+        expect(
+            profile.followingLink == "/takip/sherlockun-besinci-sezonu",
+            "profile parsing should retain the server following link"
+        )
+
+        let connectionsHTML = """
+        <ul id="follow-list">
+          <li data-reverse-follow="true">
+            <div class="follows-picture"><a href="/biri/altere-ses"><img src="//img.ekstat.com/profiles/altere.jpg" alt="altere ses"></a></div>
+            <a id="follows-nick" href="/biri/altere-ses">altere ses</a>
+            <a id="buddy-link" class="relation-link buddy-list-link remove-relation">takip ediliyor</a>
+          </li>
+          <li><a id="follows-nick" href="/biri/ottoviii">ottoviii</a></li>
+          <li><a id="follows-nick" href="/biri/altere-ses">altere ses</a></li>
+        </ul>
+        """
+        let people = ProfileConnectionParser.parse(html: connectionsHTML)
+        expect(people.map(\.username) == ["altere ses", "ottoviii"], "follow lists should preserve order and remove duplicates")
+        expect(
+            people.first?.avatarURL == "https://img.ekstat.com/profiles/altere.jpg",
+            "follow list avatars should normalize protocol-relative URLs"
+        )
+        expect(people.first?.followsYou == true, "reverse-follow state should be retained")
+        expect(people.first?.isFollowing == true, "current following state should be retained")
+        expect(
+            EksiEndpoint.profileConnections(path: "/takipci/sherlockun-besinci-sezonu").path
+                == "/takipci/sherlockun-besinci-sezonu",
+            "profile connection requests should keep the server-provided relative path"
+        )
+    }
 }
 
 private var harness = Harness()
@@ -418,6 +462,7 @@ harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
+harness.runProfileConnectionChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")
