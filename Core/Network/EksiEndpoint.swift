@@ -55,6 +55,10 @@ enum EksiEndpoint {
     case messageThread(id: String)
     case sendMessage
 
+    // Topic tracking
+    case trackTopic(id: String)
+    case untrackTopic(id: String)
+
     // Auth
     case login
     case logout
@@ -101,8 +105,8 @@ enum EksiEndpoint {
         case .favoriteUsers: return "/entry/favorileyenler"
         case .autocomplete: return "/autocomplete/query"
         case .channels: return "/kanallar/m"
-        case .channelFollow(let slug): return "/kanal/takip-et"
-        case .channelUnfollow(let slug): return "/kanal/takip-birak"
+        case .channelFollow: return "/kanal/takip-et"
+        case .channelUnfollow: return "/kanal/takip-birak"
         case .profile(let username): return "/biri/\(username)"
         case .profileEntries(let username, let filter, let page):
             let ts = Int(Date().timeIntervalSince1970 * 1000)
@@ -113,6 +117,8 @@ enum EksiEndpoint {
             return "/mesaj"
         case .messageThread(let id): return "/mesaj/\(id)"
         case .sendMessage: return "/mesaj/yolla"
+        case .trackTopic(let id): return "/baslik/takip-et/\(id)"
+        case .untrackTopic(let id): return "/baslik/takip-etme/\(id)"
         case .login: return "/giris"
         case .logout: return "/terk"
         case .commentVote: return "/yorum/vote"
@@ -123,7 +129,7 @@ enum EksiEndpoint {
         switch self {
         case .createEntry, .deleteEntry, .favoriteEntry, .unfavoriteEntry,
              .voteEntry, .removeVote, .blockUser, .sendMessage, .commentVote,
-             .channelFollow, .channelUnfollow:
+             .channelFollow, .channelUnfollow, .trackTopic, .untrackTopic:
             return .post
         default:
             return .get

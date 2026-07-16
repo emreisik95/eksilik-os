@@ -53,11 +53,13 @@ private struct Harness {
         </ul>
         <div class="content"><p>entry content</p></div>
         <a class="entry-date permalink" href="/entry/999">01.01.2024</a>
+        <a id="track-topic-link" data-tracked="1"></a>
         """
         let entryPage = EntryPageParser.parse(html: entryHTML, currentUsername: nil)
         expect(entryPage.entries.count == 1, "entry page should parse one entry")
         expect(entryPage.entries.first?.id == "999", "entry ID should come from permalink")
         expect(entryPage.entries.first?.author.nick == "yazar1", "entry author should be parsed")
+        expect(entryPage.isTracked, "topic tracking state should be parsed")
     }
 
     mutating func runTopicRequestChecks() {
@@ -98,6 +100,15 @@ private struct Harness {
         expect(
             EksiEndpoint.popularPage(page: 3).path == "/basliklar/gundem?p=3",
             "agenda pagination should request the selected page"
+        )
+        expect(
+            EksiEndpoint.trackTopic(id: "42").path == "/baslik/takip-et/42",
+            "tracking a topic should target its topic ID"
+        )
+        expect(EksiEndpoint.trackTopic(id: "42").method == .post, "topic tracking should use POST")
+        expect(
+            EksiEndpoint.untrackTopic(id: "42").path == "/baslik/takip-etme/42",
+            "untracking a topic should target its topic ID"
         )
     }
 

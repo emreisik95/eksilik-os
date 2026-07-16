@@ -65,7 +65,7 @@ final class SearchViewModel: ObservableObject {
             ? .channelUnfollow(slug: channel.id)
             : .channelFollow(slug: channel.id)
         do {
-            let csrfToken = await SessionManager.shared.csrfToken
+            let csrfToken = SessionManager.shared.csrfToken
             try await client.post(endpoint: endpoint, body: ["name": channel.id], csrfToken: csrfToken)
             channels[index].isFollowed.toggle()
         } catch {

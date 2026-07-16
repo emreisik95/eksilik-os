@@ -10,6 +10,7 @@ final class EntryListViewModel: ObservableObject {
     @Published var error: String?
     @Published var showAllLinks: [(text: String, link: String)] = []
     @Published var activeFilter: EntryFilter = .none
+    @Published var isTracked = false
 
     private let entryService = EntryService()
     var topicLink: String { currentRequest.settingPage(nil).pathAndQuery }
@@ -17,6 +18,7 @@ final class EntryListViewModel: ObservableObject {
     var offlineTotalPages: Int { max(1, pagination.totalPages) }
     private var currentRequest: TopicRequest
     private var topicSlug = ""
+    private var topicId = ""
     private var loadGeneration = UUID()
 
     init(link: String) {
@@ -45,6 +47,8 @@ final class EntryListViewModel: ObservableObject {
             title = page.title
             pagination = page.pagination
             topicSlug = page.slug
+            topicId = page.topicId
+            isTracked = page.isTracked
             if !page.slug.isEmpty {
                 currentRequest = currentRequest.replacingPath(page.slug)
             }
@@ -75,6 +79,8 @@ final class EntryListViewModel: ObservableObject {
             title = result.title
             pagination = result.pagination
             topicSlug = result.slug
+            topicId = result.topicId
+            isTracked = result.isTracked
             if !result.slug.isEmpty {
                 currentRequest = currentRequest.replacingPath(result.slug)
             }
@@ -145,6 +151,21 @@ final class EntryListViewModel: ObservableObject {
                 try await entryService.vote(entryId: entry.id, rate: rate)
                 entries[index].voteState = rate == 1 ? .upvoted : .downvoted
             }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func toggleTracking() async {
+        guard !topicId.isEmpty else { return }
+
+        do {
+            if isTracked {
+                try await entryService.untrackTopic(id: topicId)
+            } else {
+                try await entryService.trackTopic(id: topicId)
+            }
+            isTracked.toggle()
         } catch {
             self.error = error.localizedDescription
         }

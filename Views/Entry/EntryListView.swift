@@ -175,7 +175,7 @@ struct EntryListView: View {
                 if session.isLoggedIn {
                     Button {
                         Task {
-                            let username = await SessionManager.shared.username ?? ""
+                            let username = SessionManager.shared.username ?? ""
                             await viewModel.applyFilter(.author(username))
                         }
                     } label: {

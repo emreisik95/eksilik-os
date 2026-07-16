@@ -34,6 +34,14 @@ struct EntryService {
         try await client.post(endpoint: .deleteEntry, body: ["Id": id])
     }
 
+    func trackTopic(id: String) async throws {
+        try await client.post(endpoint: .trackTopic(id: id), body: [:])
+    }
+
+    func untrackTopic(id: String) async throws {
+        try await client.post(endpoint: .untrackTopic(id: id), body: [:])
+    }
+
     func createEntry(content: String, title: String, returnURL: String, id: String, token: String) async throws {
         try await client.post(
             endpoint: .createEntry,

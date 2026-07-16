@@ -9,11 +9,12 @@ struct EntryPageParser {
         let entries: [Entry]
         let pagination: Pagination
         let showAllLinks: [(text: String, link: String)]
+        let isTracked: Bool
     }
 
     static func parse(html: String, currentUsername: String?) -> ParsedPage {
         guard let doc = HTMLParser.parse(html) else {
-            return ParsedPage(title: "", slug: "", topicId: "", entries: [], pagination: .empty, showAllLinks: [])
+            return ParsedPage(title: "", slug: "", topicId: "", entries: [], pagination: .empty, showAllLinks: [], isTracked: false)
         }
 
         // Parse topic title
@@ -78,6 +79,9 @@ struct EntryPageParser {
             }
         }
 
+        let trackingValue = doc.at_css("#track-topic-link")?["data-tracked"]?.lowercased()
+        let isTracked = trackingValue == "1" || trackingValue == "true"
+
         let pagination = PaginationParser.parse(html: html)
 
         return ParsedPage(
@@ -86,7 +90,8 @@ struct EntryPageParser {
             topicId: topicId,
             entries: entries,
             pagination: pagination,
-            showAllLinks: showAllLinks
+            showAllLinks: showAllLinks,
+            isTracked: isTracked
         )
     }
 }

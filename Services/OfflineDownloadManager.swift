@@ -313,7 +313,7 @@ final class OfflineDownloadManager: NSObject, URLSessionDownloadDelegate, URLSes
     }
 
     private func transferFailed(_ descriptor: OfflineTransferDescriptor, message: String) async {
-        stateQueue.sync {
+        _ = stateQueue.sync {
             enqueuedKeys.remove(descriptor.key)
         }
         if descriptor.retryCount < 2,
