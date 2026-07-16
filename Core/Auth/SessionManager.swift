@@ -21,8 +21,11 @@ final class SessionManager: ObservableObject {
     func updateFromHTML(_ html: String) {
         let state = AuthParser.parseAuthState(html: html)
 
+        // Pages without authentication navigation cannot prove a logout.
+        guard !state.isIndeterminate else { return }
+
         if isLoggedIn && !state.isLoggedIn {
-            logout()
+            clearSession()
             return
         }
 
@@ -59,6 +62,10 @@ final class SessionManager: ObservableObject {
         Task {
             _ = try? await HTTPClient.shared.fetchHTML(for: .logout)
         }
+        clearSession()
+    }
+
+    private func clearSession() {
         isLoggedIn = false
         username = nil
         hasUnreadMessages = false

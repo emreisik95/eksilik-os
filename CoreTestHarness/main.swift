@@ -45,6 +45,25 @@ private struct Harness {
         expect(auth.isLoggedIn, "buddy navigation should indicate a logged-in session")
         expect(auth.username == "testuser", "username should be parsed")
         expect(auth.hasUnreadMessages, "green message icon should indicate unread messages")
+        expect(!auth.isIndeterminate, "recognized auth navigation should be determinate")
+
+        let indeterminateAuth = AuthParser.parseAuthState(html: "<main>entry content</main>")
+        expect(indeterminateAuth.isIndeterminate, "pages without auth navigation should not force logout")
+        expect(
+            LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/?returnUrl=%2F")!),
+            "login return URLs with a root path should be recognized"
+        )
+        expect(
+            !LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/giris")!),
+            "the login form itself should not be treated as a successful login"
+        )
+        let authCookie = HTTPCookie(properties: [
+            .domain: ".eksisozluk.com",
+            .path: "/",
+            .name: ".AspNetCore.Cookies",
+            .value: "session-token",
+        ])!
+        expect(LoginFlowPolicy.hasAuthCookie(in: [authCookie]), "login success should require an auth cookie")
 
         let entryHTML = """
         <h1 id="title" data-title="test" data-slug="test" data-id="1"></h1>

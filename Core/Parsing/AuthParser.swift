@@ -8,36 +8,32 @@ struct AuthParser {
         let hasUnreadMessages: Bool
         let hasUnreadEvents: Bool
         let csrfToken: String?
+        let isIndeterminate: Bool
     }
 
     static func parseAuthState(html: String) -> AuthState {
         guard let doc = HTMLParser.parse(html) else {
-            return AuthState(isLoggedIn: false, username: nil, hasUnreadMessages: false, hasUnreadEvents: false, csrfToken: nil)
+            return AuthState(
+                isLoggedIn: false,
+                username: nil,
+                hasUnreadMessages: false,
+                hasUnreadEvents: false,
+                csrfToken: nil,
+                isIndeterminate: true
+            )
         }
 
-        // Check login via buddy link presence
-        var isLoggedIn = false
-        for el in doc.css("li[class^=buddy mobile-only] a") {
-            if el["href"] != nil {
-                isLoggedIn = true
-                break
-            }
-        }
-
-        // If login link is visible, user is NOT logged in
-        for el in doc.css("a[id^=top-login-link]") {
-            if let text = el.text, !text.isEmpty {
-                isLoggedIn = false
-                break
-            }
-        }
+        // Navbar presence makes auth state determinate. Class order can vary.
+        let profileLink = doc.at_css("li.buddy a[href^='/biri/']")
+            ?? doc.at_css("li.mobile-only.buddy a[href^='/biri/']")
+        let loginLink = doc.at_css("#top-login-link")
+        let isIndeterminate = profileLink == nil && loginLink == nil
+        let isLoggedIn = profileLink != nil && loginLink == nil
 
         // Get username
-        var username: String?
-        for el in doc.css("li[class^=not-mobile] a") {
-            username = el["title"]
-            break
-        }
+        let username = profileLink?["title"]
+            ?? profileLink?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+            ?? doc.at_css("li.not-mobile a[title]")?["title"]
 
         // Check unread messages
         var hasUnreadMessages = false
@@ -67,7 +63,8 @@ struct AuthParser {
             username: username,
             hasUnreadMessages: hasUnreadMessages,
             hasUnreadEvents: hasUnreadEvents,
-            csrfToken: csrfToken
+            csrfToken: csrfToken,
+            isIndeterminate: isIndeterminate
         )
     }
 
@@ -87,5 +84,22 @@ struct AuthParser {
         }
 
         return (token: token, title: title, id: id, returnURL: returnURL)
+    }
+}
+
+enum LoginFlowPolicy {
+    private static let authCookieNames: Set<String> = [".AspNetCore.Cookies", "a"]
+
+    static func isSuccessfulReturnURL(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased(),
+              host == "eksisozluk.com" || host == "www.eksisozluk.com" else {
+            return false
+        }
+        return url.path.isEmpty || url.path == "/"
+    }
+
+    static func hasAuthCookie(in cookies: [HTTPCookie]) -> Bool {
+        cookies.contains { authCookieNames.contains($0.name) && !$0.value.isEmpty }
     }
 }

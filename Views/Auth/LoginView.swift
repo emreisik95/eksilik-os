@@ -23,8 +23,14 @@ struct LoginWebView: UIViewRepresentable {
         config.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
-        if let url = URL(string: "https://eksisozluk.com/giris") {
-            webView.load(URLRequest(url: url))
+        webView.customUserAgent = EksiRouter.defaultHeaders["User-Agent"]
+
+        Task { @MainActor in
+            CookiePersistence.restore()
+            await CookiePersistence.injectIntoWebView()
+            if let url = URL(string: EksiRouter.baseURL + EksiEndpoint.login.path) {
+                webView.load(URLRequest(url: url))
+            }
         }
         return webView
     }
@@ -37,22 +43,18 @@ struct LoginWebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate {
         let onLoginSuccess: (_ username: String?) -> Void
+        private var didFinishLogin = false
 
         init(onLoginSuccess: @escaping (_ username: String?) -> Void) {
             self.onLoginSuccess = onLoginSuccess
         }
 
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            if let url = navigationAction.request.url?.absoluteString,
-               url == "https://eksisozluk.com/" || url == "https://eksisozluk.com" {
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            if let url = webView.url, LoginFlowPolicy.isSuccessfulReturnURL(url) {
                 syncCookiesAndFinish(webView: webView)
-                decisionHandler(.cancel)
                 return
             }
-            decisionHandler(.allow)
-        }
 
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             // Check if the login page says user is already logged in
             webView.evaluateJavaScript("document.body.innerText") { result, _ in
                 guard let text = result as? String else { return }
@@ -64,20 +66,25 @@ struct LoginWebView: UIViewRepresentable {
 
         private func syncCookiesAndFinish(webView: WKWebView) {
             WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+                guard LoginFlowPolicy.hasAuthCookie(in: cookies) else { return }
+
                 for cookie in cookies {
                     HTTPCookieStorage.shared.setCookie(cookie)
                 }
                 CookiePersistence.save()
-                // Extract username from page HTML
+
                 DispatchQueue.main.async {
-                    webView.evaluateJavaScript("document.body.innerText") { result, _ in
-                        var username: String?
-                        if let text = result as? String,
-                           let range = text.range(of: "'", options: .literal),
-                           let endRange = text.range(of: "'", options: .literal, range: range.upperBound..<text.endIndex) {
-                            username = String(text[range.upperBound..<endRange.lowerBound])
-                        }
-                        self.onLoginSuccess(username)
+                    guard !self.didFinishLogin else { return }
+                    self.didFinishLogin = true
+
+                    let script = """
+                    (() => {
+                      const link = document.querySelector('li.buddy a[href^="/biri/"]');
+                      return link ? link.textContent.trim() : null;
+                    })()
+                    """
+                    webView.evaluateJavaScript(script) { result, _ in
+                        self.onLoginSuccess(result as? String)
                     }
                 }
             }

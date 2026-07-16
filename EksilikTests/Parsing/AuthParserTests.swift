@@ -15,6 +15,7 @@ final class AuthParserTests: XCTestCase {
         let state = AuthParser.parseAuthState(html: html)
         XCTAssertFalse(state.isLoggedIn)
         XCTAssertNil(state.username)
+        XCTAssertFalse(state.isIndeterminate)
     }
 
     func testLoggedInState() {
@@ -26,6 +27,38 @@ final class AuthParserTests: XCTestCase {
         let state = AuthParser.parseAuthState(html: html)
         XCTAssertTrue(state.isLoggedIn)
         XCTAssertEqual(state.username, "testuser")
+        XCTAssertFalse(state.isIndeterminate)
+    }
+
+    func testPageWithoutAuthNavigationIsIndeterminate() {
+        let state = AuthParser.parseAuthState(html: "<main>entry içeriği</main>")
+
+        XCTAssertTrue(state.isIndeterminate)
+    }
+
+    func testLoginReturnURLRecognition() {
+        XCTAssertTrue(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/")!))
+        XCTAssertTrue(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/?returnUrl=%2F")!))
+        XCTAssertFalse(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/giris")!))
+        XCTAssertFalse(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://example.com/")!))
+    }
+
+    func testLoginRequiresAnAuthenticationCookie() {
+        let authCookie = HTTPCookie(properties: [
+            .domain: ".eksisozluk.com",
+            .path: "/",
+            .name: ".AspNetCore.Cookies",
+            .value: "session-token",
+        ])!
+        let unrelatedCookie = HTTPCookie(properties: [
+            .domain: ".eksisozluk.com",
+            .path: "/",
+            .name: "theme",
+            .value: "dark",
+        ])!
+
+        XCTAssertTrue(LoginFlowPolicy.hasAuthCookie(in: [authCookie]))
+        XCTAssertFalse(LoginFlowPolicy.hasAuthCookie(in: [unrelatedCookie]))
     }
 
     func testCSRFToken() {
