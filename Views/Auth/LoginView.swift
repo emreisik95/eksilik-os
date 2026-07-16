@@ -44,6 +44,7 @@ struct LoginWebView: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate {
         let onLoginSuccess: (_ username: String?) -> Void
         private var didFinishLogin = false
+        private var hasAttemptedUsernameRecovery = false
 
         init(onLoginSuccess: @escaping (_ username: String?) -> Void) {
             self.onLoginSuccess = onLoginSuccess
@@ -68,12 +69,33 @@ struct LoginWebView: UIViewRepresentable {
 
         private func syncCookiesAndFinish(webView: WKWebView, username: String?) {
             webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
-                guard LoginFlowPolicy.hasAuthCookie(in: cookies) else { return }
+                let hasAuthCookie = LoginFlowPolicy.hasAuthCookie(in: cookies)
+                guard hasAuthCookie else { return }
 
                 for cookie in cookies {
                     HTTPCookieStorage.shared.setCookie(cookie)
                 }
                 CookiePersistence.save()
+
+                let completion = LoginFlowPolicy.Completion.authenticated(username: username)
+                if LoginFlowPolicy.shouldRecoverUsername(
+                    for: completion,
+                    currentURL: webView.url,
+                    hasAuthCookie: hasAuthCookie,
+                    hasAttemptedRecovery: self.hasAttemptedUsernameRecovery
+                ) {
+                    self.hasAttemptedUsernameRecovery = true
+                    DispatchQueue.main.async {
+                        guard let rootURL = URL(string: EksiRouter.baseURL + "/") else { return }
+                        webView.load(URLRequest(url: rootURL))
+                    }
+                    return
+                }
+
+                guard let username = username?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !username.isEmpty else {
+                    return
+                }
 
                 DispatchQueue.main.async {
                     guard !self.didFinishLogin else { return }

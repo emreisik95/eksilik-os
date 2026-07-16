@@ -73,6 +73,49 @@ struct AuthParser {
         return doc.at_css("input[name^=__RequestVerificationToken]")?["value"]
     }
 
+    static func parseLoginUsername(html: String) -> String? {
+        let state = parseAuthState(html: html)
+        if let username = state.username?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !username.isEmpty {
+            return username
+        }
+
+        guard let doc = HTMLParser.parse(html) else { return nil }
+        let selectors = [
+            "nav a[href^='/biri/']",
+            "header a[href^='/biri/']",
+            "a[href^='/biri/'][title]",
+            "a[href^='/biri/']",
+        ]
+
+        for selector in selectors {
+            guard let link = doc.at_css(selector),
+                  let href = link["href"],
+                  href.hasPrefix("/biri/") else { continue }
+
+            if let title = link["title"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !title.isEmpty {
+                return title
+            }
+
+            let text = link.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let genericLabels = ["hesabım", "profil", "profilim"]
+            if !text.isEmpty && !genericLabels.contains(text.lowercased()) {
+                return text
+            }
+
+            let slug = href
+                .dropFirst("/biri/".count)
+                .split(separator: "?", maxSplits: 1)
+                .first
+                .map(String.init) ?? ""
+            if !slug.isEmpty {
+                return slug.removingPercentEncoding ?? slug
+            }
+        }
+        return nil
+    }
+
     static func parseEntryFormFields(html: String) -> (token: String, title: String, id: String, returnURL: String)? {
         guard let doc = HTMLParser.parse(html) else { return nil }
 
@@ -97,8 +140,13 @@ enum LoginFlowPolicy {
 
     static func completion(for url: URL?, html: String) -> Completion? {
         let state = AuthParser.parseAuthState(html: html)
+        let loginUsername = AuthParser.parseLoginUsername(html: html)
         if state.isLoggedIn {
-            return .authenticated(username: state.username)
+            return .authenticated(username: loginUsername ?? state.username)
+        }
+
+        if let loginUsername {
+            return .authenticated(username: loginUsername)
         }
 
         if html.localizedCaseInsensitiveContains("giriş yapmış görünüyorsunuz") {
@@ -110,6 +158,28 @@ enum LoginFlowPolicy {
         }
 
         return nil
+    }
+
+    static func shouldRecoverUsername(
+        for completion: Completion,
+        currentURL: URL?,
+        hasAuthCookie: Bool,
+        hasAttemptedRecovery: Bool
+    ) -> Bool {
+        guard hasAuthCookie,
+              !hasAttemptedRecovery,
+              let currentURL,
+              !isSuccessfulReturnURL(currentURL) else {
+            return false
+        }
+
+        switch completion {
+        case .authenticated(let username):
+            guard let username else { return true }
+            return username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case .successfulReturn:
+            return true
+        }
     }
 
     static func isSuccessfulReturnURL(_ url: URL) -> Bool {

@@ -76,6 +76,44 @@ final class AuthParserTests: XCTestCase {
         XCTAssertEqual(completion, .authenticated(username: "testuser"))
     }
 
+    func testExistingSessionUsesProfileLinkOutsideLegacyBuddyMarkup() {
+        let html = """
+        <nav class="account-menu">
+          <a class="profile" href="/biri/sherlockun-besinci-sezonu" title="sherlockun besinci sezonu">hesabım</a>
+        </nav>
+        """
+
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: html
+        )
+
+        XCTAssertEqual(completion, .authenticated(username: "sherlockun besinci sezonu"))
+    }
+
+    func testMissingUsernameRecoversOnceFromTheRootPage() {
+        let completion = LoginFlowPolicy.Completion.authenticated(username: nil)
+
+        XCTAssertTrue(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/giris")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: false
+        ))
+        XCTAssertFalse(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: false
+        ))
+        XCTAssertFalse(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/giris")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: true
+        ))
+    }
+
     func testLoginFormWithoutSessionDoesNotComplete() {
         let completion = LoginFlowPolicy.completion(
             for: URL(string: "https://eksisozluk.com/giris")!,

@@ -53,6 +53,22 @@ private struct Harness {
             ) == .authenticated(username: "testuser"),
             "an authenticated login page should complete without a root redirect"
         )
+        expect(
+            LoginFlowPolicy.completion(
+                for: URL(string: "https://eksisozluk.com/giris")!,
+                html: #"<nav><a class="profile" href="/biri/sherlockun-besinci-sezonu" title="sherlockun besinci sezonu">hesabım</a></nav>"#
+            ) == .authenticated(username: "sherlockun besinci sezonu"),
+            "an existing session should resolve its username without legacy buddy markup"
+        )
+        expect(
+            LoginFlowPolicy.shouldRecoverUsername(
+                for: .authenticated(username: nil),
+                currentURL: URL(string: "https://eksisozluk.com/giris")!,
+                hasAuthCookie: true,
+                hasAttemptedRecovery: false
+            ),
+            "a cookie-backed login without a username should recover once from the root page"
+        )
 
         let indeterminateAuth = AuthParser.parseAuthState(html: "<main>entry content</main>")
         expect(indeterminateAuth.isIndeterminate, "pages without auth navigation should not force logout")
