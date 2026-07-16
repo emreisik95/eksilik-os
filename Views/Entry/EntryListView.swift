@@ -113,15 +113,16 @@ struct EntryListView: View {
                     .frame(maxWidth: UIScreen.main.bounds.width - 160)
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack(spacing: 16) {
-                    Button {
-                        showDownloadOptions = true
-                    } label: {
-                        Image(systemName: "arrow.down.circle")
-                    }
-                    .accessibilityLabel("başlığı çevrimdışı indir")
-
-                    if session.isLoggedIn {
+                Button {
+                    showDownloadOptions = true
+                } label: {
+                    Image(systemName: "arrow.down.circle")
+                }
+                .accessibilityLabel("başlığı çevrimdışı indir")
+            }
+            if session.isLoggedIn {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 16) {
                         Button {
                             Task { await viewModel.toggleTracking() }
                         } label: {
