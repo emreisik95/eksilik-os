@@ -1,39 +1,50 @@
 import Foundation
 
+enum EntryLayoutFamily: String, CaseIterable, Hashable, Sendable {
+    case classic
+    case xFeed
+    case instagram
+    case linkedIn
+    case reddit
+    case reader
+    case terminal
+    case minimal
+}
+
 enum EntryLayoutStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     case classic
-    case compact
-    case comfortable
-    case card
-    case authorFirst
-    case metadataFirst
-    case focus
+    case xFeed
+    case instagram
+    case linkedIn
+    case reddit
+    case reader
+    case terminal
     case minimal
 
     var id: String { rawValue }
 
     var name: String {
         switch self {
-        case .classic: return "klasik"
-        case .compact: return "kompakt"
-        case .comfortable: return "ferah"
-        case .card: return "kart"
-        case .authorFirst: return "yazar üstte"
-        case .metadataFirst: return "bilgi üstte"
-        case .focus: return "odak"
+        case .classic: return "klasik ekşi"
+        case .xFeed: return "X"
+        case .instagram: return "Instagram"
+        case .linkedIn: return "LinkedIn"
+        case .reddit: return "Reddit"
+        case .reader: return "okuma"
+        case .terminal: return "terminal"
         case .minimal: return "minimal"
         }
     }
 
     var summary: String {
         switch self {
-        case .classic: return "tanıdık ve dengeli"
-        case .compact: return "ekranda daha fazla entry"
-        case .comfortable: return "daha geniş okuma aralıkları"
-        case .card: return "entry'leri ayrı kartlarda gösterir"
-        case .authorFirst: return "yazarı içerikten önce gösterir"
-        case .metadataFirst: return "tarih ve numarayı üste taşır"
-        case .focus: return "içeriği ve aksiyonları öne çıkarır"
+        case .classic: return "tanıdık ekşi sözlük akışı"
+        case .xFeed: return "avatar solda, hızlı sosyal akış"
+        case .instagram: return "yazar ve medya odaklı gönderi"
+        case .linkedIn: return "kimlik başlıklı profesyonel kart"
+        case .reddit: return "oy sütunlu forum düzeni"
+        case .reader: return "ferah ve sakin uzun okuma"
+        case .terminal: return "monospace bilgi ve kompakt komutlar"
         case .minimal: return "avatar ve kalın ayraçları kaldırır"
         }
     }
@@ -41,13 +52,26 @@ enum EntryLayoutStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     var systemImage: String {
         switch self {
         case .classic: return "rectangle.split.3x1"
-        case .compact: return "list.bullet"
-        case .comfortable: return "text.alignleft"
-        case .card: return "rectangle.stack"
-        case .authorFirst: return "person.crop.circle"
-        case .metadataFirst: return "number.square"
-        case .focus: return "scope"
+        case .xFeed: return "bubble.left"
+        case .instagram: return "camera"
+        case .linkedIn: return "person.text.rectangle"
+        case .reddit: return "arrow.up.circle"
+        case .reader: return "book.closed"
+        case .terminal: return "chevron.left.forwardslash.chevron.right"
         case .minimal: return "minus"
+        }
+    }
+
+    var family: EntryLayoutFamily {
+        switch self {
+        case .classic: return .classic
+        case .xFeed: return .xFeed
+        case .instagram: return .instagram
+        case .linkedIn: return .linkedIn
+        case .reddit: return .reddit
+        case .reader: return .reader
+        case .terminal: return .terminal
+        case .minimal: return .minimal
         }
     }
 
@@ -65,31 +89,31 @@ enum EntryLayoutStyle: String, CaseIterable, Codable, Identifiable, Sendable {
                 separatorHeight: 6,
                 cornerRadius: 0
             )
-        case .compact:
+        case .xFeed:
             return EntryLayoutPresentation(
-                horizontalPadding: 12,
-                verticalPadding: 10,
-                contentSpacing: 8,
-                metadataPlacement: .inlineFooter,
+                horizontalPadding: 14,
+                verticalPadding: 12,
+                contentSpacing: 10,
+                metadataPlacement: .authorHeader,
                 container: .fullWidth,
                 actionStyle: .compact,
-                showsAvatar: false,
+                showsAvatar: true,
                 separatorHeight: 2,
                 cornerRadius: 0
             )
-        case .comfortable:
+        case .instagram:
             return EntryLayoutPresentation(
-                horizontalPadding: 20,
-                verticalPadding: 22,
-                contentSpacing: 18,
-                metadataPlacement: .footer,
+                horizontalPadding: 14,
+                verticalPadding: 14,
+                contentSpacing: 12,
+                metadataPlacement: .authorHeader,
                 container: .fullWidth,
                 actionStyle: .standard,
                 showsAvatar: true,
-                separatorHeight: 8,
+                separatorHeight: 6,
                 cornerRadius: 0
             )
-        case .card:
+        case .linkedIn:
             return EntryLayoutPresentation(
                 horizontalPadding: 16,
                 verticalPadding: 16,
@@ -101,40 +125,40 @@ enum EntryLayoutStyle: String, CaseIterable, Codable, Identifiable, Sendable {
                 separatorHeight: 0,
                 cornerRadius: 16
             )
-        case .authorFirst:
+        case .reddit:
             return EntryLayoutPresentation(
-                horizontalPadding: 16,
+                horizontalPadding: 12,
                 verticalPadding: 14,
-                contentSpacing: 12,
-                metadataPlacement: .authorHeader,
-                container: .fullWidth,
-                actionStyle: .standard,
-                showsAvatar: true,
-                separatorHeight: 6,
-                cornerRadius: 0
-            )
-        case .metadataFirst:
-            return EntryLayoutPresentation(
-                horizontalPadding: 16,
-                verticalPadding: 14,
-                contentSpacing: 12,
+                contentSpacing: 10,
                 metadataPlacement: .metadataHeader,
                 container: .fullWidth,
-                actionStyle: .standard,
-                showsAvatar: true,
-                separatorHeight: 6,
+                actionStyle: .compact,
+                showsAvatar: false,
+                separatorHeight: 4,
                 cornerRadius: 0
             )
-        case .focus:
+        case .reader:
             return EntryLayoutPresentation(
-                horizontalPadding: 18,
-                verticalPadding: 20,
-                contentSpacing: 16,
+                horizontalPadding: 22,
+                verticalPadding: 24,
+                contentSpacing: 20,
                 metadataPlacement: .footer,
                 container: .fullWidth,
                 actionStyle: .quiet,
                 showsAvatar: false,
-                separatorHeight: 3,
+                separatorHeight: 8,
+                cornerRadius: 0
+            )
+        case .terminal:
+            return EntryLayoutPresentation(
+                horizontalPadding: 14,
+                verticalPadding: 12,
+                contentSpacing: 10,
+                metadataPlacement: .metadataHeader,
+                container: .fullWidth,
+                actionStyle: .compact,
+                showsAvatar: false,
+                separatorHeight: 1,
                 cornerRadius: 0
             )
         case .minimal:
@@ -153,10 +177,19 @@ enum EntryLayoutStyle: String, CaseIterable, Codable, Identifiable, Sendable {
     }
 
     static func resolve(storedValue: String?) -> EntryLayoutStyle {
-        guard let storedValue, let style = EntryLayoutStyle(rawValue: storedValue) else {
-            return .classic
+        guard let storedValue else { return .classic }
+        if let style = EntryLayoutStyle(rawValue: storedValue) {
+            return style
         }
-        return style
+
+        switch storedValue {
+        case "compact": return .xFeed
+        case "comfortable", "focus": return .reader
+        case "card": return .linkedIn
+        case "authorFirst": return .instagram
+        case "metadataFirst": return .terminal
+        default: return .classic
+        }
     }
 }
 

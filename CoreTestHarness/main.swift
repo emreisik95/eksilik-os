@@ -209,6 +209,10 @@ private struct Harness {
             "each entry layout should have a stable unique storage value"
         )
         expect(
+            Set(EntryLayoutStyle.allCases.map(\.family)).count == EntryLayoutStyle.allCases.count,
+            "each entry layout should select a genuinely different rendering family"
+        )
+        expect(
             EntryLayoutStyle.resolve(storedValue: nil) == .classic,
             "a missing entry layout preference should use the classic layout"
         )
@@ -217,17 +221,32 @@ private struct Harness {
             "an unknown entry layout preference should safely use the classic layout"
         )
         expect(
-            EntryLayoutStyle.resolve(storedValue: EntryLayoutStyle.authorFirst.rawValue) == .authorFirst,
+            EntryLayoutStyle.resolve(storedValue: EntryLayoutStyle.xFeed.rawValue) == .xFeed,
             "a stored entry layout should round-trip"
         )
         expect(
-            EntryLayoutStyle.compact.presentation.verticalPadding
-                < EntryLayoutStyle.comfortable.presentation.verticalPadding,
-            "compact and comfortable layouts should have meaningfully different density"
+            EntryLayoutStyle.resolve(storedValue: "compact") == .xFeed,
+            "the old compact preference should migrate to the X layout"
         )
         expect(
-            EntryLayoutStyle.card.presentation.container == .card,
-            "the card layout should opt into an inset card container"
+            EntryLayoutStyle.resolve(storedValue: "card") == .linkedIn,
+            "the old card preference should migrate to the LinkedIn layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: "authorFirst") == .instagram,
+            "the old author-first preference should migrate to the Instagram layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: "metadataFirst") == .terminal,
+            "the old metadata-first preference should migrate to the terminal layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: "comfortable") == .reader,
+            "the old comfortable preference should migrate to the reader layout"
+        )
+        expect(
+            EntryLayoutStyle.resolve(storedValue: "focus") == .reader,
+            "the old focus preference should migrate to the reader layout"
         )
         expect(
             !EntryLayoutStyle.minimal.presentation.showsAvatar,

@@ -67,6 +67,8 @@ struct EntryListView: View {
                     }
                 }
                 .listStyle(.plain)
+                .id(preferences.entryLayoutStyle.id)
+                .animation(.easeInOut(duration: 0.2), value: preferences.entryLayoutStyle)
             }
 
             // Loading overlay when switching filters

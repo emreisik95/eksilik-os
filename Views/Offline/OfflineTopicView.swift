@@ -46,7 +46,7 @@ struct OfflineTopicView: View {
                             .listRowInsets(EdgeInsets())
                             .listRowSeparator(.hidden)
                             .listRowBackground(
-                                preferences.entryLayoutStyle.presentation.container == .card
+                                preferences.entryLayoutStyle.family == .linkedIn
                                     ? themeManager.current.backgroundColor
                                     : (index.isMultiple(of: 2)
                                         ? themeManager.current.cellPrimaryColor
@@ -61,6 +61,8 @@ struct OfflineTopicView: View {
                     }
                 }
                 .listStyle(.plain)
+                .id(preferences.entryLayoutStyle.id)
+                .animation(.easeInOut(duration: 0.2), value: preferences.entryLayoutStyle)
             }
         }
         .background(themeManager.current.backgroundColor.ignoresSafeArea())
@@ -121,7 +123,7 @@ struct OfflineTopicView: View {
 
     @ViewBuilder
     private func offlineEntry(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
-        if preferences.entryLayoutStyle.presentation.container == .card {
+        if preferences.entryLayoutStyle.family == .linkedIn {
             offlineEntryContents(rendered, isRead: isRead)
                 .background(themeManager.current.cellPrimaryColor)
                 .clipShape(RoundedRectangle(
@@ -142,59 +144,274 @@ struct OfflineTopicView: View {
         }
     }
 
+    @ViewBuilder
     private func offlineEntryContents(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
-        let presentation = preferences.entryLayoutStyle.presentation
-
-        return VStack(alignment: .leading, spacing: CGFloat(presentation.contentSpacing)) {
-            if presentation.metadataPlacement == .authorHeader {
-                offlineStandardMetadata(rendered, isRead: isRead)
-                offlineMetadataDivider
-            } else if presentation.metadataPlacement == .metadataHeader {
-                offlineDateHeader(rendered)
-                offlineMetadataDivider
-            }
-
-            EntryTextView(attributedText: rendered.attributedContent)
-
-            if !rendered.localImageURLs.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(rendered.localImageURLs.enumerated()), id: \.element) { index, url in
-                            LocalFileImage(url: url, contentMode: .fill)
-                                .frame(width: offlineImageSize.width, height: offlineImageSize.height)
-                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    galleryURLs = rendered.localImageURLs
-                                    galleryIndex = index
-                                    showGallery = true
-                                }
-                        }
-                    }
-                }
-            }
-
-            switch presentation.metadataPlacement {
-            case .footer:
-                offlineStandardMetadata(rendered, isRead: isRead)
-            case .inlineFooter:
-                offlineInlineMetadata(rendered, isRead: isRead)
-            case .authorHeader:
-                offlineDateHeader(rendered)
-            case .metadataHeader:
-                offlineAuthor(rendered, isRead: isRead)
+        Group {
+            switch preferences.entryLayoutStyle.family {
+            case .classic:
+                offlineClassicLayout(rendered, isRead: isRead)
+            case .xFeed:
+                offlineXLayout(rendered, isRead: isRead)
+            case .instagram:
+                offlineInstagramLayout(rendered, isRead: isRead)
+            case .linkedIn:
+                offlineLinkedInLayout(rendered, isRead: isRead)
+            case .reddit:
+                offlineRedditLayout(rendered, isRead: isRead)
+            case .reader:
+                offlineReaderLayout(rendered, isRead: isRead)
+            case .terminal:
+                offlineTerminalLayout(rendered, isRead: isRead)
+            case .minimal:
+                offlineMinimalLayout(rendered, isRead: isRead)
             }
         }
-        .padding(.horizontal, CGFloat(presentation.horizontalPadding))
-        .padding(.vertical, CGFloat(presentation.verticalPadding))
         .opacity(isRead ? 0.58 : 1)
         .animation(.easeOut(duration: 0.2), value: isRead)
     }
 
+    private func offlineClassicLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            offlineBody(rendered)
+            offlineStandardMetadata(rendered, isRead: isRead)
+        }
+        .padding(16)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 6)
+        }
+    }
+
+    private func offlineXLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            offlineAvatar(rendered, size: 42)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 5) {
+                    offlineAuthorName(rendered, isRead: isRead, font: .subheadline.weight(.bold))
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.caption2)
+                        .foregroundColor(themeManager.current.accentColor)
+                    Text("· \(rendered.entry.date)")
+                        .font(.caption)
+                        .foregroundColor(themeManager.current.dateColor)
+                        .lineLimit(1)
+                    Spacer()
+                    Image(systemName: "arrow.down.circle")
+                        .foregroundColor(themeManager.current.dateColor.opacity(0.7))
+                }
+                offlineBody(rendered)
+                offlineSocialLine(rendered)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 2)
+        }
+    }
+
+    private func offlineInstagramLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                offlineAvatar(rendered, size: 36)
+                    .overlay(Circle().stroke(themeManager.current.accentColor, lineWidth: 2))
+                offlineAuthorName(rendered, isRead: isRead, font: .subheadline.weight(.bold))
+                Spacer()
+                Image(systemName: "ellipsis")
+                    .foregroundColor(themeManager.current.dateColor)
+            }
+            offlineBody(rendered)
+            offlineSocialLine(rendered)
+            Text("\(rendered.entry.date) · #\(rendered.entry.id)")
+                .font(.caption2)
+                .foregroundColor(themeManager.current.dateColor)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 6)
+        }
+    }
+
+    private func offlineLinkedInLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 10) {
+                    offlineAvatar(rendered, size: 44)
+                    VStack(alignment: .leading, spacing: 2) {
+                        offlineAuthorName(rendered, isRead: isRead, font: .subheadline.weight(.bold))
+                        Text("sözlük yazarı · \(rendered.entry.date)")
+                        Text("#\(rendered.entry.id)")
+                    }
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.dateColor)
+                    Spacer()
+                    Image(systemName: "ellipsis")
+                        .foregroundColor(themeManager.current.dateColor)
+                }
+                offlineBody(rendered)
+            }
+            .padding(16)
+
+            offlineMetadataDivider
+
+            HStack {
+                Label("\(rendered.entry.favoriteCount)", systemImage: "star")
+                Spacer()
+                Label("indirildi", systemImage: "checkmark.circle.fill")
+                Spacer()
+                Label("okundu", systemImage: isRead ? "eye.fill" : "eye")
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundColor(themeManager.current.dateColor)
+            .frame(minHeight: 48)
+            .padding(.horizontal, 16)
+        }
+    }
+
+    private func offlineRedditLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(spacing: 4) {
+                Image(systemName: "arrow.up")
+                Text("\(rendered.entry.favoriteCount)")
+                    .font(.caption.weight(.bold))
+                Image(systemName: "arrow.down")
+            }
+            .foregroundColor(themeManager.current.accentColor)
+            .frame(width: 44)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("r/ekşisözlük · \(rendered.entry.authorNick) · \(rendered.entry.date)")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.dateColor)
+                    .lineLimit(1)
+                offlineBody(rendered)
+                HStack(spacing: 16) {
+                    Label("entry", systemImage: "text.bubble")
+                    Label("indirildi", systemImage: "arrow.down.circle")
+                    if isRead {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(themeManager.current.accentColor)
+                    }
+                }
+                .font(.caption.weight(.semibold))
+                .foregroundColor(themeManager.current.dateColor)
+                .frame(minHeight: 44)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 14)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 4)
+        }
+    }
+
+    private func offlineReaderLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Text("ENTRY \(rendered.entry.id)")
+                    .font(.caption2.weight(.semibold))
+                    .tracking(1.3)
+                Spacer()
+                Image(systemName: isRead ? "bookmark.fill" : "bookmark")
+            }
+            .foregroundColor(themeManager.current.dateColor)
+            offlineBody(rendered)
+            HStack(spacing: 10) {
+                Rectangle()
+                    .fill(themeManager.current.accentColor)
+                    .frame(width: 28, height: 2)
+                offlineAuthorName(rendered, isRead: isRead, font: .caption.weight(.semibold))
+                Text("· \(rendered.entry.date)")
+                    .font(.caption)
+                    .foregroundColor(themeManager.current.dateColor)
+            }
+        }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 24)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 8)
+        }
+    }
+
+    private func offlineTerminalLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("> \(rendered.entry.authorNick)@eksi \(rendered.entry.date) #\(rendered.entry.id)")
+                .font(.system(.caption, design: .monospaced).weight(.semibold))
+                .foregroundColor(themeManager.current.accentColor)
+                .lineLimit(1)
+            offlineBody(rendered)
+            Text("[★ \(rendered.entry.favoriteCount)]  [downloaded]  \(isRead ? "[read]" : "[unread]")")
+                .font(.system(.caption, design: .monospaced).weight(.semibold))
+                .foregroundColor(themeManager.current.dateColor)
+                .frame(minHeight: 44)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(themeManager.current.accentColor)
+                .frame(width: 3)
+        }
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 1)
+        }
+    }
+
+    private func offlineMinimalLayout(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 15) {
+            offlineBody(rendered)
+            HStack(spacing: 6) {
+                offlineAuthorName(rendered, isRead: isRead, font: .caption.weight(.semibold))
+                Text("· \(rendered.entry.date)")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.dateColor)
+                    .lineLimit(1)
+                Spacer()
+                Label("\(rendered.entry.favoriteCount)", systemImage: "star")
+                    .font(.caption)
+                    .foregroundColor(themeManager.current.dateColor)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 18)
+        .overlay(alignment: .bottom) {
+            offlineSeparator(height: 1)
+        }
+    }
+
+    private func offlineBody(_ rendered: OfflineRenderedEntry) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            EntryTextView(attributedText: rendered.attributedContent)
+            offlineImages(rendered)
+        }
+    }
+
+    @ViewBuilder
+    private func offlineImages(_ rendered: OfflineRenderedEntry) -> some View {
+        if !rendered.localImageURLs.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(rendered.localImageURLs.enumerated()), id: \.element) { index, url in
+                        LocalFileImage(url: url, contentMode: .fill)
+                            .frame(width: offlineImageSize.width, height: offlineImageSize.height)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                galleryURLs = rendered.localImageURLs
+                                galleryIndex = index
+                                showGallery = true
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     private var offlineImageSize: CGSize {
-        switch preferences.entryLayoutStyle {
-        case .compact, .minimal: return CGSize(width: 132, height: 96)
-        case .comfortable, .focus: return CGSize(width: 184, height: 132)
+        switch preferences.entryLayoutStyle.family {
+        case .xFeed, .minimal, .terminal: return CGSize(width: 140, height: 100)
+        case .instagram, .reader: return CGSize(width: 196, height: 146)
+        case .linkedIn: return CGSize(width: 184, height: 132)
         default: return CGSize(width: 160, height: 120)
         }
     }
@@ -236,18 +453,46 @@ struct OfflineTopicView: View {
     }
 
     private func offlineAuthor(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
-        HStack(spacing: preferences.entryLayoutStyle.presentation.showsAvatar ? 8 : 0) {
-            if preferences.entryLayoutStyle.presentation.showsAvatar,
-               let avatar = rendered.localAvatarURL {
-                LocalFileImage(url: avatar, contentMode: .fill)
-                    .frame(width: offlineAvatarSize, height: offlineAvatarSize)
-                    .clipShape(Circle())
-            }
+        HStack(spacing: 8) {
+            offlineAvatar(rendered, size: offlineAvatarSize)
+            offlineAuthorName(rendered, isRead: isRead, font: .subheadline.weight(.medium))
+        }
+    }
+
+    private var offlineAvatarSize: CGFloat {
+        preferences.entryLayoutStyle.family == .instagram || preferences.entryLayoutStyle.family == .linkedIn
+            ? 28
+            : 24
+    }
+
+    @ViewBuilder
+    private func offlineAvatar(_ rendered: OfflineRenderedEntry, size: CGFloat) -> some View {
+        if let avatar = rendered.localAvatarURL {
+            LocalFileImage(url: avatar, contentMode: .fill)
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+        } else {
+            Circle()
+                .fill(themeManager.current.accentColor.opacity(0.14))
+                .frame(width: size, height: size)
+                .overlay {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: size * 0.42))
+                        .foregroundColor(themeManager.current.accentColor)
+                }
+        }
+    }
+
+    private func offlineAuthorName(
+        _ rendered: OfflineRenderedEntry,
+        isRead: Bool,
+        font: Font
+    ) -> some View {
+        HStack(spacing: 5) {
             Text(rendered.entry.authorNick)
-                .font(preferences.entryLayoutStyle == .authorFirst
-                    ? .body.weight(.semibold)
-                    : .subheadline.weight(.medium))
+                .font(font)
                 .foregroundColor(themeManager.current.accentColor)
+                .lineLimit(1)
             if isRead {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
@@ -257,10 +502,24 @@ struct OfflineTopicView: View {
         }
     }
 
-    private var offlineAvatarSize: CGFloat {
-        preferences.entryLayoutStyle == .comfortable || preferences.entryLayoutStyle == .authorFirst
-            ? 28
-            : 24
+    private func offlineSocialLine(_ rendered: OfflineRenderedEntry) -> some View {
+        HStack(spacing: 22) {
+            Label("\(rendered.entry.favoriteCount)", systemImage: "star")
+            Image(systemName: "chevron.up")
+            Image(systemName: "chevron.down")
+            Spacer()
+            Image(systemName: "arrow.down.circle")
+            Image(systemName: "ellipsis")
+        }
+        .font(.caption)
+        .foregroundColor(themeManager.current.dateColor.opacity(0.75))
+        .frame(minHeight: 44)
+    }
+
+    private func offlineSeparator(height: CGFloat) -> some View {
+        Rectangle()
+            .fill(themeManager.current.separatorColor.opacity(0.25))
+            .frame(height: height)
     }
 
     private var offlineMetadataDivider: some View {
