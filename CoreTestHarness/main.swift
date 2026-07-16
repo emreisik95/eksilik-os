@@ -169,6 +169,26 @@ private struct Harness {
             firstPass.allSatisfy { (0.45...0.90).contains($0) },
             "topic skeleton widths should remain within the intended layout"
         )
+        let tallScreenRows = SkeletonLayout.rowCount(
+            viewportHeight: 874,
+            reservedHeight: 184,
+            estimatedRowHeight: 92,
+            minimumRows: 5
+        )
+        expect(tallScreenRows >= 9, "skeletons should add enough rows to cover a tall phone")
+        expect(
+            Double(tallScreenRows) * 92 >= 874 - 184,
+            "calculated skeleton rows should cover the remaining viewport"
+        )
+        expect(
+            SkeletonLayout.rowCount(
+                viewportHeight: 320,
+                reservedHeight: 200,
+                estimatedRowHeight: 100,
+                minimumRows: 5
+            ) == 5,
+            "short viewports should keep the intended minimum placeholder count"
+        )
 
         let existing = [
             Topic(id: "1", title: "bir", slug: "bir", entryCount: "1", link: "/bir"),
@@ -180,6 +200,75 @@ private struct Harness {
         ]
         let merged = TopicPageMerger.merge(existing: existing, incoming: incoming)
         expect(merged.map(\.id) == ["1", "2", "3"], "page append should keep order and remove duplicate topics")
+    }
+
+    mutating func runSearchPresentationChecks() {
+        expect(
+            SearchPresentation.state(
+                query: "",
+                isSearching: false,
+                titleCount: 0,
+                nickCount: 0,
+                error: nil
+            ) == .discovery,
+            "an empty search should show channel discovery"
+        )
+        expect(
+            SearchPresentation.state(
+                query: "a",
+                isSearching: false,
+                titleCount: 0,
+                nickCount: 0,
+                error: nil
+            ) == .needsMoreCharacters,
+            "a one-character search should explain the minimum query length"
+        )
+        expect(
+            SearchPresentation.state(
+                query: "arama",
+                isSearching: true,
+                titleCount: 0,
+                nickCount: 0,
+                error: nil
+            ) == .loading,
+            "an active request should show the full search skeleton"
+        )
+        expect(
+            SearchPresentation.state(
+                query: "arama",
+                isSearching: false,
+                titleCount: 1,
+                nickCount: 1,
+                error: nil
+            ) == .results,
+            "autocomplete matches should show results"
+        )
+        expect(
+            SearchPresentation.state(
+                query: "arama",
+                isSearching: false,
+                titleCount: 0,
+                nickCount: 0,
+                error: nil
+            ) == .empty,
+            "a completed request without matches should show an empty state"
+        )
+        expect(
+            SearchPresentation.state(
+                query: "arama",
+                isSearching: false,
+                titleCount: 0,
+                nickCount: 0,
+                error: "bağlantı yok"
+            ) == .failure,
+            "a failed request should expose a retry state"
+        )
+        expect(SearchPresentation.resolve(query: " #123 ") == .entry(id: "123"), "entry queries should route by ID")
+        expect(
+            SearchPresentation.resolve(query: "@sherlockun besinci sezonu") == .profile(username: "sherlockun besinci sezonu"),
+            "author queries should preserve the displayed nickname"
+        )
+        expect(SearchPresentation.resolve(query: "#abc") == nil, "malformed entry queries should not route as topics")
     }
 
     mutating func runImageURLChecks() {
@@ -325,6 +414,7 @@ private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
+harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()

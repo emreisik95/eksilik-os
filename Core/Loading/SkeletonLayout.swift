@@ -17,6 +17,18 @@ enum SkeletonLayout {
         profileFractions[positiveIndex(row, count: profileFractions.count)]
     }
 
+    static func rowCount(
+        viewportHeight: Double,
+        reservedHeight: Double = 0,
+        estimatedRowHeight: Double,
+        minimumRows: Int
+    ) -> Int {
+        guard estimatedRowHeight > 0 else { return max(0, minimumRows) }
+        let availableHeight = max(0, viewportHeight - reservedHeight)
+        let rowsToCoverViewport = Int(ceil(availableHeight / estimatedRowHeight)) + 1
+        return max(max(0, minimumRows), rowsToCoverViewport)
+    }
+
     private static func positiveIndex(_ value: Int, count: Int) -> Int {
         let remainder = value % count
         return remainder >= 0 ? remainder : remainder + count

@@ -44,22 +44,34 @@ struct TopicListSkeletonView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
     var body: some View {
-        List {
-            ForEach(0..<12, id: \.self) { index in
-                HStack(spacing: 12) {
-                    FractionalSkeletonBar(fraction: SkeletonLayout.topicTitleFraction(row: index))
-                    StableSkeletonBlock(cornerRadius: 10)
-                        .frame(width: 36, height: 22)
+        GeometryReader { proxy in
+            let rowCount = SkeletonLayout.rowCount(
+                viewportHeight: proxy.size.height,
+                estimatedRowHeight: 48,
+                minimumRows: 12
+            )
+
+            List {
+                ForEach(0..<rowCount, id: \.self) { index in
+                    HStack(spacing: 12) {
+                        FractionalSkeletonBar(fraction: SkeletonLayout.topicTitleFraction(row: index))
+                        StableSkeletonBlock(cornerRadius: 10)
+                            .frame(width: 36, height: 22)
+                    }
+                    .padding(.vertical, 2)
+                    .listRowBackground(
+                        index.isMultiple(of: 2)
+                        ? themeManager.current.cellPrimaryColor
+                        : themeManager.current.cellSecondaryColor
+                    )
                 }
-                .padding(.vertical, 2)
-                .listRowBackground(
-                    index.isMultiple(of: 2)
-                    ? themeManager.current.cellPrimaryColor
-                    : themeManager.current.cellSecondaryColor
-                )
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(themeManager.current.backgroundColor)
         }
-        .listStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
         .stableSkeletonPulse()
     }
@@ -69,26 +81,38 @@ struct EntryListSkeletonView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
     var body: some View {
-        List {
-            ForEach(0..<5, id: \.self) { index in
-                VStack(alignment: .leading, spacing: 10) {
-                    FractionalSkeletonBar(fraction: 0.96, height: 12)
-                    FractionalSkeletonBar(fraction: SkeletonLayout.entryLineFraction(row: index), height: 12)
-                    HStack(spacing: 8) {
-                        StableSkeletonBlock(cornerRadius: 10)
-                            .frame(width: 20, height: 20)
-                        StableSkeletonBlock()
-                            .frame(width: 80, height: 10)
-                        Spacer()
-                        StableSkeletonBlock()
-                            .frame(width: 100, height: 10)
+        GeometryReader { proxy in
+            let rowCount = SkeletonLayout.rowCount(
+                viewportHeight: proxy.size.height,
+                estimatedRowHeight: 92,
+                minimumRows: 5
+            )
+
+            List {
+                ForEach(0..<rowCount, id: \.self) { index in
+                    VStack(alignment: .leading, spacing: 10) {
+                        FractionalSkeletonBar(fraction: 0.96, height: 12)
+                        FractionalSkeletonBar(fraction: SkeletonLayout.entryLineFraction(row: index), height: 12)
+                        HStack(spacing: 8) {
+                            StableSkeletonBlock(cornerRadius: 10)
+                                .frame(width: 20, height: 20)
+                            StableSkeletonBlock()
+                                .frame(width: 80, height: 10)
+                            Spacer()
+                            StableSkeletonBlock()
+                                .frame(width: 100, height: 10)
+                        }
                     }
+                    .padding(.vertical, 6)
+                    .listRowBackground(themeManager.current.cellPrimaryColor)
                 }
-                .padding(.vertical, 6)
-                .listRowBackground(themeManager.current.cellPrimaryColor)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(themeManager.current.backgroundColor)
         }
-        .listStyle(.plain)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
         .stableSkeletonPulse()
     }
@@ -98,50 +122,107 @@ struct ProfileSkeletonView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        StableSkeletonBlock().frame(width: 150, height: 24)
-                        StableSkeletonBlock().frame(width: 210, height: 14)
-                        StableSkeletonBlock().frame(width: 120, height: 12)
+        GeometryReader { proxy in
+            let rowCount = SkeletonLayout.rowCount(
+                viewportHeight: proxy.size.height,
+                reservedHeight: 176,
+                estimatedRowHeight: 102,
+                minimumRows: 5
+            )
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            StableSkeletonBlock().frame(width: 150, height: 24)
+                            StableSkeletonBlock().frame(width: 210, height: 14)
+                            StableSkeletonBlock().frame(width: 120, height: 12)
+                        }
+                        Spacer()
+                        StableSkeletonBlock(cornerRadius: 35).frame(width: 70, height: 70)
                     }
-                    Spacer()
-                    StableSkeletonBlock(cornerRadius: 35).frame(width: 70, height: 70)
+                    .padding(16)
+
+                    Divider().overlay(themeManager.current.separatorColor)
+
+                    HStack(spacing: 22) {
+                        ForEach(0..<4, id: \.self) { index in
+                            StableSkeletonBlock()
+                                .frame(width: index == 3 ? 72 : 58, height: 14)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(height: 44)
+
+                    Divider().overlay(themeManager.current.separatorColor)
+
+                    VStack(spacing: 0) {
+                        ForEach(0..<rowCount, id: \.self) { index in
+                            VStack(alignment: .leading, spacing: 9) {
+                                FractionalSkeletonBar(fraction: 0.54, height: 13)
+                                FractionalSkeletonBar(fraction: SkeletonLayout.profileLineFraction(row: index), height: 12)
+                                FractionalSkeletonBar(fraction: 0.68, height: 12)
+                                HStack {
+                                    StableSkeletonBlock().frame(width: 70, height: 10)
+                                    Spacer()
+                                    StableSkeletonBlock().frame(width: 90, height: 10)
+                                }
+                            }
+                            .padding(16)
+                            Divider().overlay(themeManager.current.separatorColor)
+                        }
+                    }
                 }
-                .padding(16)
+                .frame(minHeight: proxy.size.height, alignment: .top)
+            }
+            .background(themeManager.current.backgroundColor)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(themeManager.current.backgroundColor)
+        .accessibilityHidden(true)
+        .stableSkeletonPulse()
+    }
+}
 
-                Divider().overlay(themeManager.current.separatorColor)
+struct SearchResultsSkeletonView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
 
-                HStack(spacing: 22) {
-                    ForEach(0..<4, id: \.self) { index in
-                        StableSkeletonBlock()
-                            .frame(width: index == 3 ? 72 : 58, height: 14)
+    var body: some View {
+        GeometryReader { proxy in
+            let rowCount = SkeletonLayout.rowCount(
+                viewportHeight: proxy.size.height,
+                estimatedRowHeight: 72,
+                minimumRows: 8
+            )
+
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(0..<rowCount, id: \.self) { index in
+                        HStack(spacing: 12) {
+                            StableSkeletonBlock(cornerRadius: 12)
+                                .frame(width: 42, height: 42)
+                            VStack(alignment: .leading, spacing: 7) {
+                                FractionalSkeletonBar(
+                                    fraction: SkeletonLayout.topicTitleFraction(row: index),
+                                    height: 14
+                                )
+                                FractionalSkeletonBar(fraction: 0.42, height: 10)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(12)
+                        .background(themeManager.current.cellPrimaryColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
                 .padding(.horizontal, 16)
-                .frame(height: 44)
-
-                Divider().overlay(themeManager.current.separatorColor)
-
-                VStack(spacing: 0) {
-                    ForEach(0..<5, id: \.self) { index in
-                        VStack(alignment: .leading, spacing: 9) {
-                            FractionalSkeletonBar(fraction: 0.54, height: 13)
-                            FractionalSkeletonBar(fraction: SkeletonLayout.profileLineFraction(row: index), height: 12)
-                            FractionalSkeletonBar(fraction: 0.68, height: 12)
-                            HStack {
-                                StableSkeletonBlock().frame(width: 70, height: 10)
-                                Spacer()
-                                StableSkeletonBlock().frame(width: 90, height: 10)
-                            }
-                        }
-                        .padding(16)
-                        Divider().overlay(themeManager.current.separatorColor)
-                    }
-                }
+                .padding(.vertical, 12)
+                .frame(minHeight: proxy.size.height, alignment: .top)
             }
+            .background(themeManager.current.backgroundColor)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
         .stableSkeletonPulse()
     }

@@ -10,6 +10,30 @@ final class SkeletonLayoutTests: XCTestCase {
         XCTAssertTrue(firstPass.allSatisfy { (0.45...0.90).contains($0) })
     }
 
+    func testRowCountCoversTallViewportWithOverscan() {
+        let count = SkeletonLayout.rowCount(
+            viewportHeight: 874,
+            reservedHeight: 184,
+            estimatedRowHeight: 92,
+            minimumRows: 5
+        )
+
+        XCTAssertGreaterThanOrEqual(count, 9)
+        XCTAssertGreaterThanOrEqual(Double(count) * 92, 874 - 184)
+    }
+
+    func testRowCountKeepsMinimumForShortViewport() {
+        XCTAssertEqual(
+            SkeletonLayout.rowCount(
+                viewportHeight: 320,
+                reservedHeight: 200,
+                estimatedRowHeight: 100,
+                minimumRows: 5
+            ),
+            5
+        )
+    }
+
     func testPageMergePreservesOrderAndRemovesDuplicates() {
         let existing = [
             Topic(id: "1", title: "bir", slug: "bir", entryCount: "1", link: "/bir"),
