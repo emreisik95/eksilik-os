@@ -11,21 +11,38 @@ struct OfflineTopicView: View {
     @State private var galleryURLs: [URL] = []
     @State private var galleryIndex = 0
     @State private var showGallery = false
+    @State private var showReadOnboarding = false
+    @AppStorage("hasSeenOfflineReadSwipeOnboarding") private var hasSeenReadOnboarding = false
 
     var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.entries.isEmpty {
+            if viewModel.isLoading && !viewModel.hasDownloadedEntries {
                 EntryListSkeletonView()
-            } else if let error = viewModel.error {
+            } else if let error = viewModel.error, !viewModel.hasDownloadedEntries {
                 ErrorView(message: error) {
                     Task { await load() }
                 }
-            } else if viewModel.entries.isEmpty {
+            } else if !viewModel.hasDownloadedEntries {
                 EmptyStateView(message: L10n.Entry.noEntries)
+            } else if viewModel.visibleEntries.isEmpty {
+                VStack(spacing: 14) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 42))
+                        .foregroundColor(themeManager.current.accentColor)
+                    Text("okunmamış entry kalmadı")
+                        .font(.headline)
+                        .foregroundColor(themeManager.current.labelColor)
+                    Button("okunanları göster") {
+                        Task { await viewModel.toggleHidingReadEntries() }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(themeManager.current.accentColor)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    ForEach(Array(viewModel.entries.enumerated()), id: \.element.id) { index, rendered in
-                        offlineEntry(rendered)
+                    ForEach(Array(viewModel.visibleEntries.enumerated()), id: \.element.id) { index, rendered in
+                        offlineEntry(rendered, isRead: viewModel.isRead(rendered.id))
                             .listRowInsets(EdgeInsets())
                             .listRowSeparator(.hidden)
                             .listRowBackground(
@@ -33,6 +50,12 @@ struct OfflineTopicView: View {
                                     ? themeManager.current.cellPrimaryColor
                                     : themeManager.current.cellSecondaryColor
                             )
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                readToggleButton(rendered)
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                readToggleButton(rendered)
+                            }
                     }
                 }
                 .listStyle(.plain)
@@ -43,12 +66,40 @@ struct OfflineTopicView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Label("çevrimdışı", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
+                Button {
+                    Task { await viewModel.toggleHidingReadEntries() }
+                } label: {
+                    Image(systemName: viewModel.readState.hidesReadEntries ? "eye.slash.fill" : "eye.slash")
+                }
+                .disabled(!viewModel.hasDownloadedEntries)
+                .accessibilityLabel(
+                    viewModel.readState.hidesReadEntries
+                        ? "okunan entry'leri göster"
+                        : "okunan entry'leri gizle"
+                )
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(themeManager.current.accentColor)
+                    .accessibilityLabel("çevrimdışı")
             }
         }
-        .task { await load() }
+        .task {
+            await load()
+            if viewModel.hasDownloadedEntries && !hasSeenReadOnboarding {
+                showReadOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showReadOnboarding, onDismiss: {
+            hasSeenReadOnboarding = true
+        }) {
+            OfflineReadOnboardingView {
+                hasSeenReadOnboarding = true
+                showReadOnboarding = false
+            }
+            .presentationDetents([.height(390)])
+            .presentationDragIndicator(.visible)
+        }
         .fullScreenCover(isPresented: $showGallery) {
             OfflineImageLightboxView(
                 urls: galleryURLs,
@@ -66,7 +117,7 @@ struct OfflineTopicView: View {
         )
     }
 
-    private func offlineEntry(_ rendered: OfflineRenderedEntry) -> some View {
+    private func offlineEntry(_ rendered: OfflineRenderedEntry, isRead: Bool) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             EntryTextView(attributedText: rendered.attributedContent)
 
@@ -97,6 +148,12 @@ struct OfflineTopicView: View {
                 Text(rendered.entry.authorNick)
                     .font(.subheadline.weight(.medium))
                     .foregroundColor(themeManager.current.accentColor)
+                if isRead {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(themeManager.current.accentColor)
+                        .accessibilityLabel("okundu")
+                }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(rendered.entry.date)
@@ -107,6 +164,66 @@ struct OfflineTopicView: View {
             }
         }
         .padding(16)
+        .opacity(isRead ? 0.58 : 1)
+        .animation(.easeOut(duration: 0.2), value: isRead)
+    }
+
+    private func readToggleButton(_ rendered: OfflineRenderedEntry) -> some View {
+        let isRead = viewModel.isRead(rendered.id)
+        return Button {
+            Task { await viewModel.toggleRead(entryID: rendered.id) }
+        } label: {
+            Label(
+                isRead ? "okunmadı" : "okundu",
+                systemImage: isRead ? "arrow.uturn.backward.circle" : "checkmark.circle"
+            )
+        }
+        .tint(isRead ? themeManager.current.accentColor : .green)
+    }
+}
+
+private struct OfflineReadOnboardingView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "arrow.left.and.right.circle.fill")
+                .font(.system(size: 54))
+                .foregroundColor(themeManager.current.accentColor)
+
+            VStack(spacing: 8) {
+                Text("okuduklarını ayır")
+                    .font(.title3.bold())
+                    .foregroundColor(themeManager.current.labelColor)
+                Text("Bir entry'yi sağa veya sola kaydırarak okundu ya da okunmadı olarak işaretleyebilirsin.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "eye.slash")
+                    .foregroundColor(themeManager.current.accentColor)
+                Text("Üstteki göz düğmesi okunan entry'leri gizler.")
+                    .font(.footnote)
+                    .foregroundColor(themeManager.current.labelColor)
+                Spacer()
+            }
+            .padding(12)
+            .background(themeManager.current.cellSecondaryColor, in: RoundedRectangle(cornerRadius: 12))
+
+            Button(action: onDismiss) {
+                Text("anladım")
+                    .font(.body.weight(.semibold))
+                    .foregroundColor(themeManager.current.backgroundColor)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(themeManager.current.accentColor, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding(24)
+        .background(themeManager.current.backgroundColor.ignoresSafeArea())
     }
 }
 

@@ -35,6 +35,47 @@ final class OfflineTopicStoreTests: XCTestCase {
         XCTAssertEqual(OfflineEntry.orderedUnique([first, replacement]).map(\.contentHTML), ["first"])
     }
 
+    func testReadEntryStatePersistsAndCanBeCleared() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = OfflineTopicStore(rootURL: root)
+        let topic = OfflineTopic(
+            title: "offline test",
+            request: TopicRequest(link: "/offline-test--42"),
+            contentMode: .normal,
+            pageLimit: .fivePages,
+            totalPages: 1
+        )
+        try await store.saveTopic(topic)
+
+        _ = try await store.setEntryRead(topicID: topic.id, entryID: "1", isRead: true)
+        let markedState = try await store.loadReadState(topicID: topic.id)
+        XCTAssertTrue(markedState.isRead("1"))
+
+        _ = try await store.setEntryRead(topicID: topic.id, entryID: "1", isRead: false)
+        let clearedState = try await store.loadReadState(topicID: topic.id)
+        XCTAssertFalse(clearedState.isRead("1"))
+    }
+
+    func testHideReadEntriesPreferencePersists() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = OfflineTopicStore(rootURL: root)
+        let topic = OfflineTopic(
+            title: "offline test",
+            request: TopicRequest(link: "/offline-test--42"),
+            contentMode: .normal,
+            pageLimit: .fivePages,
+            totalPages: 1
+        )
+        try await store.saveTopic(topic)
+
+        _ = try await store.setHidesReadEntries(topicID: topic.id, hides: true)
+
+        let reloadedState = try await store.loadReadState(topicID: topic.id)
+        XCTAssertTrue(reloadedState.hidesReadEntries)
+    }
+
     func testCorruptManifestIsQuarantined() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }

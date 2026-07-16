@@ -110,6 +110,28 @@ actor OfflineTopicStore {
         return OfflineEntry.orderedUnique(entries)
     }
 
+    func loadReadState(topicID: String) throws -> OfflineReadState {
+        let url = readStateURL(id: topicID)
+        guard fileManager.fileExists(atPath: url.path) else {
+            return OfflineReadState()
+        }
+        return try read(OfflineReadState.self, from: url)
+    }
+
+    func setEntryRead(topicID: String, entryID: String, isRead: Bool) throws -> OfflineReadState {
+        let updated = try loadReadState(topicID: topicID)
+            .settingRead(isRead, entryID: entryID)
+        try write(updated, to: readStateURL(id: topicID))
+        return updated
+    }
+
+    func setHidesReadEntries(topicID: String, hides: Bool) throws -> OfflineReadState {
+        let updated = try loadReadState(topicID: topicID)
+            .settingHidesReadEntries(hides)
+        try write(updated, to: readStateURL(id: topicID))
+        return updated
+    }
+
     func updateStatus(id: String, status: OfflineDownloadStatus, errorMessage: String? = nil) throws {
         var topic = try loadTopic(id: id)
         topic.status = status
@@ -164,6 +186,10 @@ actor OfflineTopicStore {
 
     private func manifestURL(id: String) -> URL {
         topicDirectory(id: id).appendingPathComponent("manifest.json")
+    }
+
+    private func readStateURL(id: String) -> URL {
+        topicDirectory(id: id).appendingPathComponent("read-state.json")
     }
 
     private func pageURL(topicID: String, pageNumber: Int) -> URL {

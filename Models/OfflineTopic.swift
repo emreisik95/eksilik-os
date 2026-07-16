@@ -149,6 +149,41 @@ struct OfflineEntry: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+struct OfflineReadState: Codable, Equatable, Sendable {
+    var readEntryIDs: Set<String>
+    var hidesReadEntries: Bool
+
+    init(readEntryIDs: Set<String> = [], hidesReadEntries: Bool = false) {
+        self.readEntryIDs = readEntryIDs
+        self.hidesReadEntries = hidesReadEntries
+    }
+
+    func isRead(_ entryID: String) -> Bool {
+        readEntryIDs.contains(entryID)
+    }
+
+    func settingRead(_ isRead: Bool, entryID: String) -> OfflineReadState {
+        var updated = self
+        if isRead {
+            updated.readEntryIDs.insert(entryID)
+        } else {
+            updated.readEntryIDs.remove(entryID)
+        }
+        return updated
+    }
+
+    func settingHidesReadEntries(_ hides: Bool) -> OfflineReadState {
+        var updated = self
+        updated.hidesReadEntries = hides
+        return updated
+    }
+
+    func visibleEntries(from entries: [OfflineEntry]) -> [OfflineEntry] {
+        guard hidesReadEntries else { return entries }
+        return entries.filter { !isRead($0.id) }
+    }
+}
+
 enum OfflineDownloadPlanner {
     static func pages(for limit: OfflinePageLimit, totalPages: Int) -> [Int] {
         let available = max(1, totalPages)

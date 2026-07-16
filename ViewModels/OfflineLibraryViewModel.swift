@@ -69,17 +69,39 @@ struct OfflineRenderedEntry: Identifiable {
 
 @MainActor
 final class OfflineTopicReaderViewModel: ObservableObject {
-    @Published var entries: [OfflineRenderedEntry] = []
-    @Published var isLoading = false
-    @Published var error: String?
+    @Published private(set) var entries: [OfflineRenderedEntry] = []
+    @Published private(set) var readState = OfflineReadState()
+    @Published private(set) var isLoading = false
+    @Published private(set) var error: String?
 
-    private let store = OfflineTopicStore.shared
+    private let store: OfflineTopicStore
+    private var topicID: String?
+
+    init(store: OfflineTopicStore = .shared) {
+        self.store = store
+    }
+
+    var visibleEntries: [OfflineRenderedEntry] {
+        guard readState.hidesReadEntries else { return entries }
+        return entries.filter { !readState.isRead($0.id) }
+    }
+
+    var hasDownloadedEntries: Bool {
+        !entries.isEmpty
+    }
+
+    func isRead(_ entryID: String) -> Bool {
+        readState.isRead(entryID)
+    }
 
     func load(topicID: String, theme: AppTheme, preferences: UserPreferences) async {
         guard entries.isEmpty else { return }
         isLoading = true
+        error = nil
         do {
-            let storedEntries = try await store.loadAllEntries(topicID: topicID)
+            async let storedEntriesTask = store.loadAllEntries(topicID: topicID)
+            async let readStateTask = store.loadReadState(topicID: topicID)
+            let (storedEntries, storedReadState) = try await (storedEntriesTask, readStateTask)
             var rendered: [OfflineRenderedEntry] = []
             for entry in storedEntries {
                 var imageURLs: [URL] = []
@@ -109,9 +131,36 @@ final class OfflineTopicReaderViewModel: ObservableObject {
                 ))
             }
             entries = rendered
+            readState = storedReadState
+            self.topicID = topicID
         } catch {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    func toggleRead(entryID: String) async {
+        guard let topicID else { return }
+        do {
+            readState = try await store.setEntryRead(
+                topicID: topicID,
+                entryID: entryID,
+                isRead: !readState.isRead(entryID)
+            )
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func toggleHidingReadEntries() async {
+        guard let topicID else { return }
+        do {
+            readState = try await store.setHidesReadEntries(
+                topicID: topicID,
+                hides: !readState.hidesReadEntries
+            )
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }

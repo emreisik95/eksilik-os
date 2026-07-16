@@ -226,6 +226,16 @@ private struct Harness {
         expect(OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg") == OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg"), "media filenames should be stable")
         expect(OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg") != OfflineMediaKey.filename(for: "https://cdn.example.com/b.jpg"), "different media URLs should have different filenames")
 
+        let readState = OfflineReadState()
+            .settingRead(true, entryID: "1")
+            .settingHidesReadEntries(true)
+        expect(readState.isRead("1"), "offline read state should mark an entry as read")
+        expect(!readState.isRead("2"), "offline read state should leave other entries unread")
+        expect(
+            readState.visibleEntries(from: [first, second]).map(\.id) == ["2"],
+            "hiding read entries should preserve only unread entries in source order"
+        )
+
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("EksilikHarness-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let store = OfflineTopicStore(rootURL: root)
@@ -240,6 +250,17 @@ private struct Harness {
             let loadedPage = try await store.loadPage(topicID: topic.id, pageNumber: 1)
             expect(loaded.completedPages == [1], "saving a page should persist manifest progress")
             expect(loadedPage.entries.map(\.id) == ["1", "2"], "offline pages should round-trip atomically")
+
+            _ = try await store.setEntryRead(topicID: topic.id, entryID: "1", isRead: true)
+            _ = try await store.setHidesReadEntries(topicID: topic.id, hides: true)
+            let storedReadState = try await store.loadReadState(topicID: topic.id)
+            expect(storedReadState.isRead("1"), "offline read markers should persist separately from pages")
+            expect(storedReadState.hidesReadEntries, "the hide-read preference should persist per topic")
+
+            _ = try await store.setEntryRead(topicID: topic.id, entryID: "1", isRead: false)
+            let clearedReadState = try await store.loadReadState(topicID: topic.id)
+            expect(!clearedReadState.isRead("1"), "an entry should be markable as unread again")
+
             try await store.deleteTopic(id: topic.id)
             let remainingTopics = try await store.listTopics()
             expect(remainingTopics.isEmpty, "deleting an offline topic should remove it")
