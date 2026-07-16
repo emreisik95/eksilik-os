@@ -17,7 +17,6 @@ final class EntryListViewModel: ObservableObject {
     var offlineRequest: TopicRequest { currentRequest.settingPage(nil) }
     var offlineTotalPages: Int { max(1, pagination.totalPages) }
     private var currentRequest: TopicRequest
-    private var topicSlug = ""
     private var topicId = ""
     private var loadGeneration = UUID()
 
@@ -28,9 +27,6 @@ final class EntryListViewModel: ObservableObject {
     /// Apply a filter and reload entries
     func applyFilter(_ filter: EntryFilter) async {
         activeFilter = filter
-        if !topicSlug.isEmpty {
-            currentRequest = currentRequest.replacingPath(topicSlug)
-        }
         currentRequest = currentRequest.applying(filter: filter)
         await loadEntries()
     }
@@ -46,11 +42,10 @@ final class EntryListViewModel: ObservableObject {
             guard loadGeneration == generation else { return }
             title = page.title
             pagination = page.pagination
-            topicSlug = page.slug
             topicId = page.topicId
             isTracked = page.isTracked
             if !page.slug.isEmpty {
-                currentRequest = currentRequest.replacingPath(page.slug)
+                currentRequest = currentRequest.replacingTopic(slug: page.slug, id: page.topicId)
             }
             showAllLinks = page.showAllLinks
             entries = preParseEntries(page.entries)
@@ -78,11 +73,10 @@ final class EntryListViewModel: ObservableObject {
             currentRequest = requestedPage
             title = result.title
             pagination = result.pagination
-            topicSlug = result.slug
             topicId = result.topicId
             isTracked = result.isTracked
             if !result.slug.isEmpty {
-                currentRequest = currentRequest.replacingPath(result.slug)
+                currentRequest = currentRequest.replacingTopic(slug: result.slug, id: result.topicId)
             }
             showAllLinks = result.showAllLinks
             entries = preParseEntries(result.entries)

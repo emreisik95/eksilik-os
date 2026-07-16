@@ -110,6 +110,13 @@ private struct Harness {
             EksiEndpoint.untrackTopic(id: "42").path == "/baslik/takip-etme/42",
             "untracking a topic should target its topic ID"
         )
+        let canonicalPage = TopicRequest(link: "/eski-baslik--42?a=popular")
+            .replacingTopic(slug: "yeni-baslik", id: "42")
+            .settingPage(105)
+        expect(
+            canonicalPage.pathAndQuery == "yeni-baslik--42?a=popular&p=105",
+            "canonical topic replacement should preserve the topic ID, filter, and requested page"
+        )
     }
 
     mutating func runStableLoadingChecks() {

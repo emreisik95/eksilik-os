@@ -46,4 +46,19 @@ final class TopicRequestTests: XCTestCase {
     func testAgendaPageEndpointIncludesRequestedPage() {
         XCTAssertEqual(EksiEndpoint.popularPage(page: 3).path, "/basliklar/gundem?p=3")
     }
+
+    func testCanonicalTopicReplacementPreservesIDFilterAndPage() {
+        let request = TopicRequest(link: "/eski-baslik--42?a=popular")
+            .replacingTopic(slug: "yeni-baslik", id: "42")
+            .settingPage(105)
+
+        XCTAssertEqual(request.pathAndQuery, "yeni-baslik--42?a=popular&p=105")
+    }
+
+    func testCanonicalTopicReplacementDoesNotDuplicateID() {
+        let request = TopicRequest(link: "/eski-baslik--42?day=2026-07-16")
+            .replacingTopic(slug: "yeni-baslik--42", id: "42")
+
+        XCTAssertEqual(request.pathAndQuery, "yeni-baslik--42?day=2026-07-16")
+    }
 }

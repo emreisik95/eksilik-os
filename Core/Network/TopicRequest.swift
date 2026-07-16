@@ -54,4 +54,17 @@ struct TopicRequest: Codable, Hashable, Sendable {
         copy.path = TopicRequest(link: newPath).path
         return copy
     }
+
+    func replacingTopic(slug: String, id: String) -> TopicRequest {
+        let normalizedSlug = TopicRequest(link: slug).path
+        guard !normalizedSlug.isEmpty else { return self }
+        guard !id.isEmpty else { return replacingPath(normalizedSlug) }
+
+        let baseSlug = normalizedSlug.replacingOccurrences(
+            of: #"--\d+$"#,
+            with: "",
+            options: .regularExpression
+        )
+        return replacingPath("\(baseSlug)--\(id)")
+    }
 }
