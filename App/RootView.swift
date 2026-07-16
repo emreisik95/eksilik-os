@@ -75,7 +75,16 @@ struct RootView: View {
         .environmentObject(preferences)
         .environmentObject(deepLinkRouter)
         .preferredColorScheme(themeManager.current.colorScheme)
-        .task { await doBootstrap() }
+        .task { await bootstrapWithOfflineFallback() }
+    }
+
+    private func bootstrapWithOfflineFallback() async {
+        let bootstrapTask = Task { await doBootstrap() }
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+        if !isReady {
+            withAnimation { isReady = true }
+        }
+        await bootstrapTask.value
     }
 
     private func doBootstrap() async {

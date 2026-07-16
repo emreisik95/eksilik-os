@@ -31,8 +31,11 @@ final class WebViewFetcher: NSObject {
             wv.customUserAgent = EksiRouter.defaultHeaders["User-Agent"]
             self.webView = wv
 
-            print("🌐 Bootstrap: loading eksisozluk.com...")
-            wv.load(URLRequest(url: URL(string: "https://eksisozluk.com/")!))
+            guard let url = URL(string: "https://eksisozluk.com/") else {
+                self.finish(success: false)
+                return
+            }
+            wv.load(URLRequest(url: url))
 
             // Timeout
             DispatchQueue.main.asyncAfter(deadline: .now() + 25) { [weak self] in

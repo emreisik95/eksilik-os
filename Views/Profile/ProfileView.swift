@@ -84,7 +84,16 @@ struct ProfileView: View {
                 Divider().overlay(themeManager.current.separatorColor)
 
                 // Entry list
-                if profile.entries.isEmpty {
+                if viewModel.isLoadingEntries && profile.entries.isEmpty {
+                    VStack(spacing: 10) {
+                        ProgressView()
+                        Text("entry'ler yükleniyor")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 40)
+                } else if profile.entries.isEmpty {
                     Text(L10n.Entry.noEntries)
                         .foregroundColor(.gray)
                         .padding(.top, 40)
@@ -95,18 +104,19 @@ struct ProfileView: View {
                             Divider().overlay(themeManager.current.separatorColor)
                         }
 
-                        // Load more
-                        Button {
-                            Task { await viewModel.loadMoreEntries() }
-                        } label: {
-                            if viewModel.isLoadingMore {
-                                ProgressView()
-                                    .padding()
-                            } else {
-                                Text("daha fazla göster")
-                                    .font(.subheadline)
-                                    .foregroundColor(themeManager.current.accentColor)
-                                    .padding()
+                        if viewModel.hasMoreEntries {
+                            Button {
+                                Task { await viewModel.loadMoreEntries() }
+                            } label: {
+                                if viewModel.isLoadingMore {
+                                    ProgressView()
+                                        .padding()
+                                } else {
+                                    Text("daha fazla göster")
+                                        .font(.subheadline)
+                                        .foregroundColor(themeManager.current.accentColor)
+                                        .padding()
+                                }
                             }
                         }
                     }

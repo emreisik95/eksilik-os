@@ -41,7 +41,9 @@ struct ChannelTopicListView: View {
     }
 
     private func load() async {
+        guard topics.isEmpty, !isLoading else { return }
         isLoading = true
+        error = nil
         do {
             let html = try await HTTPClient.shared.fetchHTML(for: .topic(slug: link, page: nil))
             topics = TopicListParser.parse(html: html)

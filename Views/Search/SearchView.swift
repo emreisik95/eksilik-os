@@ -2,11 +2,12 @@ import SwiftUI
 
 struct SearchView: View {
     @StateObject private var viewModel = SearchViewModel()
+    @State private var navigationPath = NavigationPath()
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             List {
                 if !viewModel.titles.isEmpty {
                     Section(L10n.Search.topics) {
@@ -34,7 +35,7 @@ struct SearchView: View {
                 }
 
                 // Skeleton loading when channels loading
-                if viewModel.query.isEmpty && viewModel.channels.isEmpty {
+                if viewModel.query.isEmpty && viewModel.isLoadingChannels {
                     Section {
                         ForEach(0..<8, id: \.self) { index in
                             HStack {
@@ -97,7 +98,7 @@ struct SearchView: View {
             .searchable(text: $viewModel.query, prompt: L10n.Search.prompt)
             .onSubmit(of: .search) {
                 if let route = viewModel.resolveQuery() {
-                    // Navigation handled by route
+                    navigationPath.append(route)
                 }
             }
             .onChange(of: viewModel.query) { _ in viewModel.search() }

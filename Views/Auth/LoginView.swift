@@ -23,7 +23,9 @@ struct LoginWebView: UIViewRepresentable {
         config.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
-        webView.load(URLRequest(url: URL(string: "https://eksisozluk.com/giris")!))
+        if let url = URL(string: "https://eksisozluk.com/giris") {
+            webView.load(URLRequest(url: url))
+        }
         return webView
     }
 

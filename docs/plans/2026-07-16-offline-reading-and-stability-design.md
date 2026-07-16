@@ -53,3 +53,17 @@ A fifth main tab, “çevrimdışı,” lists saved and active downloads with pr
 Tests will be written before production changes for request construction, filter-preserving pagination, page-limit resolution, manifest state transitions, atomic storage round-trips, deduplication, and parser snapshots. Existing parser tests will be extended for image-link normalization and malformed HTML.
 
 The bug audit will also inspect forced unwraps, unbounded pagination, duplicate loads, stale loading flags, invalid URLs, missing view types, and accessibility labels. XcodeGen generation and Swift parse checks will run locally. A full simulator build and XCTest run require a complete Xcode installation; the current machine only has Command Line Tools, so that final verification must be run in Xcode or CI.
+
+## Implementation status
+
+Implemented on `codex/offline-reading-bugfixes`:
+
+- query-aware pagination preserves date, şükela, author, and search filters;
+- deterministic topic, entry, search, and profile skeleton layouts;
+- shared image normalization, caching, prefetching, retry UI, and full-screen gallery;
+- Codable offline manifests/pages, ordered deduplication, atomic writes, media isolation, and corrupt-manifest quarantine;
+- one reconnectable background URL session with launch events, bounded retries, cancellation, and page/media task recovery;
+- download options, offline library progress/actions, and read-only local topic rendering;
+- profile stale-response protection/end-of-list handling, working keyboard search navigation, finite channel loading state, and removal of reachable forced-unwrap crashes.
+
+Local verification passes the portable core harness, Swift syntax parsing for every source file, XcodeGen project generation, and whitespace checks. A complete Xcode installation is still required for simulator compilation and XCTest execution.

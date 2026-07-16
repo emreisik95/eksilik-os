@@ -31,5 +31,15 @@ struct UserProfile {
         var isPinned: Bool
         var imageURLs: [String]
         var parsedContent: NSAttributedString?
+
+        static func orderedUnique(_ entries: [ProfileEntry]) -> [ProfileEntry] {
+            var seen = Set<String>()
+            return entries.filter { entry in
+                let key = entry.id.isEmpty
+                    ? "\(entry.topicLink)|\(entry.date)|\(entry.contentHTML)"
+                    : entry.id
+                return seen.insert(key).inserted
+            }
+        }
     }
 }

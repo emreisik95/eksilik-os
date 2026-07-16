@@ -12,6 +12,9 @@ Reklamsız, açık kaynak ekşi sözlük iOS istemcisi.
 - **5 tema** — gece, gündüz, klasik, x, oled
 - **Gelişmiş filtreleme** — tam eşleşme, içeren, regex ile başlık engelleme
 - **Entry filtreleri** — bugün, şükela (zamanlı), ekşi şeyler, linkler, görseller, çaylaklar, başlıkta arama
+- **Filtre güvenli sayfalama** — bugün/şükela/yazar/arama kapsamı sayfa değiştirirken korunur
+- **Görsel galeri** — önbellekli ön yükleme, tam ekran görüntüleme, kaydırma ve yakınlaştırma
+- **Çevrimdışı okuma** — normal veya şükela içerikten ilk 5, ilk 10 ya da tüm sayfaları arka planda indirme
 - **Kanal listesi** — arama sayfasında kanallar ve takip etme
 - **Entry aksiyonları** — paylaş, mesaj gönder, modlog, yazar engelle
 - **Alternatif ikonlar** — varsayılan, açık, klasik
@@ -58,6 +61,17 @@ App → Views → ViewModels → Services → Core (Network/Parsing/Auth/Theme/N
 - **Kanna** ile HTML parsing (web API yok, HTML scraping)
 - **WKWebView** Cloudflare bypass + cookie yönetimi
 - **NavigationStack** (iOS 16+) ile programatik navigasyon
+- Atomik dosya deposu + arka plan `URLSession` ile devam edebilir çevrimdışı indirmeler
+
+## Doğrulama / Verification
+
+Çekirdek ayrıştırıcı, URL, sayfalama ve çevrimdışı depolama kontrolleri Xcode olmadan da çalıştırılabilir:
+
+```bash
+swift run EksilikCoreHarness
+```
+
+Tam uygulama derlemesi ve simülatör testleri için eksiksiz Xcode kurulumu gerekir.
 
 ## Temalar / Themes
 

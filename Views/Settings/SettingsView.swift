@@ -66,14 +66,22 @@ struct SettingsView: View {
                 } else {
                     Section("hesap") {
                         NavigationLink("tercihler") {
-                            EksiWebView(url: URL(string: "\(preferences.baseURL)/ayarlar/tercihler")!)
-                                .navigationTitle("tercihler")
-                                .navigationBarTitleDisplayMode(.inline)
+                            if let url = URL(string: "\(preferences.baseURL)/ayarlar/tercihler") {
+                                EksiWebView(url: url)
+                                    .navigationTitle("tercihler")
+                                    .navigationBarTitleDisplayMode(.inline)
+                            } else {
+                                ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
+                            }
                         }
                         NavigationLink("takip / engellenmişler") {
-                            EksiWebView(url: URL(string: "\(preferences.baseURL)/takip-engellenmis")!)
-                                .navigationTitle("takip / engellenmişler")
-                                .navigationBarTitleDisplayMode(.inline)
+                            if let url = URL(string: "\(preferences.baseURL)/takip-engellenmis") {
+                                EksiWebView(url: url)
+                                    .navigationTitle("takip / engellenmişler")
+                                    .navigationBarTitleDisplayMode(.inline)
+                            } else {
+                                ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
+                            }
                         }
                     }
                     .listRowBackground(themeManager.current.cellPrimaryColor)

@@ -190,6 +190,33 @@ private struct Harness {
             expect(false, "offline storage round-trip failed: \(error)")
         }
     }
+
+    mutating func runProfilePaginationChecks() {
+        func entry(_ id: String, content: String) -> UserProfile.ProfileEntry {
+            UserProfile.ProfileEntry(
+                id: id,
+                topicTitle: "başlık",
+                topicLink: "baslik--1",
+                contentHTML: content,
+                author: "yazar",
+                authorId: "1",
+                date: "",
+                favoriteCount: 0,
+                isFavorited: false,
+                voteState: .none,
+                isPinned: false,
+                imageURLs: []
+            )
+        }
+
+        let merged = UserProfile.ProfileEntry.orderedUnique([
+            entry("1", content: "ilk"),
+            entry("2", content: "ikinci"),
+            entry("1", content: "tekrar"),
+        ])
+        expect(merged.map(\.id) == ["1", "2"], "profile pagination should not append duplicate entries")
+        expect(merged.first?.contentHTML == "ilk", "profile pagination should keep the first entry value")
+    }
 }
 
 private var harness = Harness()
@@ -198,6 +225,7 @@ harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
 harness.runImageURLChecks()
 await harness.runOfflinePlanningChecks()
+harness.runProfilePaginationChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

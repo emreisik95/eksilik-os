@@ -152,7 +152,8 @@ final class OfflineDownloadManager: NSObject, URLSessionDownloadDelegate, URLSes
             retryCount: retryCount
         )
         let path = topic.request.settingPage(page).pathAndQuery
-        guard let url = URL(string: EksiRouter.baseURL + "/" + path) else {
+        guard let baseURL = URL(string: EksiRouter.baseURL),
+              let url = URL(string: "/" + path, relativeTo: baseURL)?.absoluteURL else {
             Task { await transferFailed(descriptor, message: NetworkError.invalidURL.localizedDescription) }
             return
         }

@@ -8,6 +8,7 @@ final class SearchViewModel: ObservableObject {
     @Published var nicks: [String] = []
     @Published var isSearching = false
     @Published var channels: [Channel] = []
+    @Published var isLoadingChannels = false
 
     private let searchService = SearchService()
     private let client = HTTPClient.shared
@@ -19,29 +20,37 @@ final class SearchViewModel: ObservableObject {
         guard query.count >= 2 else {
             titles = []
             nicks = []
+            isSearching = false
             return
         }
 
+        let requestedQuery = query
         searchTask = Task {
             isSearching = true
             do {
-                let result = try await searchService.search(query: query)
-                if !Task.isCancelled {
+                let result = try await searchService.search(query: requestedQuery)
+                if !Task.isCancelled, query == requestedQuery {
                     titles = result.titles
                     nicks = result.nicks
                 }
             } catch {
-                if !Task.isCancelled {
+                if !Task.isCancelled, query == requestedQuery {
                     titles = []
                     nicks = []
                 }
             }
-            isSearching = false
+            if query == requestedQuery {
+                isSearching = false
+            }
         }
     }
 
     func loadChannels() async {
-        guard channels.isEmpty else { return }
+        guard channels.isEmpty, !isLoadingChannels else { return }
+        isLoadingChannels = true
+        defer {
+            isLoadingChannels = false
+        }
         do {
             let html = try await client.fetchHTML(for: .channels)
             channels = ChannelParser.parse(html: html)
@@ -66,6 +75,7 @@ final class SearchViewModel: ObservableObject {
 
     func resolveQuery() -> Route? {
         let text = query.trimmingCharacters(in: .whitespaces)
+        guard !text.isEmpty else { return nil }
         if text.hasPrefix("#"), let _ = Int(text.dropFirst()) {
             return .entryById(id: String(text.dropFirst()))
         }
