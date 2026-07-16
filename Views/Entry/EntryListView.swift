@@ -103,7 +103,7 @@ struct EntryListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(themeManager.current.backgroundColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
+        .toolbar(content: {
             ToolbarItem(placement: .principal) {
                 Text(viewModel.title.isEmpty ? title : viewModel.title)
                     .font(.subheadline.bold())
@@ -136,7 +136,7 @@ struct EntryListView: View {
                     }
                 }
             }
-        }
+        })
         .alert("başlıkta ara", isPresented: $showSearchAlert) {
             TextField("aranacak kelime...", text: $searchKeywords)
             Button("ara") {
