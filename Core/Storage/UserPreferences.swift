@@ -8,6 +8,7 @@ final class UserPreferences: ObservableObject {
     @AppStorage("visibleHomeTabs") var visibleHomeTabsData: Data = Data()
     @AppStorage("homeTabBarPosition") var homeTabBarPosition: String = "bottom"  // "top" or "bottom"
     @AppStorage("baseURL") var baseURL: String = "https://eksisozluk.com"
+    @AppStorage("useIconFilters") var useIconFilters: Bool = false
 
     var visibleHomeTabs: [String] {
         get {
