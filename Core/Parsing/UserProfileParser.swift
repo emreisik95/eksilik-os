@@ -126,23 +126,32 @@ struct UserProfileParser {
 
     /// Extract image URLs from HTML content (img src and links to image files)
     static func extractImageURLs(from html: String) -> [String] {
-        let imgPattern = try? NSRegularExpression(pattern: #"<img[^>]+src\s*=\s*"([^"]+)"#)
-        let linkPattern = try? NSRegularExpression(pattern: #"<a[^>]+href\s*=\s*"([^"]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^"]*)?)""#, options: .caseInsensitive)
         let range = NSRange(html.startIndex..., in: html)
-        var urls: [String] = []
+        var candidates: [(location: Int, value: String, requiresImageExtension: Bool)] = []
+        let patterns: [(NSRegularExpression?, Bool)] = [
+            (try? NSRegularExpression(pattern: #"<img[^>]+src\s*=\s*["']([^"']+)["']"#, options: .caseInsensitive), false),
+            (try? NSRegularExpression(pattern: #"<a[^>]+href\s*=\s*["']([^"']+)["']"#, options: .caseInsensitive), true),
+        ]
 
-        for pattern in [imgPattern, linkPattern].compactMap({ $0 }) {
+        for (pattern, requiresImageExtension) in patterns {
+            guard let pattern else { continue }
             for match in pattern.matches(in: html, range: range) {
                 if let urlRange = Range(match.range(at: 1), in: html) {
-                    var url = String(html[urlRange])
-                    if url.hasPrefix("//") { url = "https:\(url)" }
-                    if url.hasPrefix("http"), !url.contains("eksisozluk.com/Content"), !url.contains("logo") {
-                        urls.append(url)
-                    }
+                    candidates.append((match.range.location, String(html[urlRange]), requiresImageExtension))
                 }
             }
         }
-        return Array(Set(urls)) // deduplicate
+
+        let ordered = candidates.sorted { $0.location < $1.location }.compactMap { candidate -> String? in
+            guard let url = ImageURLNormalizer.normalize(candidate.value),
+                  !url.absoluteString.contains("eksisozluk.com/Content"),
+                  !url.absoluteString.localizedCaseInsensitiveContains("logo"),
+                  !candidate.requiresImageExtension || ImageURLNormalizer.isImageURL(candidate.value) else {
+                return nil
+            }
+            return url.absoluteString
+        }
+        return ImageURLNormalizer.normalizeStrings(ordered)
     }
 
     private static func emptyProfile() -> UserProfile {

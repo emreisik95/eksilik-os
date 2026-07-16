@@ -48,6 +48,7 @@ final class EntryListViewModel: ObservableObject {
             }
             showAllLinks = page.showAllLinks
             entries = preParseEntries(page.entries)
+            prefetchImages()
         } catch {
             guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
@@ -77,6 +78,7 @@ final class EntryListViewModel: ObservableObject {
             }
             showAllLinks = result.showAllLinks
             entries = preParseEntries(result.entries)
+            prefetchImages()
         } catch {
             guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
@@ -104,6 +106,11 @@ final class EntryListViewModel: ObservableObject {
             )
             return e
         }
+    }
+
+    private func prefetchImages() {
+        let urls = entries.flatMap(\.imageURLs) + entries.compactMap { $0.author.avatarURL }
+        Task { await ImagePipeline.shared.prefetch(urls) }
     }
 
     func toggleFavorite(for entry: Entry) async {

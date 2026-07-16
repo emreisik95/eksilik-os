@@ -121,12 +121,39 @@ private struct Harness {
         let merged = TopicPageMerger.merge(existing: existing, incoming: incoming)
         expect(merged.map(\.id) == ["1", "2", "3"], "page append should keep order and remove duplicate topics")
     }
+
+    mutating func runImageURLChecks() {
+        expect(
+            ImageURLNormalizer.normalize("//cdn.example.com/photo.jpg")?.absoluteString == "https://cdn.example.com/photo.jpg",
+            "protocol-relative image URLs should use HTTPS"
+        )
+        expect(
+            ImageURLNormalizer.normalize("https://cdn.example.com/a.jpg?x=1&amp;y=2")?.absoluteString == "https://cdn.example.com/a.jpg?x=1&y=2",
+            "HTML entities should be decoded in image URLs"
+        )
+        expect(ImageURLNormalizer.isImageURL("https://cdn.example.com/a.webp?size=large"), "query strings should not hide image extensions")
+        expect(ImageURLNormalizer.normalize("javascript:alert(1)") == nil, "non-network image URLs should be rejected")
+
+        let html = """
+        <a href="https://cdn.example.com/first.png">first</a>
+        <img src="//cdn.example.com/second.jpg">
+        <a href="https://cdn.example.com/first.png">duplicate</a>
+        """
+        expect(
+            UserProfileParser.extractImageURLs(from: html) == [
+                "https://cdn.example.com/first.png",
+                "https://cdn.example.com/second.jpg",
+            ],
+            "extracted images should preserve source order while deduplicating"
+        )
+    }
 }
 
 private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
+harness.runImageURLChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

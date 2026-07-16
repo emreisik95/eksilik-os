@@ -48,6 +48,7 @@ final class UserProfileViewModel: ObservableObject {
         do {
             let result = try await userService.fetchProfile(username: username)
             profile = result
+            prefetchImages()
             // Entries are loaded separately via AJAX tab endpoints
             await loadEntries(filter: selectedTab.rawValue)
         } catch {
@@ -72,6 +73,7 @@ final class UserProfileViewModel: ObservableObject {
         do {
             let entries = try await userService.fetchProfileEntries(username: username, filter: filter, page: 1)
             profile?.entries = preParseEntries(entries)
+            prefetchImages()
         } catch {
             self.error = error.localizedDescription
         }
@@ -88,6 +90,7 @@ final class UserProfileViewModel: ObservableObject {
                 currentPage -= 1
             } else {
                 profile?.entries.append(contentsOf: parsed)
+                prefetchImages()
             }
         } catch {
             currentPage -= 1
@@ -153,5 +156,13 @@ final class UserProfileViewModel: ObservableObject {
             )
             return e
         }
+    }
+
+    private func prefetchImages() {
+        guard let profile else { return }
+        let urls = [profile.avatarURL].compactMap { $0 }
+            + profile.badges.map(\.imageURL)
+            + profile.entries.flatMap(\.imageURLs)
+        Task { await ImagePipeline.shared.prefetch(urls) }
     }
 }

@@ -5,6 +5,9 @@ struct ProfileView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @State private var entryToDelete: UserProfile.ProfileEntry?
+    @State private var showLightbox = false
+    @State private var lightboxIndex = 0
+    @State private var lightboxImages: [String] = []
     /// When true, wraps in NavigationStack (tab root). When false, used as push destination.
     var isRoot: Bool = false
 
@@ -43,6 +46,13 @@ struct ProfileView: View {
         .navigationTitle(viewModel.profile?.nick ?? viewModel.username)
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadProfile() }
+        .fullScreenCover(isPresented: $showLightbox) {
+            ImageLightboxView(
+                imageURLs: lightboxImages,
+                selectedIndex: $lightboxIndex,
+                isPresented: $showLightbox
+            )
+        }
         .confirmationDialog("entry'i sil", isPresented: Binding(
             get: { entryToDelete != nil },
             set: { if !$0 { entryToDelete = nil } }
@@ -134,15 +144,12 @@ struct ProfileView: View {
                 Spacer()
 
                 // Avatar on the right
-                if let avatarURL = profile.avatarURL, let url = URL(string: avatarURL) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Circle()
-                            .fill(themeManager.current.cellPrimaryColor)
-                    }
+                if let avatarURL = profile.avatarURL {
+                    CachedRemoteImage(url: avatarURL)
                     .frame(width: 70, height: 70)
                     .clipShape(Circle())
+                    .contentShape(Circle())
+                    .onTapGesture { openLightbox(images: [avatarURL], index: 0) }
                 }
             }
 
@@ -150,13 +157,13 @@ struct ProfileView: View {
             if !profile.badges.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
-                        ForEach(profile.badges, id: \.imageURL) { badge in
-                            AsyncImage(url: URL(string: badge.imageURL)) { image in
-                                image.resizable().scaledToFit()
-                            } placeholder: {
-                                Color.clear
-                            }
+                        ForEach(Array(profile.badges.enumerated()), id: \.offset) { index, badge in
+                            CachedRemoteImage(url: badge.imageURL, contentMode: .fit, showsRetry: false)
                             .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                openLightbox(images: profile.badges.map(\.imageURL), index: index)
+                            }
                         }
                     }
                 }
@@ -266,16 +273,12 @@ struct ProfileView: View {
             if !entry.imageURLs.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(entry.imageURLs, id: \.self) { urlStr in
-                            if let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    RoundedRectangle(cornerRadius: 6).fill(Color.gray.opacity(0.2))
-                                }
+                        ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
+                            CachedRemoteImage(url: urlStr)
                                 .frame(width: 160, height: 120)
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                            }
+                                .contentShape(Rectangle())
+                                .onTapGesture { openLightbox(images: entry.imageURLs, index: index) }
                         }
                     }
                 }
@@ -343,6 +346,12 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    private func openLightbox(images: [String], index: Int) {
+        lightboxImages = images
+        lightboxIndex = index
+        showLightbox = true
     }
 
 }

@@ -48,8 +48,7 @@ struct EntryRowView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
-                                CookieImage(url: urlStr)
-                                    .scaledToFill()
+                                CachedRemoteImage(url: urlStr)
                                     .frame(width: 160, height: 120)
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                     .contentShape(Rectangle())
@@ -74,12 +73,8 @@ struct EntryRowView: View {
                     nav.push(Route.profile(username: entry.author.nick))
                 } label: {
                     HStack(spacing: 8) {
-                        if let avatarURL = entry.author.avatarURL, let url = URL(string: avatarURL) {
-                            AsyncImage(url: url) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Circle().fill(Color.gray.opacity(0.3))
-                            }
+                        if let avatarURL = entry.author.avatarURL {
+                            CachedRemoteImage(url: avatarURL)
                             .frame(width: 24, height: 24)
                             .clipShape(Circle())
                         }
@@ -222,6 +217,9 @@ struct EntryRowView: View {
                 selectedIndex: $lightboxIndex,
                 isPresented: $showLightbox
             )
+        }
+        .task(id: entry.id) {
+            await ImagePipeline.shared.prefetch(entry.imageURLs + [entry.author.avatarURL].compactMap { $0 })
         }
     }
 
