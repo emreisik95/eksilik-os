@@ -89,34 +89,37 @@ struct TopicListView: View {
 
 @ViewBuilder
 func destinationView(for route: Route) -> some View {
-    switch route {
-    case .topicList(let link, let title):
-        ChannelTopicListView(link: link, title: title)
-    case .entryList(let link, let title):
-        EntryListView(link: link, title: title)
-    case .entryById(let id):
-        EntryListView(link: "entry/\(id)", title: "")
-    case .profile(let username):
-        ProfileView(username: username)
-    case .composeEntry(let link):
-        EntryComposeView(topicLink: link)
-    case .favoriteUsers(let entryId):
-        FavoriteUsersView(entryId: entryId)
-    case .messageThread(let link, let title):
-        MessageThreadView(link: link, title: title)
-    case .composeMessage(let to, let subject):
-        MessageComposeView(recipient: to, subject: subject)
-    case .login:
-        LoginView()
-    case .settings:
-        SettingsView()
-    case .webPage(let urlStr, let title):
-        if let url = URL(string: urlStr) {
-            EksiWebView(url: url)
-                .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
+    Group {
+        switch route {
+        case .topicList(let link, let title):
+            ChannelTopicListView(link: link, title: title)
+        case .entryList(let link, let title):
+            EntryListView(link: link, title: title)
+        case .entryById(let id):
+            EntryListView(link: "entry/\(id)", title: "")
+        case .profile(let username):
+            ProfileView(username: username)
+        case .composeEntry(let link):
+            EntryComposeView(topicLink: link)
+        case .favoriteUsers(let entryId):
+            FavoriteUsersView(entryId: entryId)
+        case .messageThread(let link, let title):
+            MessageThreadView(link: link, title: title)
+        case .composeMessage(let to, let subject):
+            MessageComposeView(recipient: to, subject: subject)
+        case .login:
+            LoginView()
+        case .settings:
+            SettingsView()
+        case .webPage(let urlStr, let title):
+            if let url = URL(string: urlStr) {
+                EksiWebView(url: url)
+                    .navigationTitle(title)
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        default:
+            EmptyView()
         }
-    default:
-        EmptyView()
     }
+    .navigationBarBackButtonDisplayMode(.minimal)
 }

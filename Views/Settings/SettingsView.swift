@@ -12,6 +12,7 @@ struct SettingsView: View {
                 Section(L10n.Settings.appearance) {
                     NavigationLink(L10n.Settings.theme) {
                         ThemePickerView()
+                            .navigationBarBackButtonDisplayMode(.minimal)
                     }
 
                     Stepper(L10n.Settings.fontSize(preferences.selectedFontSize), value: $preferences.selectedFontSize, in: 10...24)
@@ -28,6 +29,7 @@ struct SettingsView: View {
                 Section(L10n.Settings.content) {
                     NavigationLink(L10n.Settings.blockedTopics) {
                         BlockedTopicsView()
+                            .navigationBarBackButtonDisplayMode(.minimal)
                     }
                 }
                 .listRowBackground(themeManager.current.cellPrimaryColor)
@@ -35,6 +37,7 @@ struct SettingsView: View {
                 Section("ana sayfa sekmeleri") {
                     NavigationLink("sekmeleri düzenle") {
                         TabCustomizationView()
+                            .navigationBarBackButtonDisplayMode(.minimal)
                     }
 
                     Picker("sekme çubuğu konumu", selection: $preferences.homeTabBarPosition) {
@@ -60,6 +63,7 @@ struct SettingsView: View {
                     Section {
                         NavigationLink(L10n.Settings.login) {
                             LoginView()
+                                .navigationBarBackButtonDisplayMode(.minimal)
                         }
                     }
                     .listRowBackground(themeManager.current.cellPrimaryColor)
@@ -70,6 +74,7 @@ struct SettingsView: View {
                                 EksiWebView(url: url)
                                     .navigationTitle("tercihler")
                                     .navigationBarTitleDisplayMode(.inline)
+                                    .navigationBarBackButtonDisplayMode(.minimal)
                             } else {
                                 ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
                             }
@@ -79,6 +84,7 @@ struct SettingsView: View {
                                 EksiWebView(url: url)
                                     .navigationTitle("takip / engellenmişler")
                                     .navigationBarTitleDisplayMode(.inline)
+                                    .navigationBarBackButtonDisplayMode(.minimal)
                             } else {
                                 ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
                             }
