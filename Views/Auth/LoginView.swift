@@ -50,22 +50,24 @@ struct LoginWebView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            if let url = webView.url, LoginFlowPolicy.isSuccessfulReturnURL(url) {
-                syncCookiesAndFinish(webView: webView)
-                return
-            }
+            let currentURL = webView.url
+            webView.evaluateJavaScript("document.documentElement.outerHTML") { result, _ in
+                guard let html = result as? String,
+                      let completion = LoginFlowPolicy.completion(for: currentURL, html: html) else {
+                    return
+                }
 
-            // Check if the login page says user is already logged in
-            webView.evaluateJavaScript("document.body.innerText") { result, _ in
-                guard let text = result as? String else { return }
-                if text.contains("giriş yapmış görünüyorsunuz") {
-                    self.syncCookiesAndFinish(webView: webView)
+                switch completion {
+                case .authenticated(let username):
+                    self.syncCookiesAndFinish(webView: webView, username: username)
+                case .successfulReturn:
+                    self.syncCookiesAndFinish(webView: webView, username: nil)
                 }
             }
         }
 
-        private func syncCookiesAndFinish(webView: WKWebView) {
-            WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+        private func syncCookiesAndFinish(webView: WKWebView, username: String?) {
+            webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
                 guard LoginFlowPolicy.hasAuthCookie(in: cookies) else { return }
 
                 for cookie in cookies {
@@ -76,16 +78,7 @@ struct LoginWebView: UIViewRepresentable {
                 DispatchQueue.main.async {
                     guard !self.didFinishLogin else { return }
                     self.didFinishLogin = true
-
-                    let script = """
-                    (() => {
-                      const link = document.querySelector('li.buddy a[href^="/biri/"]');
-                      return link ? link.textContent.trim() : null;
-                    })()
-                    """
-                    webView.evaluateJavaScript(script) { result, _ in
-                        self.onLoginSuccess(result as? String)
-                    }
+                    self.onLoginSuccess(username)
                 }
             }
         }

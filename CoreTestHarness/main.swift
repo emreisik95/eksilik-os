@@ -46,6 +46,13 @@ private struct Harness {
         expect(auth.username == "testuser", "username should be parsed")
         expect(auth.hasUnreadMessages, "green message icon should indicate unread messages")
         expect(!auth.isIndeterminate, "recognized auth navigation should be determinate")
+        expect(
+            LoginFlowPolicy.completion(
+                for: URL(string: "https://eksisozluk.com/giris")!,
+                html: authHTML
+            ) == .authenticated(username: "testuser"),
+            "an authenticated login page should complete without a root redirect"
+        )
 
         let indeterminateAuth = AuthParser.parseAuthState(html: "<main>entry content</main>")
         expect(indeterminateAuth.isIndeterminate, "pages without auth navigation should not force logout")

@@ -95,8 +95,21 @@ enum LoginFlowPolicy {
 
     private static let authCookieNames: Set<String> = [".AspNetCore.Cookies", "a"]
 
-    static func completion(for _: URL?, html _: String) -> Completion? {
-        nil
+    static func completion(for url: URL?, html: String) -> Completion? {
+        let state = AuthParser.parseAuthState(html: html)
+        if state.isLoggedIn {
+            return .authenticated(username: state.username)
+        }
+
+        if html.localizedCaseInsensitiveContains("giriş yapmış görünüyorsunuz") {
+            return .authenticated(username: nil)
+        }
+
+        if let url, isSuccessfulReturnURL(url) {
+            return .successfulReturn
+        }
+
+        return nil
     }
 
     static func isSuccessfulReturnURL(_ url: URL) -> Bool {
