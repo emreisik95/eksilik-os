@@ -375,13 +375,17 @@ struct HomeTabView: View {
 
                     Divider().opacity(0.2)
 
-                    NavigationLink(value: Route.settings) {
-                        Label("sekmeleri düzenle", systemImage: "slider.horizontal.3")
+                    Button {
+                        isSidebarOpen = false
+                        nav.push(.settings)
+                    } label: {
+                        Label("ayarlar", systemImage: "gearshape")
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(themeManager.current.labelColor)
                             .padding(.horizontal, 18)
                             .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
                     }
+                    .buttonStyle(.plain)
                 }
                 .frame(width: min(proxy.size.width * 0.82, 310))
                 .background(.regularMaterial)
