@@ -88,7 +88,16 @@ struct AuthParser {
 }
 
 enum LoginFlowPolicy {
+    enum Completion: Equatable {
+        case authenticated(username: String?)
+        case successfulReturn
+    }
+
     private static let authCookieNames: Set<String> = [".AspNetCore.Cookies", "a"]
+
+    static func completion(for _: URL?, html _: String) -> Completion? {
+        nil
+    }
 
     static func isSuccessfulReturnURL(_ url: URL) -> Bool {
         guard url.scheme?.lowercased() == "https",

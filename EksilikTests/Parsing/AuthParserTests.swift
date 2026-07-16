@@ -61,6 +61,30 @@ final class AuthParserTests: XCTestCase {
         XCTAssertFalse(LoginFlowPolicy.hasAuthCookie(in: [unrelatedCookie]))
     }
 
+    func testAuthenticatedLoginPageCompletesWithoutRootRedirect() {
+        let html = """
+        <li class="buddy mobile-only">
+          <a href="/biri/testuser">testuser</a>
+        </li>
+        """
+
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: html
+        )
+
+        XCTAssertEqual(completion, .authenticated(username: "testuser"))
+    }
+
+    func testLoginFormWithoutSessionDoesNotComplete() {
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: #"<a id="top-login-link">giriş</a>"#
+        )
+
+        XCTAssertNil(completion)
+    }
+
     func testCSRFToken() {
         let html = """
         <input name="__RequestVerificationToken" value="abc123token" />
