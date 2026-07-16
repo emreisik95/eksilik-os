@@ -59,7 +59,6 @@ struct OfflineLibraryView: View {
             if item.topic.isReadable {
                 NavigationLink {
                     OfflineTopicView(topicID: item.topic.id, title: item.topic.title)
-                        .navigationBarBackButtonDisplayMode(.minimal)
                 } label: {
                     rowContent(item)
                 }

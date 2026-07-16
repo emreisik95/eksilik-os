@@ -121,5 +121,4 @@ func destinationView(for route: Route) -> some View {
             EmptyView()
         }
     }
-    .navigationBarBackButtonDisplayMode(.minimal)
 }
