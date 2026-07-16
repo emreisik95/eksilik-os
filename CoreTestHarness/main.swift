@@ -147,6 +147,49 @@ private struct Harness {
             "extracted images should preserve source order while deduplicating"
         )
     }
+
+    mutating func runOfflinePlanningChecks() async {
+        expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 3) == [1, 2, 3], "five-page downloads should clamp to the topic")
+        expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 12) == Array(1...5), "five-page downloads should plan five pages")
+        expect(OfflineDownloadPlanner.pages(for: .tenPages, totalPages: 12) == Array(1...10), "ten-page downloads should plan ten pages")
+        expect(OfflineDownloadPlanner.pages(for: .allPages, totalPages: 12) == Array(1...12), "all-page downloads should plan the full topic")
+
+        let first = OfflineEntry(id: "1", contentHTML: "one", authorNick: "a", authorID: "a", authorAvatarURL: nil, date: "d", favoriteCount: 0, imageURLs: [])
+        let replacement = OfflineEntry(id: "1", contentHTML: "new", authorNick: "a", authorID: "a", authorAvatarURL: nil, date: "d", favoriteCount: 0, imageURLs: [])
+        let second = OfflineEntry(id: "2", contentHTML: "two", authorNick: "b", authorID: "b", authorAvatarURL: nil, date: "d", favoriteCount: 0, imageURLs: [])
+        expect(OfflineEntry.orderedUnique([first, replacement, second]).map(\.id) == ["1", "2"], "offline entries should deduplicate without changing order")
+        expect(OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg") == OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg"), "media filenames should be stable")
+        expect(OfflineMediaKey.filename(for: "https://cdn.example.com/a.jpg") != OfflineMediaKey.filename(for: "https://cdn.example.com/b.jpg"), "different media URLs should have different filenames")
+
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("EksilikHarness-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = OfflineTopicStore(rootURL: root)
+        let request = TopicRequest(link: "/offline-test--42")
+        let topic = OfflineTopic(title: "offline test", request: request, contentMode: .normal, pageLimit: .fivePages, totalPages: 2)
+        let page = OfflineTopicPage(topicID: topic.id, pageNumber: 1, title: topic.title, entries: [first, second])
+
+        do {
+            try await store.saveTopic(topic)
+            try await store.savePage(page)
+            let loaded = try await store.loadTopic(id: topic.id)
+            let loadedPage = try await store.loadPage(topicID: topic.id, pageNumber: 1)
+            expect(loaded.completedPages == [1], "saving a page should persist manifest progress")
+            expect(loadedPage.entries.map(\.id) == ["1", "2"], "offline pages should round-trip atomically")
+            try await store.deleteTopic(id: topic.id)
+            let remainingTopics = try await store.listTopics()
+            expect(remainingTopics.isEmpty, "deleting an offline topic should remove it")
+
+            try await store.saveTopic(topic)
+            let manifest = root.appendingPathComponent(topic.id).appendingPathComponent("manifest.json")
+            try Data("not-json".utf8).write(to: manifest, options: .atomic)
+            let recoveredTopics = try await store.listTopics()
+            let quarantinedFiles = try FileManager.default.contentsOfDirectory(atPath: manifest.deletingLastPathComponent().path)
+            expect(recoveredTopics.isEmpty, "a corrupt manifest should not hide other offline topics")
+            expect(quarantinedFiles.contains { $0.hasPrefix("manifest-corrupt-") }, "a corrupt manifest should be quarantined")
+        } catch {
+            expect(false, "offline storage round-trip failed: \(error)")
+        }
+    }
 }
 
 private var harness = Harness()
@@ -154,6 +197,7 @@ harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
 harness.runStableLoadingChecks()
 harness.runImageURLChecks()
+await harness.runOfflinePlanningChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")
