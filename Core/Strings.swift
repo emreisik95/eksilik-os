@@ -5,9 +5,14 @@ enum L10n {
     enum Tab {
         static let home = "anasayfa"
         static let search = "ara"
+        static let offline = "çevrimdışı"
         static let messages = "mesajlar"
         static let profile = "profil"
         static let settings = "ayarlar"
+    }
+
+    enum Offline {
+        static let title = "çevrimdışı"
     }
 
     // MARK: - Home

@@ -8,6 +8,7 @@ struct EntryListView: View {
     let title: String
     @State private var showSearchAlert = false
     @State private var searchKeywords = ""
+    @State private var showDownloadOptions = false
     @AppStorage("hasSeenFilterHint") private var hasSeenFilterHint = false
 
     init(link: String, title: String) {
@@ -111,9 +112,16 @@ struct EntryListView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: UIScreen.main.bounds.width - 160)
             }
-            if session.isLoggedIn {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 16) {
+                    Button {
+                        showDownloadOptions = true
+                    } label: {
+                        Image(systemName: "arrow.down.circle")
+                    }
+                    .accessibilityLabel("başlığı çevrimdışı indir")
+
+                    if session.isLoggedIn {
                         Button {
                             Task { await viewModel.toggleTracking() }
                         } label: {
@@ -135,6 +143,13 @@ struct EntryListView: View {
                 Task { await viewModel.applyFilter(.search(searchKeywords)) }
             }
             Button("vazgeç", role: .cancel) { }
+        }
+        .sheet(isPresented: $showDownloadOptions) {
+            DownloadOptionsView(
+                title: viewModel.title.isEmpty ? title : viewModel.title,
+                request: viewModel.offlineRequest,
+                totalPages: viewModel.offlineTotalPages
+            )
         }
         .task {
             guard viewModel.entries.isEmpty else { return }

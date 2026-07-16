@@ -13,6 +13,8 @@ final class EntryListViewModel: ObservableObject {
 
     private let entryService = EntryService()
     var topicLink: String { currentRequest.settingPage(nil).pathAndQuery }
+    var offlineRequest: TopicRequest { currentRequest.settingPage(nil) }
+    var offlineTotalPages: Int { max(1, pagination.totalPages) }
     private var currentRequest: TopicRequest
     private var topicSlug = ""
     private var loadGeneration = UUID()

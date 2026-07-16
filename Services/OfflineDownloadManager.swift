@@ -69,24 +69,36 @@ final class OfflineDownloadManager: NSObject, URLSessionDownloadDelegate, URLSes
         title: String,
         request: TopicRequest,
         contentMode: OfflineContentMode,
-        pageLimit: OfflinePageLimit,
-        totalPages: Int
+        pageLimit: OfflinePageLimit
     ) async throws -> OfflineTopic {
         let cleanRequest = request
             .settingPage(nil)
             .applying(filter: contentMode == .sukela ? .niceAllTime : .none)
+        let firstPage = try await EntryService().fetchEntries(request: cleanRequest.settingPage(1))
+        let resolvedTotalPages = max(1, firstPage.pagination.totalPages)
         let topic = OfflineTopic(
             title: title,
             request: cleanRequest,
             contentMode: contentMode,
             pageLimit: pageLimit,
-            totalPages: totalPages
+            totalPages: resolvedTotalPages
         )
 
         await cancelTasks(topicID: topic.id)
         try await store.saveTopic(topic)
         try await store.updateStatus(id: topic.id, status: .downloading)
-        for page in topic.plannedPages {
+        try await store.savePage(OfflineTopicPage(
+            topicID: topic.id,
+            pageNumber: 1,
+            title: firstPage.title.isEmpty ? title : firstPage.title,
+            entries: firstPage.entries.map(OfflineEntry.init(entry:))
+        ))
+        await enqueueMedia(
+            topicID: topic.id,
+            rawURLs: firstPage.entries.flatMap(\.imageURLs)
+                + firstPage.entries.compactMap { $0.author.avatarURL }
+        )
+        for page in topic.plannedPages where page != 1 {
             enqueuePage(topic: topic, page: page, retryCount: 0)
         }
         postChange()

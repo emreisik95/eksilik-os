@@ -12,6 +12,9 @@ struct ContentView: View {
             SearchView()
                 .tabItem { Label(L10n.Tab.search, systemImage: "magnifyingglass") }
 
+            OfflineLibraryView()
+                .tabItem { Label(L10n.Tab.offline, systemImage: "arrow.down.circle") }
+
             profileTab
                 .tabItem { Label(session.isLoggedIn ? L10n.Tab.profile : L10n.Auth.login, systemImage: "person") }
 
