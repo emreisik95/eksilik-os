@@ -50,9 +50,11 @@ enum PaginationControl: String, CaseIterable, Identifiable, Sendable {
 }
 
 enum EntryListChromePolicy {
-    static let paginationButtonSize = 48.0
-    static let paginationControlSpacing = 14.0
-    static let paginationSectionSpacing = 8.0
+    static let paginationTouchTargetSize = 44.0
+    static let paginationVisualButtonSize = 36.0
+    static let paginationIconSize = 16.0
+    static let paginationControlSpacing = 12.0
+    static let paginationSectionSpacing = 6.0
     static let leadingPaginationControls: [PaginationControl] = [.first, .previous]
     static let trailingPaginationControls: [PaginationControl] = [.next, .last]
     static let filterSwipeOnboardingStorageKey = "hasSeenEntryFilterSwipeOnboardingV2"

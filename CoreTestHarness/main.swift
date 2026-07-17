@@ -505,8 +505,17 @@ private struct Harness {
 
     mutating func runEntryListChromeChecks() {
         expect(
-            EntryListChromePolicy.paginationButtonSize >= 44,
+            EntryListChromePolicy.paginationTouchTargetSize >= 44,
             "pagination controls should meet the minimum touch target"
+        )
+        expect(
+            EntryListChromePolicy.paginationVisualButtonSize <= 40,
+            "pagination controls should stay visually compact"
+        )
+        expect(
+            EntryListChromePolicy.paginationVisualButtonSize
+                < EntryListChromePolicy.paginationTouchTargetSize,
+            "pagination visuals should not fill the entire touch target"
         )
         expect(
             EntryListChromePolicy.paginationControlSpacing >= 12,

@@ -12,7 +12,7 @@ struct PaginationView: View {
             Text("\(pagination.currentPage) / \(pagination.totalPages)")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundColor(themeManager.current.labelColor)
-                .frame(minWidth: 56, minHeight: 44)
+                .frame(minWidth: 52, minHeight: 36)
                 .background(
                     Capsule()
                         .fill(themeManager.current.cellSecondaryColor)
@@ -22,7 +22,7 @@ struct PaginationView: View {
             controlGroup(EntryListChromePolicy.trailingPaginationControls)
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
         .background(themeManager.current.backgroundColor)
     }
@@ -42,17 +42,24 @@ struct PaginationView: View {
             onPageChange(control.targetPage(in: pagination))
         } label: {
             Image(systemName: control.systemImage)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(
+                    size: CGFloat(EntryListChromePolicy.paginationIconSize),
+                    weight: .semibold
+                ))
                 .foregroundColor(themeManager.current.accentColor)
                 .frame(
-                    width: CGFloat(EntryListChromePolicy.paginationButtonSize),
-                    height: CGFloat(EntryListChromePolicy.paginationButtonSize)
+                    width: CGFloat(EntryListChromePolicy.paginationVisualButtonSize),
+                    height: CGFloat(EntryListChromePolicy.paginationVisualButtonSize)
                 )
                 .background(
                     Circle()
                         .fill(themeManager.current.cellSecondaryColor)
                 )
-                .contentShape(Circle())
+                .frame(
+                    width: CGFloat(EntryListChromePolicy.paginationTouchTargetSize),
+                    height: CGFloat(EntryListChromePolicy.paginationTouchTargetSize)
+                )
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

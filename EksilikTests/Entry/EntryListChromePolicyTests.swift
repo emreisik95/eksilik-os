@@ -2,8 +2,13 @@ import XCTest
 @testable import EksilikApp
 
 final class EntryListChromePolicyTests: XCTestCase {
-    func testPaginationControlsAreLargeAndClearlySeparated() {
-        XCTAssertGreaterThanOrEqual(EntryListChromePolicy.paginationButtonSize, 44)
+    func testPaginationControlsLookCompactWithoutShrinkingTheTouchTarget() {
+        XCTAssertGreaterThanOrEqual(EntryListChromePolicy.paginationTouchTargetSize, 44)
+        XCTAssertLessThanOrEqual(EntryListChromePolicy.paginationVisualButtonSize, 40)
+        XCTAssertLessThan(
+            EntryListChromePolicy.paginationVisualButtonSize,
+            EntryListChromePolicy.paginationTouchTargetSize
+        )
         XCTAssertGreaterThanOrEqual(EntryListChromePolicy.paginationControlSpacing, 12)
         XCTAssertEqual(EntryListChromePolicy.leadingPaginationControls, [.first, .previous])
         XCTAssertEqual(EntryListChromePolicy.trailingPaginationControls, [.next, .last])
