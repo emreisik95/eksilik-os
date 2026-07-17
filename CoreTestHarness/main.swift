@@ -503,6 +503,47 @@ private struct Harness {
         )
     }
 
+    mutating func runEntryListChromeChecks() {
+        expect(
+            EntryListChromePolicy.paginationButtonSize >= 44,
+            "pagination controls should meet the minimum touch target"
+        )
+        expect(
+            EntryListChromePolicy.paginationControlSpacing >= 12,
+            "pagination controls should have unambiguous spacing"
+        )
+        expect(
+            EntryListChromePolicy.leadingPaginationControls == [.first, .previous],
+            "first and previous page controls should form the leading group"
+        )
+        expect(
+            EntryListChromePolicy.trailingPaginationControls == [.next, .last],
+            "next and last page controls should form the trailing group"
+        )
+
+        let middle = Pagination(currentPage: 2, totalPages: 3)
+        expect(PaginationControl.first.targetPage(in: middle) == 1, "first should target page one")
+        expect(PaginationControl.previous.targetPage(in: middle) == 1, "previous should target the prior page")
+        expect(PaginationControl.next.targetPage(in: middle) == 3, "next should target the following page")
+        expect(PaginationControl.last.targetPage(in: middle) == 3, "last should target the final page")
+        expect(
+            !PaginationControl.previous.isEnabled(in: Pagination(currentPage: 1, totalPages: 3)),
+            "backward controls should be disabled on the first page"
+        )
+        expect(
+            !PaginationControl.next.isEnabled(in: Pagination(currentPage: 3, totalPages: 3)),
+            "forward controls should be disabled on the final page"
+        )
+        expect(
+            EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: false),
+            "filter swipe onboarding should appear on first use"
+        )
+        expect(
+            !EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: true),
+            "filter swipe onboarding should stay dismissed after completion"
+        )
+    }
+
     mutating func runOfflinePlanningChecks() async {
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 3) == [1, 2, 3], "five-page downloads should clamp to the topic")
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 12) == Array(1...5), "five-page downloads should plan five pages")
@@ -653,6 +694,7 @@ harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 harness.runExternalLinkChecks()
+harness.runEntryListChromeChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()

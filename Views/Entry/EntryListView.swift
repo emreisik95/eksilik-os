@@ -10,7 +10,9 @@ struct EntryListView: View {
     @State private var searchKeywords = ""
     @State private var showDownloadOptions = false
     @State private var galleryPresentation: ImageGalleryPresentation?
-    @AppStorage("hasSeenFilterHint") private var hasSeenFilterHint = false
+    @State private var showFilterSwipeOnboarding = false
+    @AppStorage(EntryListChromePolicy.filterSwipeOnboardingStorageKey)
+    private var hasSeenFilterSwipeOnboarding = false
 
     init(link: String, title: String) {
         _viewModel = StateObject(wrappedValue: EntryListViewModel(link: link))
@@ -79,27 +81,6 @@ struct EntryListView: View {
 
             // Always visible: filter bar + pagination
             filterBar
-                .overlay(alignment: .trailing) {
-                    if !hasSeenFilterHint {
-                        HStack(spacing: 4) {
-                            Text("kaydır")
-                                .font(.caption2)
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                        }
-                        .foregroundColor(themeManager.current.accentColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(themeManager.current.backgroundColor.opacity(0.9))
-                        .cornerRadius(8)
-                        .padding(.trailing, 4)
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation { hasSeenFilterHint = true }
-                            }
-                        }
-                    }
-                }
 
             if viewModel.pagination.totalPages > 1 {
                 PaginationView(
@@ -161,12 +142,28 @@ struct EntryListView: View {
                 totalPages: viewModel.offlineTotalPages
             )
         }
+        .sheet(isPresented: $showFilterSwipeOnboarding, onDismiss: {
+            hasSeenFilterSwipeOnboarding = true
+        }) {
+            EntryFilterSwipeOnboardingView {
+                hasSeenFilterSwipeOnboarding = true
+                showFilterSwipeOnboarding = false
+            }
+            .presentationDetents([.height(380)])
+            .presentationDragIndicator(.visible)
+        }
         .fullScreenCover(item: $galleryPresentation) { presentation in
             ImageLightboxView(presentation: presentation)
         }
         .task {
-            guard viewModel.entries.isEmpty else { return }
-            await viewModel.loadEntries()
+            if viewModel.entries.isEmpty {
+                await viewModel.loadEntries()
+            }
+            if EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(
+                hasSeen: hasSeenFilterSwipeOnboarding
+            ) {
+                showFilterSwipeOnboarding = true
+            }
         }
         .refreshable { await viewModel.loadEntries() }
     }
@@ -277,5 +274,56 @@ struct EntryListView: View {
                     ? themeManager.current.accentColor
                     : themeManager.current.cellSecondaryColor)
         )
+    }
+}
+
+private struct EntryFilterSwipeOnboardingView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "arrow.left.and.right.circle.fill")
+                .font(.system(size: 54))
+                .foregroundColor(themeManager.current.accentColor)
+
+            VStack(spacing: 8) {
+                Text("filtreler arasında gezin")
+                    .font(.title3.bold())
+                    .foregroundColor(themeManager.current.labelColor)
+                Text("Tümü, bugün, şükela ve diğer filtreleri görmek için filtre şeridini sağa veya sola kaydır.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "hand.draw")
+                    .foregroundColor(themeManager.current.accentColor)
+                Text("İstediğin görünüme geçmek için filtreye dokun.")
+                    .font(.footnote)
+                    .foregroundColor(themeManager.current.labelColor)
+                Spacer()
+            }
+            .padding(12)
+            .background(
+                themeManager.current.cellSecondaryColor,
+                in: RoundedRectangle(cornerRadius: 12)
+            )
+
+            Button(action: onDismiss) {
+                Text("anladım")
+                    .font(.body.weight(.semibold))
+                    .foregroundColor(themeManager.current.backgroundColor)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        themeManager.current.accentColor,
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
+            }
+        }
+        .padding(24)
+        .background(themeManager.current.backgroundColor.ignoresSafeArea())
     }
 }

@@ -31,6 +31,7 @@ let package = Package(
                 "Core/Loading/SkeletonLayout.swift",
                 "Core/Links/ExternalLinkPolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
+                "Core/Presentation/EntryListChromePolicy.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
                 "Core/Presentation/MainTab.swift",
                 "Core/Search/SearchPresentation.swift",

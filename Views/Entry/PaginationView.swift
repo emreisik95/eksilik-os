@@ -6,34 +6,57 @@ struct PaginationView: View {
     @EnvironmentObject var themeManager: ThemeManager
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: { onPageChange(1) }) {
-                Image(systemName: "backward.end.fill")
-            }
-            .disabled(!pagination.hasPreviousPage)
-
-            Button(action: { onPageChange(pagination.currentPage - 1) }) {
-                Image(systemName: "chevron.left")
-            }
-            .disabled(!pagination.hasPreviousPage)
+        HStack(spacing: CGFloat(EntryListChromePolicy.paginationSectionSpacing)) {
+            controlGroup(EntryListChromePolicy.leadingPaginationControls)
 
             Text("\(pagination.currentPage) / \(pagination.totalPages)")
-                .font(.caption)
+                .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundColor(themeManager.current.labelColor)
+                .frame(minWidth: 56, minHeight: 44)
+                .background(
+                    Capsule()
+                        .fill(themeManager.current.cellSecondaryColor)
+                )
+                .accessibilityLabel("\(pagination.totalPages) sayfadan \(pagination.currentPage). sayfa")
 
-            Button(action: { onPageChange(pagination.currentPage + 1) }) {
-                Image(systemName: "chevron.right")
-            }
-            .disabled(!pagination.hasNextPage)
-
-            Button(action: { onPageChange(pagination.totalPages) }) {
-                Image(systemName: "forward.end.fill")
-            }
-            .disabled(!pagination.hasNextPage)
+            controlGroup(EntryListChromePolicy.trailingPaginationControls)
         }
-        .foregroundColor(themeManager.current.accentColor)
+        .padding(.horizontal, 6)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
         .background(themeManager.current.backgroundColor)
+    }
+
+    private func controlGroup(_ controls: [PaginationControl]) -> some View {
+        HStack(spacing: CGFloat(EntryListChromePolicy.paginationControlSpacing)) {
+            ForEach(controls) { control in
+                paginationButton(control)
+            }
+        }
+    }
+
+    private func paginationButton(_ control: PaginationControl) -> some View {
+        let isEnabled = control.isEnabled(in: pagination)
+
+        return Button {
+            onPageChange(control.targetPage(in: pagination))
+        } label: {
+            Image(systemName: control.systemImage)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(themeManager.current.accentColor)
+                .frame(
+                    width: CGFloat(EntryListChromePolicy.paginationButtonSize),
+                    height: CGFloat(EntryListChromePolicy.paginationButtonSize)
+                )
+                .background(
+                    Circle()
+                        .fill(themeManager.current.cellSecondaryColor)
+                )
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.32)
+        .accessibilityLabel(control.accessibilityLabel)
     }
 }
