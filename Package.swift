@@ -34,6 +34,7 @@ let package = Package(
                 "Core/Presentation/EntryListChromePolicy.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
                 "Core/Presentation/MainTab.swift",
+                "Core/Presentation/SettingsPresentationPolicy.swift",
                 "Core/Search/SearchPresentation.swift",
                 "Core/Images/ImageURLNormalizer.swift",
                 "Core/Storage/OfflineTopicStore.swift",

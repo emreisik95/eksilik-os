@@ -544,6 +544,39 @@ private struct Harness {
         )
     }
 
+    mutating func runSettingsPresentationChecks() {
+        let signedOut = SettingsPresentationPolicy.sections(isLoggedIn: false)
+        expect(
+            signedOut.map(\.kind) == [.appearance, .home, .content, .account, .advanced],
+            "settings sections should keep a predictable scanning order"
+        )
+
+        let signedOutItems = signedOut.flatMap(\.items)
+        expect(
+            signedOutItems.count == Set(signedOutItems).count,
+            "settings items should appear in exactly one section"
+        )
+        expect(
+            signedOut.first(where: { $0.kind == .account })?.items == [.login],
+            "signed-out settings should offer login without account-only actions"
+        )
+
+        let signedIn = SettingsPresentationPolicy.sections(isLoggedIn: true)
+        expect(
+            signedIn.first(where: { $0.kind == .account })?.items
+                == [.accountPreferences, .trackingAndBlocks, .logout],
+            "signed-in settings should group account actions together"
+        )
+        expect(
+            SettingsPresentationPolicy.adjustedFontSize(10, delta: -1) == 10,
+            "font controls should not go below the supported minimum"
+        )
+        expect(
+            SettingsPresentationPolicy.adjustedFontSize(24, delta: 1) == 24,
+            "font controls should not go above the supported maximum"
+        )
+    }
+
     mutating func runOfflinePlanningChecks() async {
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 3) == [1, 2, 3], "five-page downloads should clamp to the topic")
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 12) == Array(1...5), "five-page downloads should plan five pages")
@@ -695,6 +728,7 @@ harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
 harness.runExternalLinkChecks()
 harness.runEntryListChromeChecks()
+harness.runSettingsPresentationChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
