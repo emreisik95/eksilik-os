@@ -87,17 +87,36 @@ struct EntryTextView: UIViewRepresentable {
                 return false
             }
 
-            // External links — open in-app browser
+            // Social/media links — prefer the installed app via universal links.
             if link.hasPrefix("http://") || link.hasPrefix("https://") {
-                let safari = SFSafariViewController(url: URL)
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let root = windowScene.windows.first?.rootViewController {
-                    root.present(safari, animated: true)
+                if ExternalLinkPolicy.prefersNativeApp(URL) {
+                    UIApplication.shared.open(
+                        URL,
+                        options: [.universalLinksOnly: true]
+                    ) { [weak self] opened in
+                        guard !opened else { return }
+                        DispatchQueue.main.async {
+                            self?.presentInAppBrowser(URL)
+                        }
+                    }
+                } else {
+                    presentInAppBrowser(URL)
                 }
                 return false
             }
 
             return true
+        }
+
+        private func presentInAppBrowser(_ url: URL) {
+            let safari = SFSafariViewController(url: url)
+            guard let windowScene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive }),
+                  let root = windowScene.windows.first(where: \.isKeyWindow)?.rootViewController else {
+                return
+            }
+            root.present(safari, animated: true)
         }
     }
 }

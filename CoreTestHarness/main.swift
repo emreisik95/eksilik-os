@@ -468,6 +468,41 @@ private struct Harness {
         )
     }
 
+    mutating func runExternalLinkChecks() {
+        let marked = ExternalLinkPolicy.addingTextMarkers(
+            to: #"<a href="https://x.com/example/status/1">kaynak</a>"#
+        )
+        expect(
+            marked.contains("kaynak \u{2197}\u{FE0E}"),
+            "external links should use the text-presentation north-east arrow"
+        )
+        expect(
+            !marked.contains("\u{FE0F}"),
+            "external link markers should never request emoji presentation"
+        )
+
+        let nativeHosts = [
+            "https://x.com/example/status/1",
+            "https://www.instagram.com/p/example/",
+            "https://youtu.be/example",
+            "https://m.youtube.com/watch?v=example",
+            "https://www.tiktok.com/@example/video/1",
+            "https://www.linkedin.com/posts/example",
+        ]
+        expect(
+            nativeHosts.allSatisfy { ExternalLinkPolicy.prefersNativeApp(URL(string: $0)!) },
+            "social and media links should prefer their installed native applications"
+        )
+        expect(
+            !ExternalLinkPolicy.prefersNativeApp(URL(string: "https://example.com/x.com")!),
+            "unrelated websites should stay in the in-app browser"
+        )
+        expect(
+            !ExternalLinkPolicy.prefersNativeApp(URL(string: "https://notx.com/example")!),
+            "lookalike domains should not be treated as native social links"
+        )
+    }
+
     mutating func runOfflinePlanningChecks() async {
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 3) == [1, 2, 3], "five-page downloads should clamp to the topic")
         expect(OfflineDownloadPlanner.pages(for: .fivePages, totalPages: 12) == Array(1...5), "five-page downloads should plan five pages")
@@ -617,6 +652,7 @@ harness.runEntryLayoutStyleChecks()
 harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
 harness.runImageURLChecks()
+harness.runExternalLinkChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()

@@ -29,6 +29,7 @@ let package = Package(
                 "Core/Network/EksiEndpoint.swift",
                 "Core/Network/TopicRequest.swift",
                 "Core/Loading/SkeletonLayout.swift",
+                "Core/Links/ExternalLinkPolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
                 "Core/Presentation/MainTab.swift",
