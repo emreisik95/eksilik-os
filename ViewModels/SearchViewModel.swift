@@ -7,7 +7,10 @@ final class SearchViewModel: ObservableObject {
     @Published var titles: [String] = []
     @Published var nicks: [String] = []
     @Published var isSearching = false
+    @Published var searchError: String?
     @Published var channels: [Channel] = []
+    @Published var isLoadingChannels = false
+    @Published var channelError: String?
 
     private let searchService = SearchService()
     private let client = HTTPClient.shared
@@ -16,37 +19,50 @@ final class SearchViewModel: ObservableObject {
     func search() {
         searchTask?.cancel()
 
-        guard query.count >= 2 else {
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalizedQuery.count >= 2 else {
             titles = []
             nicks = []
+            isSearching = false
+            searchError = nil
             return
         }
 
+        let requestedQuery = normalizedQuery
+        searchError = nil
         searchTask = Task {
             isSearching = true
             do {
-                let result = try await searchService.search(query: query)
-                if !Task.isCancelled {
+                let result = try await searchService.search(query: requestedQuery)
+                if !Task.isCancelled, currentNormalizedQuery == requestedQuery {
                     titles = result.titles
                     nicks = result.nicks
                 }
             } catch {
-                if !Task.isCancelled {
+                if !Task.isCancelled, currentNormalizedQuery == requestedQuery {
                     titles = []
                     nicks = []
+                    searchError = error.localizedDescription
                 }
             }
-            isSearching = false
+            if currentNormalizedQuery == requestedQuery {
+                isSearching = false
+            }
         }
     }
 
     func loadChannels() async {
-        guard channels.isEmpty else { return }
+        guard channels.isEmpty, !isLoadingChannels else { return }
+        isLoadingChannels = true
+        channelError = nil
+        defer {
+            isLoadingChannels = false
+        }
         do {
             let html = try await client.fetchHTML(for: .channels)
             channels = ChannelParser.parse(html: html)
         } catch {
-            // silently fail — channels are optional
+            channelError = error.localizedDescription
         }
     }
 
@@ -56,7 +72,7 @@ final class SearchViewModel: ObservableObject {
             ? .channelUnfollow(slug: channel.id)
             : .channelFollow(slug: channel.id)
         do {
-            let csrfToken = await SessionManager.shared.csrfToken
+            let csrfToken = SessionManager.shared.csrfToken
             try await client.post(endpoint: endpoint, body: ["name": channel.id], csrfToken: csrfToken)
             channels[index].isFollowed.toggle()
         } catch {
@@ -65,14 +81,29 @@ final class SearchViewModel: ObservableObject {
     }
 
     func resolveQuery() -> Route? {
-        let text = query.trimmingCharacters(in: .whitespaces)
-        if text.hasPrefix("#"), let _ = Int(text.dropFirst()) {
-            return .entryById(id: String(text.dropFirst()))
+        switch SearchPresentation.resolve(query: query) {
+        case .entry(let id):
+            return .entryById(id: id)
+        case .profile(let username):
+            return .profile(username: username)
+        case .topic(let link, let title):
+            return .entryList(link: link, title: title)
+        case nil:
+            return nil
         }
-        if text.hasPrefix("@") {
-            return .profile(username: String(text.dropFirst()))
-        }
-        let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? text
-        return .entryList(link: encoded, title: text)
+    }
+
+    var presentationState: SearchPresentation.State {
+        SearchPresentation.state(
+            query: query,
+            isSearching: isSearching,
+            titleCount: titles.count,
+            nickCount: nicks.count,
+            error: searchError
+        )
+    }
+
+    private var currentNormalizedQuery: String {
+        query.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

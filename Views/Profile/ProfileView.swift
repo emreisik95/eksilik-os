@@ -5,6 +5,7 @@ struct ProfileView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @State private var entryToDelete: UserProfile.ProfileEntry?
+    @State private var galleryPresentation: ImageGalleryPresentation?
     /// When true, wraps in NavigationStack (tab root). When false, used as push destination.
     var isRoot: Bool = false
 
@@ -31,7 +32,7 @@ struct ProfileView: View {
             themeManager.current.backgroundColor.ignoresSafeArea()
 
             if viewModel.isLoading && viewModel.profile == nil {
-                LoadingView()
+                ProfileSkeletonView()
             } else if let profile = viewModel.profile {
                 profileContent(profile)
             } else if let error = viewModel.error {
@@ -43,6 +44,9 @@ struct ProfileView: View {
         .navigationTitle(viewModel.profile?.nick ?? viewModel.username)
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.loadProfile() }
+        .fullScreenCover(item: $galleryPresentation) { presentation in
+            ImageLightboxView(presentation: presentation)
+        }
         .confirmationDialog("entry'i sil", isPresented: Binding(
             get: { entryToDelete != nil },
             set: { if !$0 { entryToDelete = nil } }
@@ -74,7 +78,16 @@ struct ProfileView: View {
                 Divider().overlay(themeManager.current.separatorColor)
 
                 // Entry list
-                if profile.entries.isEmpty {
+                if viewModel.isLoadingEntries && profile.entries.isEmpty {
+                    VStack(spacing: 10) {
+                        ProgressView()
+                        Text("entry'ler yükleniyor")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 40)
+                } else if profile.entries.isEmpty {
                     Text(L10n.Entry.noEntries)
                         .foregroundColor(.gray)
                         .padding(.top, 40)
@@ -85,18 +98,19 @@ struct ProfileView: View {
                             Divider().overlay(themeManager.current.separatorColor)
                         }
 
-                        // Load more
-                        Button {
-                            Task { await viewModel.loadMoreEntries() }
-                        } label: {
-                            if viewModel.isLoadingMore {
-                                ProgressView()
-                                    .padding()
-                            } else {
-                                Text("daha fazla göster")
-                                    .font(.subheadline)
-                                    .foregroundColor(themeManager.current.accentColor)
-                                    .padding()
+                        if viewModel.hasMoreEntries {
+                            Button {
+                                Task { await viewModel.loadMoreEntries() }
+                            } label: {
+                                if viewModel.isLoadingMore {
+                                    ProgressView()
+                                        .padding()
+                                } else {
+                                    Text("daha fazla göster")
+                                        .font(.subheadline)
+                                        .foregroundColor(themeManager.current.accentColor)
+                                        .padding()
+                                }
                             }
                         }
                     }
@@ -134,15 +148,12 @@ struct ProfileView: View {
                 Spacer()
 
                 // Avatar on the right
-                if let avatarURL = profile.avatarURL, let url = URL(string: avatarURL) {
-                    AsyncImage(url: url) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Circle()
-                            .fill(themeManager.current.cellPrimaryColor)
-                    }
+                if let avatarURL = profile.avatarURL {
+                    CachedRemoteImage(url: avatarURL)
                     .frame(width: 70, height: 70)
                     .clipShape(Circle())
+                    .contentShape(Circle())
+                    .onTapGesture { openLightbox(images: [avatarURL], index: 0) }
                 }
             }
 
@@ -150,35 +161,33 @@ struct ProfileView: View {
             if !profile.badges.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
-                        ForEach(profile.badges, id: \.imageURL) { badge in
-                            AsyncImage(url: URL(string: badge.imageURL)) { image in
-                                image.resizable().scaledToFit()
-                            } placeholder: {
-                                Color.clear
-                            }
+                        ForEach(Array(profile.badges.enumerated()), id: \.offset) { index, badge in
+                            CachedRemoteImage(url: badge.imageURL, contentMode: .fit, showsRetry: false)
                             .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                openLightbox(images: profile.badges.map(\.imageURL), index: index)
+                            }
                         }
                     }
                 }
             }
 
             // Stats row
-            HStack(spacing: 12) {
-                if profile.entryCount > 0 {
-                    Text(L10n.Profile.entryCount(profile.entryCount))
-                        .font(.caption)
-                        .foregroundColor(themeManager.current.labelColor)
-                }
-                if profile.followerCount > 0 {
-                    Text(L10n.Profile.followerCount(profile.followerCount))
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                if profile.followingCount > 0 {
-                    Text(L10n.Profile.followingCount(profile.followingCount))
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
+            HStack(spacing: 8) {
+                profileStat(value: profile.entryCount, label: "entry")
+                profileStat(
+                    value: profile.followerCount,
+                    label: "takipçi",
+                    path: profile.followerLink,
+                    destinationTitle: "takipçiler"
+                )
+                profileStat(
+                    value: profile.followingCount,
+                    label: "takip",
+                    path: profile.followingLink,
+                    destinationTitle: "takip ettikleri"
+                )
             }
 
             // Join date
@@ -192,6 +201,46 @@ struct ProfileView: View {
                 .foregroundColor(.gray)
             }
         }
+    }
+
+    @ViewBuilder
+    private func profileStat(
+        value: Int,
+        label: String,
+        path: String? = nil,
+        destinationTitle: String = ""
+    ) -> some View {
+        if let path {
+            NavigationLink {
+                ProfileConnectionsView(path: path, title: destinationTitle)
+            } label: {
+                profileStatLabel(value: value, label: label, isActionable: true)
+            }
+            .buttonStyle(.plain)
+        } else {
+            profileStatLabel(value: value, label: label, isActionable: false)
+        }
+    }
+
+    private func profileStatLabel(value: Int, label: String, isActionable: Bool) -> some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 4) {
+                Text("\(value)")
+                    .font(.headline)
+                if isActionable {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.bold())
+                }
+            }
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .foregroundColor(isActionable ? themeManager.current.accentColor : themeManager.current.labelColor)
+        .frame(maxWidth: .infinity, minHeight: 58)
+        .background(themeManager.current.cellPrimaryColor)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Tab Picker
@@ -266,16 +315,12 @@ struct ProfileView: View {
             if !entry.imageURLs.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(entry.imageURLs, id: \.self) { urlStr in
-                            if let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { image in
-                                    image.resizable().scaledToFill()
-                                } placeholder: {
-                                    RoundedRectangle(cornerRadius: 6).fill(Color.gray.opacity(0.2))
-                                }
+                        ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
+                            CachedRemoteImage(url: urlStr)
                                 .frame(width: 160, height: 120)
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                            }
+                                .contentShape(Rectangle())
+                                .onTapGesture { openLightbox(images: entry.imageURLs, index: index) }
                         }
                     }
                 }
@@ -343,6 +388,13 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+    }
+
+    private func openLightbox(images: [String], index: Int) {
+        galleryPresentation = ImageGalleryPresentation(
+            imageURLs: images,
+            initialIndex: index
+        )
     }
 
 }

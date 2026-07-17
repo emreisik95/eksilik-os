@@ -3,6 +3,7 @@ import Foundation
 enum EksiEndpoint {
     // Topic lists
     case popular
+    case popularPage(page: Int)
     case today(page: Int)
     case todayInHistory(year: Int? = nil)
     case events
@@ -47,12 +48,17 @@ enum EksiEndpoint {
     // User
     case profile(username: String)
     case profileEntries(username: String, filter: String, page: Int = 1)
+    case profileConnections(path: String)
     case blockUser
 
     // Messages
     case messages(page: Int?)
     case messageThread(id: String)
     case sendMessage
+
+    // Topic tracking
+    case trackTopic(id: String)
+    case untrackTopic(id: String)
 
     // Auth
     case login
@@ -64,6 +70,7 @@ enum EksiEndpoint {
     var path: String {
         switch self {
         case .popular: return "/basliklar/gundem"
+        case .popularPage(let page): return "/basliklar/gundem?p=\(max(1, page))"
         case .today(let page): return "/basliklar/bugun/\(page)"
         case .todayInHistory(let year):
             if let year { return "/basliklar/tarihte-bugun?year=\(year)" }
@@ -99,18 +106,22 @@ enum EksiEndpoint {
         case .favoriteUsers: return "/entry/favorileyenler"
         case .autocomplete: return "/autocomplete/query"
         case .channels: return "/kanallar/m"
-        case .channelFollow(let slug): return "/kanal/takip-et"
-        case .channelUnfollow(let slug): return "/kanal/takip-birak"
+        case .channelFollow: return "/kanal/takip-et"
+        case .channelUnfollow: return "/kanal/takip-birak"
         case .profile(let username): return "/biri/\(username)"
         case .profileEntries(let username, let filter, let page):
             let ts = Int(Date().timeIntervalSince1970 * 1000)
             return "/\(filter)?nick=\(username)&p=\(page)&_=\(ts)"
+        case .profileConnections(let path):
+            return "/" + path.drop(while: { $0 == "/" })
         case .blockUser: return "/userrelation/addrelation"
         case .messages(let page):
             if let page { return "/mesaj?p=\(page)" }
             return "/mesaj"
         case .messageThread(let id): return "/mesaj/\(id)"
         case .sendMessage: return "/mesaj/yolla"
+        case .trackTopic(let id): return "/baslik/takip-et/\(id)"
+        case .untrackTopic(let id): return "/baslik/takip-etme/\(id)"
         case .login: return "/giris"
         case .logout: return "/terk"
         case .commentVote: return "/yorum/vote"
@@ -121,7 +132,7 @@ enum EksiEndpoint {
         switch self {
         case .createEntry, .deleteEntry, .favoriteEntry, .unfavoriteEntry,
              .voteEntry, .removeVote, .blockUser, .sendMessage, .commentVote,
-             .channelFollow, .channelUnfollow:
+             .channelFollow, .channelUnfollow, .trackTopic, .untrackTopic:
             return .post
         default:
             return .get

@@ -1,5 +1,9 @@
 import XCTest
+#if canImport(EksilikApp)
 @testable import EksilikApp
+#else
+@testable import EksilikCore
+#endif
 
 final class AuthParserTests: XCTestCase {
 
@@ -11,6 +15,7 @@ final class AuthParserTests: XCTestCase {
         let state = AuthParser.parseAuthState(html: html)
         XCTAssertFalse(state.isLoggedIn)
         XCTAssertNil(state.username)
+        XCTAssertFalse(state.isIndeterminate)
     }
 
     func testLoggedInState() {
@@ -22,6 +27,100 @@ final class AuthParserTests: XCTestCase {
         let state = AuthParser.parseAuthState(html: html)
         XCTAssertTrue(state.isLoggedIn)
         XCTAssertEqual(state.username, "testuser")
+        XCTAssertFalse(state.isIndeterminate)
+    }
+
+    func testPageWithoutAuthNavigationIsIndeterminate() {
+        let state = AuthParser.parseAuthState(html: "<main>entry içeriği</main>")
+
+        XCTAssertTrue(state.isIndeterminate)
+    }
+
+    func testLoginReturnURLRecognition() {
+        XCTAssertTrue(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/")!))
+        XCTAssertTrue(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/?returnUrl=%2F")!))
+        XCTAssertFalse(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://eksisozluk.com/giris")!))
+        XCTAssertFalse(LoginFlowPolicy.isSuccessfulReturnURL(URL(string: "https://example.com/")!))
+    }
+
+    func testLoginRequiresAnAuthenticationCookie() {
+        let authCookie = HTTPCookie(properties: [
+            .domain: ".eksisozluk.com",
+            .path: "/",
+            .name: ".AspNetCore.Cookies",
+            .value: "session-token",
+        ])!
+        let unrelatedCookie = HTTPCookie(properties: [
+            .domain: ".eksisozluk.com",
+            .path: "/",
+            .name: "theme",
+            .value: "dark",
+        ])!
+
+        XCTAssertTrue(LoginFlowPolicy.hasAuthCookie(in: [authCookie]))
+        XCTAssertFalse(LoginFlowPolicy.hasAuthCookie(in: [unrelatedCookie]))
+    }
+
+    func testAuthenticatedLoginPageCompletesWithoutRootRedirect() {
+        let html = """
+        <li class="buddy mobile-only">
+          <a href="/biri/testuser">testuser</a>
+        </li>
+        """
+
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: html
+        )
+
+        XCTAssertEqual(completion, .authenticated(username: "testuser"))
+    }
+
+    func testExistingSessionUsesProfileLinkOutsideLegacyBuddyMarkup() {
+        let html = """
+        <nav class="account-menu">
+          <a class="profile" href="/biri/sherlockun-besinci-sezonu" title="sherlockun besinci sezonu">hesabım</a>
+        </nav>
+        """
+
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: html
+        )
+
+        XCTAssertEqual(completion, .authenticated(username: "sherlockun besinci sezonu"))
+    }
+
+    func testMissingUsernameRecoversOnceFromTheRootPage() {
+        let completion = LoginFlowPolicy.Completion.authenticated(username: nil)
+
+        XCTAssertTrue(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/giris")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: false
+        ))
+        XCTAssertFalse(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: false
+        ))
+        XCTAssertFalse(LoginFlowPolicy.shouldRecoverUsername(
+            for: completion,
+            currentURL: URL(string: "https://eksisozluk.com/giris")!,
+            hasAuthCookie: true,
+            hasAttemptedRecovery: true
+        ))
+    }
+
+    func testLoginFormWithoutSessionDoesNotComplete() {
+        let completion = LoginFlowPolicy.completion(
+            for: URL(string: "https://eksisozluk.com/giris")!,
+            html: #"<a id="top-login-link">giriş</a>"#
+        )
+
+        XCTAssertNil(completion)
     }
 
     func testCSRFToken() {

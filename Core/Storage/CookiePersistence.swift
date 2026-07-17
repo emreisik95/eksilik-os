@@ -6,7 +6,8 @@ enum CookiePersistence {
 
     /// Save all eksisozluk cookies to UserDefaults using simple codable format
     static func save() {
-        guard let cookies = HTTPCookieStorage.shared.cookies(for: URL(string: "https://eksisozluk.com")!),
+        guard let siteURL = URL(string: "https://eksisozluk.com"),
+              let cookies = HTTPCookieStorage.shared.cookies(for: siteURL),
               !cookies.isEmpty else { return }
 
         let dicts: [[String: String]] = cookies.compactMap { cookie in
@@ -59,7 +60,8 @@ enum CookiePersistence {
 
     /// Check if we have persisted auth cookies
     static var hasAuthCookies: Bool {
-        guard let cookies = HTTPCookieStorage.shared.cookies(for: URL(string: "https://eksisozluk.com")!) else { return false }
+        guard let siteURL = URL(string: "https://eksisozluk.com"),
+              let cookies = HTTPCookieStorage.shared.cookies(for: siteURL) else { return false }
         // eksisozluk uses these cookies for auth
         return cookies.contains(where: { $0.name == ".AspNetCore.Cookies" || $0.name == "a" })
     }
@@ -77,7 +79,8 @@ enum CookiePersistence {
     /// Inject cookies from HTTPCookieStorage into WKWebView and wait for completion
     @MainActor
     static func injectIntoWebView() async {
-        guard let cookies = HTTPCookieStorage.shared.cookies(for: URL(string: "https://eksisozluk.com")!) else { return }
+        guard let siteURL = URL(string: "https://eksisozluk.com"),
+              let cookies = HTTPCookieStorage.shared.cookies(for: siteURL) else { return }
         let store = WKWebsiteDataStore.default().httpCookieStore
         for cookie in cookies {
             await store.setCookie(cookie)

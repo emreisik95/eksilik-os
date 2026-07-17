@@ -6,10 +6,13 @@ final class UserProfileViewModel: ObservableObject {
     @Published var profile: UserProfile?
     @Published var isLoading = false
     @Published var isLoadingMore = false
+    @Published var isLoadingEntries = false
+    @Published var hasMoreEntries = true
     @Published var error: String?
     @Published var selectedTab: ProfileTab = .entries
     private var currentPage = 1
     private var currentFilter = "son-entryleri"
+    private var entriesGeneration = UUID()
 
     enum ProfileTab: String, CaseIterable {
         case entries = "son-entryleri"
@@ -42,22 +45,26 @@ final class UserProfileViewModel: ObservableObject {
     }
 
     func loadProfile() async {
+        guard profile == nil, !isLoading else { return }
         isLoading = true
         error = nil
+        defer { isLoading = false }
 
         do {
             let result = try await userService.fetchProfile(username: username)
             profile = result
+            prefetchImages()
             // Entries are loaded separately via AJAX tab endpoints
             await loadEntries(filter: selectedTab.rawValue)
         } catch {
             self.error = error.localizedDescription
         }
-
-        isLoading = false
     }
 
     func selectTab(_ tab: ProfileTab) async {
+        guard selectedTab != tab || currentFilter != tab.rawValue || profile?.entries.isEmpty == true else {
+            return
+        }
         selectedTab = tab
         await loadEntries(filter: tab.rawValue)
     }
@@ -67,32 +74,55 @@ final class UserProfileViewModel: ObservableObject {
     }
 
     private func loadEntries(filter: String) async {
+        let generation = UUID()
+        entriesGeneration = generation
         currentFilter = filter
         currentPage = 1
+        hasMoreEntries = true
+        isLoadingEntries = true
+        isLoadingMore = false
+        error = nil
         do {
             let entries = try await userService.fetchProfileEntries(username: username, filter: filter, page: 1)
-            profile?.entries = preParseEntries(entries)
+            guard entriesGeneration == generation, currentFilter == filter else { return }
+            let parsed = UserProfile.ProfileEntry.orderedUnique(preParseEntries(entries))
+            profile?.entries = parsed
+            hasMoreEntries = !parsed.isEmpty
+            prefetchImages()
         } catch {
+            guard entriesGeneration == generation else { return }
             self.error = error.localizedDescription
+        }
+        if entriesGeneration == generation {
+            isLoadingEntries = false
         }
     }
 
     func loadMoreEntries() async {
-        guard !isLoadingMore else { return }
+        guard !isLoadingMore, !isLoadingEntries, hasMoreEntries else { return }
+        let generation = entriesGeneration
+        let filter = currentFilter
+        let nextPage = currentPage + 1
         isLoadingMore = true
-        currentPage += 1
+        defer { isLoadingMore = false }
         do {
-            let entries = try await userService.fetchProfileEntries(username: username, filter: currentFilter, page: currentPage)
+            let entries = try await userService.fetchProfileEntries(username: username, filter: filter, page: nextPage)
+            guard entriesGeneration == generation, currentFilter == filter else { return }
             let parsed = preParseEntries(entries)
-            if parsed.isEmpty {
-                currentPage -= 1
+            let existing = profile?.entries ?? []
+            let merged = UserProfile.ProfileEntry.orderedUnique(existing + parsed)
+            let addedCount = merged.count - existing.count
+            if parsed.isEmpty || addedCount == 0 {
+                hasMoreEntries = false
             } else {
-                profile?.entries.append(contentsOf: parsed)
+                currentPage = nextPage
+                profile?.entries = merged
+                prefetchImages()
             }
         } catch {
-            currentPage -= 1
+            guard entriesGeneration == generation else { return }
+            self.error = error.localizedDescription
         }
-        isLoadingMore = false
     }
 
     func vote(for entry: UserProfile.ProfileEntry, rate: Int) async {
@@ -153,5 +183,13 @@ final class UserProfileViewModel: ObservableObject {
             )
             return e
         }
+    }
+
+    private func prefetchImages() {
+        guard let profile else { return }
+        let urls = [profile.avatarURL].compactMap { $0 }
+            + profile.badges.map(\.imageURL)
+            + profile.entries.flatMap(\.imageURLs)
+        Task { await ImagePipeline.shared.prefetch(urls) }
     }
 }

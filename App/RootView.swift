@@ -14,6 +14,25 @@ struct RootView: View {
             if isReady {
                 ContentView()
                     .transition(.opacity)
+                    .overlay(alignment: .top) {
+                        if didFail {
+                            HStack(spacing: 8) {
+                                Image(systemName: "wifi.slash")
+                                Text("bağlantı yok — çevrimdışı içerikler kullanılabilir")
+                                    .font(.caption)
+                                Button(L10n.Common.retry) {
+                                    didFail = false
+                                    Task { await doBootstrap() }
+                                }
+                                .font(.caption.bold())
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.black.opacity(0.82), in: Capsule())
+                            .padding(.top, 8)
+                        }
+                    }
             }
 
             if !isReady {
@@ -56,17 +75,23 @@ struct RootView: View {
         .environmentObject(preferences)
         .environmentObject(deepLinkRouter)
         .preferredColorScheme(themeManager.current.colorScheme)
-        .task { await doBootstrap() }
+        .task { await bootstrapWithOfflineFallback() }
+    }
+
+    private func bootstrapWithOfflineFallback() async {
+        let bootstrapTask = Task { await doBootstrap() }
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+        if !isReady {
+            withAnimation { isReady = true }
+        }
+        await bootstrapTask.value
     }
 
     private func doBootstrap() async {
         let success = await WebViewFetcher.shared.bootstrap()
         withAnimation {
-            if success {
-                isReady = true
-            } else {
-                didFail = true
-            }
+            isReady = true
+            didFail = !success
         }
     }
 }

@@ -25,6 +25,7 @@ jobs:
 
       - name: Build
         run: |
+          set -o pipefail
           xcodebuild build \
             -project EksilikApp.xcodeproj \
             -scheme EksilikApp \
@@ -34,6 +35,7 @@ jobs:
 
       - name: Test
         run: |
+          set -o pipefail
           xcodebuild test \
             -project EksilikApp.xcodeproj \
             -scheme EksilikApp \

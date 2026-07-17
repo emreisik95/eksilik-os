@@ -40,7 +40,8 @@ struct TopicsProvider: AppIntentTimelineProvider {
 
     func timeline(for intent: EksilikWidgetIntent, in context: Context) async -> Timeline<TopicEntry> {
         let entry = await fetchEntry(for: intent)
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())
+            ?? Date().addingTimeInterval(30 * 60)
         return Timeline(entries: [entry], policy: .after(nextUpdate))
     }
 

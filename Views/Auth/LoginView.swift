@@ -23,7 +23,15 @@ struct LoginWebView: UIViewRepresentable {
         config.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
-        webView.load(URLRequest(url: URL(string: "https://eksisozluk.com/giris")!))
+        webView.customUserAgent = EksiRouter.defaultHeaders["User-Agent"]
+
+        Task { @MainActor in
+            CookiePersistence.restore()
+            await CookiePersistence.injectIntoWebView()
+            if let url = URL(string: EksiRouter.baseURL + EksiEndpoint.login.path) {
+                webView.load(URLRequest(url: url))
+            }
+        }
         return webView
     }
 
@@ -35,48 +43,64 @@ struct LoginWebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate {
         let onLoginSuccess: (_ username: String?) -> Void
+        private var didFinishLogin = false
+        private var hasAttemptedUsernameRecovery = false
 
         init(onLoginSuccess: @escaping (_ username: String?) -> Void) {
             self.onLoginSuccess = onLoginSuccess
         }
 
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-            if let url = navigationAction.request.url?.absoluteString,
-               url == "https://eksisozluk.com/" || url == "https://eksisozluk.com" {
-                syncCookiesAndFinish(webView: webView)
-                decisionHandler(.cancel)
-                return
-            }
-            decisionHandler(.allow)
-        }
-
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            // Check if the login page says user is already logged in
-            webView.evaluateJavaScript("document.body.innerText") { result, _ in
-                guard let text = result as? String else { return }
-                if text.contains("giriş yapmış görünüyorsunuz") {
-                    self.syncCookiesAndFinish(webView: webView)
+            let currentURL = webView.url
+            webView.evaluateJavaScript("document.documentElement.outerHTML") { result, _ in
+                guard let html = result as? String,
+                      let completion = LoginFlowPolicy.completion(for: currentURL, html: html) else {
+                    return
+                }
+
+                switch completion {
+                case .authenticated(let username):
+                    self.syncCookiesAndFinish(webView: webView, username: username)
+                case .successfulReturn:
+                    self.syncCookiesAndFinish(webView: webView, username: nil)
                 }
             }
         }
 
-        private func syncCookiesAndFinish(webView: WKWebView) {
-            WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+        private func syncCookiesAndFinish(webView: WKWebView, username: String?) {
+            webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+                let hasAuthCookie = LoginFlowPolicy.hasAuthCookie(in: cookies)
+                guard hasAuthCookie else { return }
+
                 for cookie in cookies {
                     HTTPCookieStorage.shared.setCookie(cookie)
                 }
                 CookiePersistence.save()
-                // Extract username from page HTML
-                DispatchQueue.main.async {
-                    webView.evaluateJavaScript("document.body.innerText") { result, _ in
-                        var username: String?
-                        if let text = result as? String,
-                           let range = text.range(of: "'", options: .literal),
-                           let endRange = text.range(of: "'", options: .literal, range: range.upperBound..<text.endIndex) {
-                            username = String(text[range.upperBound..<endRange.lowerBound])
-                        }
-                        self.onLoginSuccess(username)
+
+                let completion = LoginFlowPolicy.Completion.authenticated(username: username)
+                if LoginFlowPolicy.shouldRecoverUsername(
+                    for: completion,
+                    currentURL: webView.url,
+                    hasAuthCookie: hasAuthCookie,
+                    hasAttemptedRecovery: self.hasAttemptedUsernameRecovery
+                ) {
+                    self.hasAttemptedUsernameRecovery = true
+                    DispatchQueue.main.async {
+                        guard let rootURL = URL(string: EksiRouter.baseURL + "/") else { return }
+                        webView.load(URLRequest(url: rootURL))
                     }
+                    return
+                }
+
+                guard let username = username?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !username.isEmpty else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    guard !self.didFinishLogin else { return }
+                    self.didFinishLogin = true
+                    self.onLoginSuccess(username)
                 }
             }
         }

@@ -8,7 +8,11 @@ struct EntryListView: View {
     let title: String
     @State private var showSearchAlert = false
     @State private var searchKeywords = ""
-    @AppStorage("hasSeenFilterHint") private var hasSeenFilterHint = false
+    @State private var showDownloadOptions = false
+    @State private var galleryPresentation: ImageGalleryPresentation?
+    @State private var showFilterSwipeOnboarding = false
+    @AppStorage(EntryListChromePolicy.filterSwipeOnboardingStorageKey)
+    private var hasSeenFilterSwipeOnboarding = false
 
     init(link: String, title: String) {
         _viewModel = StateObject(wrappedValue: EntryListViewModel(link: link))
@@ -18,35 +22,7 @@ struct EntryListView: View {
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.isLoading && viewModel.entries.isEmpty {
-                List {
-                    ForEach(0..<5, id: \.self) { i in
-                        VStack(alignment: .leading, spacing: 10) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(height: 12)
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(height: 12)
-                                .frame(maxWidth: 250)
-                            HStack {
-                                Circle()
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 20, height: 20)
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 80, height: 10)
-                                Spacer()
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(themeManager.current.cellSecondaryColor)
-                                    .frame(width: 100, height: 10)
-                            }
-                        }
-                        .padding(.vertical, 6)
-                        .listRowBackground(themeManager.current.cellPrimaryColor)
-                    }
-                }
-                .listStyle(.plain)
-                .redacted(reason: .placeholder)
+                EntryListSkeletonView()
             } else if let error = viewModel.error, viewModel.entries.isEmpty {
                 ErrorView(
                     message: error,
@@ -79,7 +55,13 @@ struct EntryListView: View {
                             isEven: index % 2 == 0,
                             onFavorite: { Task { await viewModel.toggleFavorite(for: entry) } },
                             onUpvote: { Task { await viewModel.vote(for: entry, rate: 1) } },
-                            onDownvote: { Task { await viewModel.vote(for: entry, rate: -1) } }
+                            onDownvote: { Task { await viewModel.vote(for: entry, rate: -1) } },
+                            onOpenImages: { imageURLs, index in
+                                galleryPresentation = ImageGalleryPresentation(
+                                    imageURLs: imageURLs,
+                                    initialIndex: index
+                                )
+                            }
                         )
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(themeManager.current.backgroundColor)
@@ -87,6 +69,8 @@ struct EntryListView: View {
                     }
                 }
                 .listStyle(.plain)
+                .id(preferences.entryLayoutStyle.id)
+                .animation(.easeInOut(duration: 0.2), value: preferences.entryLayoutStyle)
             }
 
             // Loading overlay when switching filters
@@ -97,27 +81,6 @@ struct EntryListView: View {
 
             // Always visible: filter bar + pagination
             filterBar
-                .overlay(alignment: .trailing) {
-                    if !hasSeenFilterHint {
-                        HStack(spacing: 4) {
-                            Text("kaydır")
-                                .font(.caption2)
-                            Image(systemName: "chevron.right")
-                                .font(.caption2)
-                        }
-                        .foregroundColor(themeManager.current.accentColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(themeManager.current.backgroundColor.opacity(0.9))
-                        .cornerRadius(8)
-                        .padding(.trailing, 4)
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation { hasSeenFilterHint = true }
-                            }
-                        }
-                    }
-                }
 
             if viewModel.pagination.totalPages > 1 {
                 PaginationView(
@@ -130,7 +93,7 @@ struct EntryListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(themeManager.current.backgroundColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar {
+        .toolbar(content: {
             ToolbarItem(placement: .principal) {
                 Text(viewModel.title.isEmpty ? title : viewModel.title)
                     .font(.subheadline.bold())
@@ -138,6 +101,14 @@ struct EntryListView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: UIScreen.main.bounds.width - 160)
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showDownloadOptions = true
+                } label: {
+                    Image(systemName: "arrow.down.circle")
+                }
+                .accessibilityLabel("başlığı çevrimdışı indir")
             }
             if session.isLoggedIn {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -155,7 +126,7 @@ struct EntryListView: View {
                     }
                 }
             }
-        }
+        })
         .alert("başlıkta ara", isPresented: $showSearchAlert) {
             TextField("aranacak kelime...", text: $searchKeywords)
             Button("ara") {
@@ -164,9 +135,35 @@ struct EntryListView: View {
             }
             Button("vazgeç", role: .cancel) { }
         }
+        .sheet(isPresented: $showDownloadOptions) {
+            DownloadOptionsView(
+                title: viewModel.title.isEmpty ? title : viewModel.title,
+                request: viewModel.offlineRequest,
+                totalPages: viewModel.offlineTotalPages
+            )
+        }
+        .sheet(isPresented: $showFilterSwipeOnboarding, onDismiss: {
+            hasSeenFilterSwipeOnboarding = true
+        }) {
+            EntryFilterSwipeOnboardingView {
+                hasSeenFilterSwipeOnboarding = true
+                showFilterSwipeOnboarding = false
+            }
+            .presentationDetents([.height(380)])
+            .presentationDragIndicator(.visible)
+        }
+        .fullScreenCover(item: $galleryPresentation) { presentation in
+            ImageLightboxView(presentation: presentation)
+        }
         .task {
-            guard viewModel.entries.isEmpty else { return }
-            await viewModel.loadEntries()
+            if viewModel.entries.isEmpty {
+                await viewModel.loadEntries()
+            }
+            if EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(
+                hasSeen: hasSeenFilterSwipeOnboarding
+            ) {
+                showFilterSwipeOnboarding = true
+            }
         }
         .refreshable { await viewModel.loadEntries() }
     }
@@ -187,7 +184,7 @@ struct EntryListView: View {
                 if session.isLoggedIn {
                     Button {
                         Task {
-                            let username = await SessionManager.shared.username ?? ""
+                            let username = SessionManager.shared.username ?? ""
                             await viewModel.applyFilter(.author(username))
                         }
                     } label: {
@@ -277,5 +274,56 @@ struct EntryListView: View {
                     ? themeManager.current.accentColor
                     : themeManager.current.cellSecondaryColor)
         )
+    }
+}
+
+private struct EntryFilterSwipeOnboardingView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "arrow.left.and.right.circle.fill")
+                .font(.system(size: 54))
+                .foregroundColor(themeManager.current.accentColor)
+
+            VStack(spacing: 8) {
+                Text("filtreler arasında gezin")
+                    .font(.title3.bold())
+                    .foregroundColor(themeManager.current.labelColor)
+                Text("Tümü, bugün, şükela ve diğer filtreleri görmek için filtre şeridini sağa veya sola kaydır.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "hand.draw")
+                    .foregroundColor(themeManager.current.accentColor)
+                Text("İstediğin görünüme geçmek için filtreye dokun.")
+                    .font(.footnote)
+                    .foregroundColor(themeManager.current.labelColor)
+                Spacer()
+            }
+            .padding(12)
+            .background(
+                themeManager.current.cellSecondaryColor,
+                in: RoundedRectangle(cornerRadius: 12)
+            )
+
+            Button(action: onDismiss) {
+                Text("anladım")
+                    .font(.body.weight(.semibold))
+                    .foregroundColor(themeManager.current.backgroundColor)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(
+                        themeManager.current.accentColor,
+                        in: RoundedRectangle(cornerRadius: 12)
+                    )
+            }
+        }
+        .padding(24)
+        .background(themeManager.current.backgroundColor.ignoresSafeArea())
     }
 }

@@ -6,8 +6,7 @@ struct TopicListView: View {
     @StateObject private var viewModel: TopicListViewModel
 
     init(listType: TopicListViewModel.ListType, year: Int? = nil) {
-        // BlockedTopicStore will be replaced via onAppear with environment version
-        let vm = TopicListViewModel(listType: listType, blockedStore: BlockedTopicStore())
+        let vm = TopicListViewModel(listType: listType)
         vm.year = year
         _viewModel = StateObject(wrappedValue: vm)
     }
@@ -15,29 +14,7 @@ struct TopicListView: View {
     var body: some View {
         Group {
             if viewModel.isLoading && viewModel.topics.isEmpty {
-                List {
-                    ForEach(0..<12, id: \.self) { i in
-                        HStack {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(height: 14)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(width: CGFloat.random(in: 150...280))
-                            Spacer()
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(themeManager.current.cellSecondaryColor)
-                                .frame(width: 36, height: 22)
-                        }
-                        .padding(.vertical, 2)
-                        .listRowBackground(
-                            i % 2 == 0
-                            ? themeManager.current.cellPrimaryColor
-                            : themeManager.current.cellSecondaryColor
-                        )
-                    }
-                }
-                .listStyle(.plain)
-                .redacted(reason: .placeholder)
+                TopicListSkeletonView()
             } else if let error = viewModel.error, viewModel.topics.isEmpty {
                 ErrorView(message: error) {
                     print("🔄 Retry tapped for \(viewModel.listType)")
@@ -51,6 +28,7 @@ struct TopicListView: View {
         }
         .background(themeManager.current.backgroundColor)
         .task {
+            viewModel.configure(blockedStore: blockedStore)
             guard viewModel.topics.isEmpty else { return }
             await viewModel.loadTopics()
         }
@@ -95,6 +73,15 @@ struct TopicListView: View {
                     }
                 }
             }
+
+            if viewModel.isLoadingMore {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                .listRowBackground(themeManager.current.backgroundColor)
+            }
         }
         .listStyle(.plain)
     }
@@ -102,34 +89,36 @@ struct TopicListView: View {
 
 @ViewBuilder
 func destinationView(for route: Route) -> some View {
-    switch route {
-    case .topicList(let link, let title):
-        ChannelTopicListView(link: link, title: title)
-    case .entryList(let link, let title):
-        EntryListView(link: link, title: title)
-    case .entryById(let id):
-        EntryListView(link: "entry/\(id)", title: "")
-    case .profile(let username):
-        ProfileView(username: username)
-    case .composeEntry(let link):
-        EntryComposeView(topicLink: link)
-    case .favoriteUsers(let entryId):
-        FavoriteUsersView(entryId: entryId)
-    case .messageThread(let link, let title):
-        MessageThreadView(link: link, title: title)
-    case .composeMessage(let to, let subject):
-        MessageComposeView(recipient: to, subject: subject)
-    case .login:
-        LoginView()
-    case .settings:
-        SettingsView()
-    case .webPage(let urlStr, let title):
-        if let url = URL(string: urlStr) {
-            EksiWebView(url: url)
-                .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
+    Group {
+        switch route {
+        case .topicList(let link, let title):
+            ChannelTopicListView(link: link, title: title)
+        case .entryList(let link, let title):
+            EntryListView(link: link, title: title)
+        case .entryById(let id):
+            EntryListView(link: "entry/\(id)", title: "")
+        case .profile(let username):
+            ProfileView(username: username)
+        case .composeEntry(let link):
+            EntryComposeView(topicLink: link)
+        case .favoriteUsers(let entryId):
+            FavoriteUsersView(entryId: entryId)
+        case .messageThread(let link, let title):
+            MessageThreadView(link: link, title: title)
+        case .composeMessage(let to, let subject):
+            MessageComposeView(recipient: to, subject: subject)
+        case .login:
+            LoginView()
+        case .settings:
+            SettingsView()
+        case .webPage(let urlStr, let title):
+            if let url = URL(string: urlStr) {
+                EksiWebView(url: url)
+                    .navigationTitle(title)
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+        default:
+            EmptyView()
         }
-    default:
-        EmptyView()
     }
 }

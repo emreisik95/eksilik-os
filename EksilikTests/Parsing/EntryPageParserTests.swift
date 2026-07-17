@@ -1,5 +1,9 @@
 import XCTest
+#if canImport(EksilikApp)
 @testable import EksilikApp
+#else
+@testable import EksilikCore
+#endif
 
 final class EntryPageParserTests: XCTestCase {
 
@@ -39,5 +43,13 @@ final class EntryPageParserTests: XCTestCase {
         XCTAssertTrue(page.entries[0].isFavorited)
         XCTAssertEqual(page.entries[0].author.nick, "yazar1")
         XCTAssertEqual(page.entries[0].id, "999")
+    }
+
+    func testParseTrackedTopic() {
+        let html = #"<a id="track-topic-link" data-tracked="1"></a>"#
+
+        let page = EntryPageParser.parse(html: html, currentUsername: nil)
+
+        XCTAssertTrue(page.isTracked)
     }
 }

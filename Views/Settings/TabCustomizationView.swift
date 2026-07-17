@@ -1,38 +1,69 @@
 import SwiftUI
 
 struct TabCustomizationView: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    @EnvironmentObject var preferences: UserPreferences
+    @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var preferences: UserPreferences
 
-    private let allTabs: [(String, String)] = [
-        ("gündem", "popular"),
-        ("bugün", "today"),
-        ("debe", "debe"),
-        ("tarihte bugün", "todayInHistory"),
-        ("son", "latest"),
-        ("takip", "following"),
-        ("kenar", "kenar"),
-        ("çaylaklar", "caylaklar"),
-        ("çöp", "cop"),
-    ]
+    private var orderedTabs: [HomeTabDefinition] {
+        let definitions = Dictionary(
+            uniqueKeysWithValues: HomeTabDefinition.all.map { ($0.id, $0) }
+        )
+        return HomeTabCatalog.normalizedOrder(preferences.homeTabOrder).compactMap { definitions[$0] }
+    }
 
     var body: some View {
         List {
-            Section(footer: Text("hiçbiri seçilmezse tümü gösterilir")) {
-                ForEach(allTabs, id: \.1) { tab in
+            Section {
+                ForEach(orderedTabs) { tab in
                     Button {
-                        toggleTab(tab.1)
+                        toggleTab(tab.id)
                     } label: {
-                        HStack {
-                            Text(tab.0)
-                                .foregroundColor(themeManager.current.labelColor)
-                            Spacer()
-                            if isVisible(tab.1) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(themeManager.current.accentColor)
+                        HStack(spacing: 12) {
+                            Image(systemName: tab.systemImage)
+                                .foregroundColor(isVisible(tab.id)
+                                    ? themeManager.current.accentColor
+                                    : .secondary)
+                                .frame(width: 28)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(tab.name)
+                                    .foregroundColor(themeManager.current.labelColor)
+                                if tab.requiresLogin {
+                                    Text("giriş yapınca kullanılabilir")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
                             }
+
+                            Spacer()
+
+                            Image(systemName: isVisible(tab.id) ? "checkmark.circle.fill" : "circle")
+                                .font(.title3)
+                                .foregroundColor(isVisible(tab.id)
+                                    ? themeManager.current.accentColor
+                                    : .secondary.opacity(0.45))
                         }
+                        .frame(minHeight: 48)
                     }
+                    .buttonStyle(.plain)
+                }
+                .onMove(perform: moveTabs)
+            } header: {
+                Text("görünürlük ve sıra")
+            } footer: {
+                Text("Sekmeye dokunarak gizle veya göster. Sıralamak için sağ üstten Düzenle'ye basıp tutamaçları sürükle.")
+            }
+            .listRowBackground(themeManager.current.cellPrimaryColor)
+
+            Section {
+                Button {
+                    withAnimation {
+                        preferences.visibleHomeTabs = []
+                        preferences.homeTabOrder = HomeTabCatalog.defaultOrder
+                    }
+                } label: {
+                    Label("varsayılan düzene dön", systemImage: "arrow.counterclockwise")
+                        .foregroundColor(themeManager.current.accentColor)
                 }
             }
             .listRowBackground(themeManager.current.cellPrimaryColor)
@@ -42,28 +73,40 @@ struct TabCustomizationView: View {
         .background(themeManager.current.backgroundColor)
         .navigationTitle("sekmeler")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            EditButton()
+        }
     }
 
-    private func isVisible(_ rawValue: String) -> Bool {
+    private func isVisible(_ id: String) -> Bool {
         let visible = preferences.visibleHomeTabs
-        return visible.isEmpty || visible.contains(rawValue)
+        return visible.isEmpty || visible.contains(id)
     }
 
-    private func toggleTab(_ rawValue: String) {
+    private func toggleTab(_ id: String) {
         var visible = preferences.visibleHomeTabs
         if visible.isEmpty {
-            // First toggle: start with all tabs, then remove this one
-            visible = allTabs.map { $0.1 }
-            visible.removeAll { $0 == rawValue }
-        } else if visible.contains(rawValue) {
-            visible.removeAll { $0 == rawValue }
+            visible = HomeTabCatalog.defaultOrder
+        }
+
+        if let index = visible.firstIndex(of: id) {
+            guard visible.count > 1 else { return }
+            visible.remove(at: index)
         } else {
-            visible.append(rawValue)
+            visible.append(id)
         }
-        // If all removed or all selected, reset to empty (show all)
-        if visible.isEmpty || visible.count == allTabs.count {
-            visible = []
-        }
-        preferences.visibleHomeTabs = visible
+
+        let knownVisible = Set(visible).intersection(HomeTabCatalog.defaultOrder)
+        preferences.visibleHomeTabs = knownVisible.count == HomeTabCatalog.defaultOrder.count
+            ? []
+            : HomeTabCatalog.normalizedOrder(preferences.homeTabOrder).filter(knownVisible.contains)
+    }
+
+    private func moveTabs(from source: IndexSet, to destination: Int) {
+        preferences.homeTabOrder = HomeTabCatalog.moving(
+            preferences.homeTabOrder,
+            fromOffsets: source,
+            toOffset: destination
+        )
     }
 }

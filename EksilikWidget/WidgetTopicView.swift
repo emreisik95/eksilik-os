@@ -129,8 +129,11 @@ struct WidgetTopicView: View {
     }
 
     private func deepLink(for topic: WidgetTopic) -> URL {
-        let encoded = topic.link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? topic.link
-        return URL(string: "eksilik://topic?link=\(encoded)")!
+        var components = URLComponents()
+        components.scheme = "eksilik"
+        components.host = "topic"
+        components.queryItems = [URLQueryItem(name: "link", value: topic.link)]
+        return components.url ?? URL(fileURLWithPath: "/")
     }
 }
 

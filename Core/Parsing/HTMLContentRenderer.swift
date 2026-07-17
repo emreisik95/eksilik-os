@@ -11,7 +11,7 @@ enum HTMLContentRenderer {
     ) -> NSAttributedString? {
         var processed = html
         processed = expandStarLinks(processed)
-        processed = addExternalLinkIcons(processed)
+        processed = ExternalLinkPolicy.addingTextMarkers(to: processed)
 
         let styledHTML = """
         <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -60,8 +60,10 @@ enum HTMLContentRenderer {
         let matches = regex.matches(in: html, range: range)
 
         for match in matches.reversed() {
-            let fullRange = Range(match.range, in: result)!
-            let queryRange = Range(match.range(at: 1), in: result)!
+            guard let fullRange = Range(match.range, in: result),
+                  let queryRange = Range(match.range(at: 1), in: result) else {
+                continue
+            }
             let query = String(result[queryRange])
 
             let replacement = " <a class=\"star-ref\" href=\"/?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)\">(bkz: \(query))</a>"
@@ -69,22 +71,5 @@ enum HTMLContentRenderer {
         }
 
         return result
-    }
-
-    /// Add → icon to external links
-    private static func addExternalLinkIcons(_ html: String) -> String {
-        guard let regex = try? NSRegularExpression(
-            pattern: #"(<a\s+[^>]*href\s*=\s*"https?://[^"]*"[^>]*>)(.*?)(</a>)"#,
-            options: [.dotMatchesLineSeparators, .caseInsensitive]
-        ) else { return html }
-
-        let nsHTML = html as NSString
-        let range = NSRange(location: 0, length: nsHTML.length)
-
-        return regex.stringByReplacingMatches(
-            in: html,
-            range: range,
-            withTemplate: "$1$2 ↗$3"
-        )
     }
 }

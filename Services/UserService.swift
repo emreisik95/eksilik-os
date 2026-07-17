@@ -16,6 +16,11 @@ struct UserService {
         return UserProfileParser.parseProfileEntries(html: html)
     }
 
+    func fetchProfileConnections(path: String) async throws -> [ProfileConnection] {
+        let html = try await client.fetchHTML(for: .profileConnections(path: path))
+        return ProfileConnectionParser.parse(html: html)
+    }
+
     func performAction(url: String) async throws {
         let html = try await client.fetchHTML(for: .topic(slug: url, page: nil))
         _ = html
