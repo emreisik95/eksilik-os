@@ -4,7 +4,7 @@ import XCTest
 final class EntryListChromePolicyTests: XCTestCase {
     func testPaginationControlsLookCompactWithoutShrinkingTheTouchTarget() {
         XCTAssertGreaterThanOrEqual(EntryListChromePolicy.paginationTouchTargetSize, 44)
-        XCTAssertLessThanOrEqual(EntryListChromePolicy.paginationVisualButtonSize, 40)
+        XCTAssertLessThanOrEqual(EntryListChromePolicy.paginationVisualButtonSize, 34)
         XCTAssertLessThan(
             EntryListChromePolicy.paginationVisualButtonSize,
             EntryListChromePolicy.paginationTouchTargetSize

@@ -51,8 +51,8 @@ enum PaginationControl: String, CaseIterable, Identifiable, Sendable {
 
 enum EntryListChromePolicy {
     static let paginationTouchTargetSize = 44.0
-    static let paginationVisualButtonSize = 36.0
-    static let paginationIconSize = 16.0
+    static let paginationVisualButtonSize = 32.0
+    static let paginationIconSize = 14.0
     static let paginationControlSpacing = 12.0
     static let paginationSectionSpacing = 6.0
     static let leadingPaginationControls: [PaginationControl] = [.first, .previous]

@@ -509,7 +509,7 @@ private struct Harness {
             "pagination controls should meet the minimum touch target"
         )
         expect(
-            EntryListChromePolicy.paginationVisualButtonSize <= 40,
+            EntryListChromePolicy.paginationVisualButtonSize <= 34,
             "pagination controls should stay visually compact"
         )
         expect(

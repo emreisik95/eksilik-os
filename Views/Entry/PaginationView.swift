@@ -12,7 +12,7 @@ struct PaginationView: View {
             Text("\(pagination.currentPage) / \(pagination.totalPages)")
                 .font(.subheadline.weight(.semibold).monospacedDigit())
                 .foregroundColor(themeManager.current.labelColor)
-                .frame(minWidth: 52, minHeight: 36)
+                .frame(minWidth: 48, minHeight: 32)
                 .background(
                     Capsule()
                         .fill(themeManager.current.cellSecondaryColor)
@@ -22,7 +22,7 @@ struct PaginationView: View {
             controlGroup(EntryListChromePolicy.trailingPaginationControls)
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
         .frame(maxWidth: .infinity)
         .background(themeManager.current.backgroundColor)
     }
