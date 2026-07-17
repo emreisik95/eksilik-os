@@ -6,22 +6,48 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            HomeTabView()
-                .tabItem { Label(L10n.Tab.home, systemImage: "house") }
-
-            SearchView()
-                .tabItem { Label(L10n.Tab.search, systemImage: "magnifyingglass") }
-
-            OfflineLibraryView()
-                .tabItem { Label(L10n.Tab.offline, systemImage: "arrow.down.circle") }
-
-            profileTab
-                .tabItem { Label(session.isLoggedIn ? L10n.Tab.profile : L10n.Auth.login, systemImage: "person") }
-
-            SettingsView()
-                .tabItem { Label(L10n.Tab.settings, systemImage: "gearshape") }
+            ForEach(MainTab.allCases) { tab in
+                tabContent(for: tab)
+                    .tabItem {
+                        Label(tabTitle(for: tab), systemImage: tab.systemImage)
+                    }
+            }
         }
         .tint(themeManager.current.accentColor)
+    }
+
+    @ViewBuilder
+    private func tabContent(for tab: MainTab) -> some View {
+        switch tab {
+        case .home:
+            HomeTabView()
+        case .search:
+            SearchView()
+        case .events:
+            eventsTab
+        case .profile:
+            profileTab
+        case .settings:
+            SettingsView()
+        }
+    }
+
+    private func tabTitle(for tab: MainTab) -> String {
+        if tab == .profile, !session.isLoggedIn {
+            return L10n.Auth.login
+        }
+        return tab.title
+    }
+
+    private var eventsTab: some View {
+        NavigationStack {
+            TopicListView(listType: .events)
+                .navigationTitle(L10n.Tab.events)
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationDestination(for: Route.self) { route in
+                    destinationView(for: route)
+                }
+        }
     }
 
     @ViewBuilder

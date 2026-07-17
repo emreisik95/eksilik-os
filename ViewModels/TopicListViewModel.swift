@@ -14,7 +14,7 @@ final class TopicListViewModel: ObservableObject {
     private var loadGeneration = UUID()
 
     enum ListType: String {
-        case popular, today, todayInHistory, following, latest, debe, kenar, caylaklar, cop
+        case popular, today, todayInHistory, events, following, latest, debe, kenar, caylaklar, cop
     }
 
     let listType: ListType
@@ -97,6 +97,9 @@ final class TopicListViewModel: ObservableObject {
             return try await topicService.fetchTodayTopicsPaginated(page: page, isBlocked: isBlocked)
         case .todayInHistory:
             let topics = try await topicService.fetchFromEndpoint(.todayInHistory(year: year), isBlocked: isBlocked)
+            return (topics, .empty)
+        case .events:
+            let topics = try await topicService.fetchFromEndpoint(.events, isBlocked: isBlocked)
             return (topics, .empty)
         case .following:
             let topics = try await topicService.fetchFromEndpoint(.following, isBlocked: isBlocked)

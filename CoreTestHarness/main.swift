@@ -161,6 +161,18 @@ private struct Harness {
         )
     }
 
+    mutating func runMainTabChecks() {
+        expect(
+            MainTab.allCases == [.home, .search, .events, .profile, .settings],
+            "the olay tab should remain in the primary tab bar"
+        )
+        expect(MainTab.events.title == "olay", "the events tab should keep its olay label")
+        expect(
+            !MainTab.allCases.map(\.rawValue).contains("offline"),
+            "offline reading should not replace a primary tab"
+        )
+    }
+
     mutating func runStableLoadingChecks() {
         let firstPass = (0..<24).map(SkeletonLayout.topicTitleFraction(row:))
         let secondPass = (0..<24).map(SkeletonLayout.topicTitleFraction(row:))
@@ -599,6 +611,7 @@ private struct Harness {
 private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runTopicRequestChecks()
+harness.runMainTabChecks()
 harness.runStableLoadingChecks()
 harness.runEntryLayoutStyleChecks()
 harness.runHomeNavigationChecks()

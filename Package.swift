@@ -31,6 +31,7 @@ let package = Package(
                 "Core/Loading/SkeletonLayout.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
+                "Core/Presentation/MainTab.swift",
                 "Core/Search/SearchPresentation.swift",
                 "Core/Images/ImageURLNormalizer.swift",
                 "Core/Storage/OfflineTopicStore.swift",

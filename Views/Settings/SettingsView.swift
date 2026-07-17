@@ -37,6 +37,12 @@ struct SettingsView: View {
                 .listRowBackground(themeManager.current.cellPrimaryColor)
 
                 Section(L10n.Settings.content) {
+                    NavigationLink {
+                        OfflineLibraryView()
+                    } label: {
+                        Label(L10n.Offline.title, systemImage: "arrow.down.circle")
+                    }
+
                     NavigationLink(L10n.Settings.blockedTopics) {
                         BlockedTopicsView()
                     }

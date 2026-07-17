@@ -5,51 +5,49 @@ struct OfflineLibraryView: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if viewModel.isLoading && viewModel.items.isEmpty {
-                    LoadingView()
-                } else if let error = viewModel.error, viewModel.items.isEmpty {
-                    ErrorView(message: error) { Task { await viewModel.load() } }
-                } else if viewModel.items.isEmpty {
-                    VStack(spacing: 14) {
-                        Image(systemName: "arrow.down.circle")
-                            .font(.system(size: 42))
-                            .foregroundColor(.gray)
-                        Text("indirilen başlık yok")
-                            .font(.headline)
-                        Text("bir başlıktaki indirme düğmesinden normal veya şükela entry'leri kaydedebilirsin")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 36)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(viewModel.items) { item in
-                            offlineRow(item)
-                                .listRowBackground(themeManager.current.cellPrimaryColor)
-                                .swipeActions {
-                                    Button(role: .destructive) {
-                                        Task { await viewModel.delete(item.topic) }
-                                    } label: {
-                                        Label("sil", systemImage: "trash")
-                                    }
-                                }
-                        }
-                    }
-                    .listStyle(.plain)
-                    .refreshable { await viewModel.load() }
+        Group {
+            if viewModel.isLoading && viewModel.items.isEmpty {
+                LoadingView()
+            } else if let error = viewModel.error, viewModel.items.isEmpty {
+                ErrorView(message: error) { Task { await viewModel.load() } }
+            } else if viewModel.items.isEmpty {
+                VStack(spacing: 14) {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 42))
+                        .foregroundColor(.gray)
+                    Text("indirilen başlık yok")
+                        .font(.headline)
+                    Text("bir başlıktaki indirme düğmesinden normal veya şükela entry'leri kaydedebilirsin")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 36)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(viewModel.items) { item in
+                        offlineRow(item)
+                            .listRowBackground(themeManager.current.cellPrimaryColor)
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    Task { await viewModel.delete(item.topic) }
+                                } label: {
+                                    Label("sil", systemImage: "trash")
+                                }
+                            }
+                    }
+                }
+                .listStyle(.plain)
+                .refreshable { await viewModel.load() }
             }
-            .background(themeManager.current.backgroundColor.ignoresSafeArea())
-            .navigationTitle(L10n.Offline.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .task { await viewModel.load() }
-            .onReceive(NotificationCenter.default.publisher(for: .offlineTopicsDidChange)) { _ in
-                Task { await viewModel.load() }
-            }
+        }
+        .background(themeManager.current.backgroundColor.ignoresSafeArea())
+        .navigationTitle(L10n.Offline.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await viewModel.load() }
+        .onReceive(NotificationCenter.default.publisher(for: .offlineTopicsDidChange)) { _ in
+            Task { await viewModel.load() }
         }
     }
 
