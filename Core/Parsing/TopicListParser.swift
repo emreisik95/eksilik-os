@@ -56,4 +56,22 @@ struct TopicListParser {
             blockedTopics.contains(where: { title.contains($0) })
         })
     }
+
+    static func parseActivityFeed(
+        html: String,
+        page: Int,
+        isBlocked: ((String) -> Bool)? = nil
+    ) -> [Topic] {
+        parse(html: html, isBlocked: isBlocked)
+            .enumerated()
+            .map { index, topic in
+                Topic(
+                    id: "activity-\(max(1, page))-\(index)-\(topic.id)",
+                    title: topic.title,
+                    slug: topic.slug,
+                    entryCount: topic.entryCount,
+                    link: topic.link
+                )
+            }
+    }
 }

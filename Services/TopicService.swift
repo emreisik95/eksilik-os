@@ -45,7 +45,11 @@ struct TopicService {
         let html = try await client.fetchHTML(for: section.endpoint(page: page))
         await SessionManager.shared.updateFromHTML(html)
         return (
-            TopicListParser.parse(html: html, isBlocked: isBlocked),
+            TopicListParser.parseActivityFeed(
+                html: html,
+                page: page,
+                isBlocked: isBlocked
+            ),
             PaginationParser.parse(html: html)
         )
     }
