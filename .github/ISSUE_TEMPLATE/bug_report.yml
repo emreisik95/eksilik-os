@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a reproducible problem in ek$ilik
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ek$ilik. Never include passwords, session cookies, private messages, signing files, or other personal data.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched open and closed issues for the same problem.
+          required: true
+        - label: I can reproduce this on the latest TestFlight or App Store build.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and build
+      placeholder: 2.0.1 (10)
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and iOS version
+      placeholder: iPhone 17, iOS 26.0
+    validations:
+      required: true
+  - type: dropdown
+    id: account-state
+    attributes:
+      label: Account state
+      options:
+        - Signed out
+        - Signed in
+        - Not relevant
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Tap …
+        3. Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or sanitized logs
+      description: Remove usernames, cookies, tokens, private content, and other personal data first.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

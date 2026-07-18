@@ -1,5 +1,8 @@
 # ek$ilik
 
+[![Build & Test](https://github.com/emreisik95/eksilik-os/actions/workflows/build.yml/badge.svg)](https://github.com/emreisik95/eksilik-os/actions/workflows/build.yml)
+[![CodeQL](https://github.com/emreisik95/eksilik-os/actions/workflows/codeql.yml/badge.svg)](https://github.com/emreisik95/eksilik-os/actions/workflows/codeql.yml)
+
 Reklamsız, açık kaynak ekşi sözlük iOS istemcisi.
 
 > Ad-free, open source [ekşi sözlük](https://eksisozluk.com) iOS client built with SwiftUI.
@@ -25,16 +28,17 @@ Reklamsız, açık kaynak ekşi sözlük iOS istemcisi.
 ## Kurulum / Setup
 
 ### Gereksinimler / Requirements
+
 - Xcode 15+
 - iOS 16.0+
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) 2.46+
 
 ### Adımlar / Steps
 
 ```bash
 # Repoyu klonla / Clone the repo
 git clone https://github.com/emreisik95/eksilik-os.git
-cd eksilik-os/EksilikApp
+cd eksilik-os
 
 # Xcode projesini oluştur / Generate Xcode project
 xcodegen generate
@@ -47,8 +51,9 @@ SPM bağımlılıkları Xcode tarafından otomatik çözülür.
 SPM dependencies are resolved automatically by Xcode.
 
 ### Bağımlılıklar / Dependencies
-- [Kanna](https://github.com/tid-kijyun/Kanna) 5.3+ — HTML parsing
-- [KeychainAccess](https://github.com/kishikawakatsumi/KeychainAccess) 4.2+ — Secure storage
+
+- [Kanna](https://github.com/tid-kijyun/Kanna) 5.3.0 — HTML parsing
+- [KeychainAccess](https://github.com/kishikawakatsumi/KeychainAccess) 4.2.2 — Secure storage
 
 ## Mimari / Architecture
 
@@ -72,6 +77,8 @@ swift run EksilikCoreHarness
 ```
 
 Tam uygulama derlemesi ve simülatör testleri için eksiksiz Xcode kurulumu gerekir.
+
+Katkılar test güdümlü ilerler: üretim Swift değişiklikleri karşılık gelen test değişikliğiyle birlikte gelmeli ve coverage mevcut tabanın altına düşmemelidir. Ayrıntılar için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik bildirimleri için [SECURITY.md](SECURITY.md) dosyasına bakın.
 
 ## Temalar / Themes
 
