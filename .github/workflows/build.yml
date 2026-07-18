@@ -46,6 +46,9 @@ jobs:
       - name: Test portable SwiftLint baseline
         run: bash .github/scripts/test_swiftlint_baseline.sh
 
+      - name: Test immutable quality baselines
+        run: bash .github/scripts/test_quality_baseline_contract.sh
+
       - name: Test repository contract
         run: bash .github/scripts/test_repository_contract.sh
 
@@ -55,6 +58,13 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: bash .github/scripts/check_tdd_contract.sh "$BASE_SHA" "$HEAD_SHA"
+
+      - name: Prevent quality baseline regressions
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/check_quality_baseline_changes.sh "$BASE_SHA" "$HEAD_SHA" "$GITHUB_WORKSPACE"
 
   swiftlint:
     name: SwiftLint

@@ -14,6 +14,8 @@ required_files=(
     .swiftlint-baseline.json
     .github/scripts/materialize_swiftlint_baseline.sh
     .github/scripts/test_swiftlint_baseline.sh
+    .github/scripts/check_quality_baseline_changes.sh
+    .github/scripts/test_quality_baseline_contract.sh
     .github/CODEOWNERS
     .github/coverage-baseline.json
     .github/pull_request_template.md
@@ -61,6 +63,8 @@ build_workflow=".github/workflows/build.yml"
 grep -Fq -- '-enableCodeCoverage YES' "$build_workflow" || fail "CI must enable Xcode coverage"
 grep -Fq 'check_coverage.sh' "$build_workflow" || fail "CI must enforce the coverage baseline"
 grep -Fq 'check_tdd_contract.sh' "$build_workflow" || fail "CI must enforce the TDD change contract"
+grep -Fq 'check_quality_baseline_changes.sh' "$build_workflow" \
+    || fail "quality baselines must not be weakened by a pull request"
 grep -Fq 'test_repository_contract.sh' "$build_workflow" || fail "CI must enforce repository policy"
 grep -Fq 'name: Quality Gate' "$build_workflow" || fail "CI must expose a stable Quality Gate"
 grep -Fq 'swiftlint lint --strict' "$build_workflow" || fail "SwiftLint must run in strict mode"
