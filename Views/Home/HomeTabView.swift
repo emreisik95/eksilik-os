@@ -121,6 +121,9 @@ struct HomeTabView: View {
         if selectedTab == .debe {
             DebeView()
                 .id(selectedTab)
+        } else if selectedTab == .following {
+            FollowingFeedView()
+                .id(selectedTab)
         } else if selectedTab == .todayInHistory {
             TopicListView(listType: selectedTab, year: selectedYear)
                 .id("todayInHistory-\(selectedYear ?? 0)")

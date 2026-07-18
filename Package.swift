@@ -32,6 +32,7 @@ let package = Package(
                 "Core/Links/ExternalLinkPolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
                 "Core/Presentation/EntryListChromePolicy.swift",
+                "Core/Presentation/FollowingFeedSection.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
                 "Core/Presentation/MainTab.swift",
                 "Core/Presentation/SettingsPresentationPolicy.swift",

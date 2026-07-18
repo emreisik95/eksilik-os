@@ -8,6 +8,8 @@ enum EksiEndpoint {
     case todayInHistory(year: Int? = nil)
     case events
     case following
+    case followingPage(page: Int)
+    case followingFavorites(page: Int)
     case latest
     // sorunsal removed - no longer exists on eksisozluk
     case debe
@@ -77,6 +79,8 @@ enum EksiEndpoint {
             return "/basliklar/tarihte-bugun"
         case .events: return "/basliklar/olay"
         case .following: return "/basliklar/takip"
+        case .followingPage(let page): return "/basliklar/takip?p=\(max(1, page))"
+        case .followingFavorites(let page): return "/basliklar/badifav?p=\(max(1, page))"
         case .latest: return "/basliklar/son"
         case .debe: return "/debe"
         case .kenar: return "/basliklar/kenar"

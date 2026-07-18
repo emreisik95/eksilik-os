@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct TopicListView: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    @EnvironmentObject var blockedStore: BlockedTopicStore
     @StateObject private var viewModel: TopicListViewModel
 
     init(listType: TopicListViewModel.ListType, year: Int? = nil) {
@@ -10,6 +8,16 @@ struct TopicListView: View {
         vm.year = year
         _viewModel = StateObject(wrappedValue: vm)
     }
+
+    var body: some View {
+        TopicListContentView(viewModel: viewModel)
+    }
+}
+
+struct TopicListContentView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var blockedStore: BlockedTopicStore
+    @ObservedObject var viewModel: TopicListViewModel
 
     var body: some View {
         Group {
@@ -27,7 +35,7 @@ struct TopicListView: View {
             }
         }
         .background(themeManager.current.backgroundColor)
-        .task {
+        .task(id: viewModel.listType.rawValue) {
             viewModel.configure(blockedStore: blockedStore)
             guard viewModel.topics.isEmpty else { return }
             await viewModel.loadTopics()
@@ -106,7 +114,7 @@ func destinationView(for route: Route) -> some View {
                 TopicListView(listType: .today)
                     .navigationTitle("bugün")
             case "takip":
-                TopicListView(listType: .following)
+                FollowingFeedView()
                     .navigationTitle("takip")
             case "debe":
                 TopicListView(listType: .debe)

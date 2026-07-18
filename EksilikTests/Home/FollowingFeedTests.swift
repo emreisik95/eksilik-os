@@ -39,4 +39,20 @@ final class FollowingFeedTests: XCTestCase {
             "/basliklar/badifav?p=1"
         )
     }
+
+    func testActivityParserPreservesRepeatedTopicsAsSeparateRows() {
+        let html = """
+        <ul class="topic-list partial">
+            <li><a href="/fatih-kadir-akin--42">fatih kadir akın<small>altere ses</small></a></li>
+            <li><a href="/fatih-kadir-akin--42">fatih kadir akın<small>res publica non dominetur</small></a></li>
+        </ul>
+        """
+
+        let topics = TopicListParser.parseActivityFeed(html: html, page: 1)
+
+        XCTAssertEqual(topics.count, 2)
+        XCTAssertEqual(topics.map(\.link), ["/fatih-kadir-akin--42", "/fatih-kadir-akin--42"])
+        XCTAssertEqual(Set(topics.map(\.id)).count, 2)
+        XCTAssertEqual(topics.map(\.entryCount), ["altere ses", "res publica non dominetur"])
+    }
 }
