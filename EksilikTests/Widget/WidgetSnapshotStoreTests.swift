@@ -53,4 +53,11 @@ final class WidgetSnapshotStoreTests: XCTestCase {
         XCTAssertNotNil(store.load(source: .popular))
         XCTAssertNil(store.load(source: .following))
     }
+
+    func testFollowingSourceRequiresPrivacyRedaction() {
+        XCTAssertTrue(WidgetFeedSource.following.isPrivacySensitive)
+        XCTAssertFalse(WidgetFeedSource.popular.isPrivacySensitive)
+        XCTAssertFalse(WidgetFeedSource.today.isPrivacySensitive)
+        XCTAssertFalse(WidgetFeedSource.debe.isPrivacySensitive)
+    }
 }
