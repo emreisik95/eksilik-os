@@ -37,3 +37,15 @@ EksilikWidget-Info.plist
 
 # Misc
 *.psd
+
+# Local credentials and signing assets
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.pem
+*.key
+*.cer
+*.mobileprovision
+GoogleService-Info.plist

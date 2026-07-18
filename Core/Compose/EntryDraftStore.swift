@@ -25,6 +25,12 @@ struct EntryDraftStore {
         defaults.removeObject(forKey: key(for: topicLink))
     }
 
+    func clearAll() {
+        defaults.dictionaryRepresentation().keys
+            .filter { $0.hasPrefix("entry.draft.") }
+            .forEach(defaults.removeObject(forKey:))
+    }
+
     private func key(for topicLink: String) -> String {
         let encodedLink = Data(topicLink.utf8).base64EncodedString()
         return "entry.draft.\(encodedLink)"

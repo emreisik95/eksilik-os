@@ -20,16 +20,19 @@ struct WidgetTopicView: View {
     }
 
     var body: some View {
-        switch family {
-        case .systemSmall:
-            smallView
-        case .systemMedium:
-            mediumView
-        case .systemLarge:
-            largeView
-        default:
-            mediumView
+        Group {
+            switch family {
+            case .systemSmall:
+                smallView
+            case .systemMedium:
+                mediumView
+            case .systemLarge:
+                largeView
+            default:
+                mediumView
+            }
         }
+        .privacySensitive(entry.source == .following)
     }
 
     private var smallView: some View {
@@ -41,7 +44,7 @@ struct WidgetTopicView: View {
                 Spacer()
             }
 
-            ForEach(entry.topics.prefix(3)) { topic in
+            ForEach(Array(entry.topics.prefix(3).enumerated()), id: \.offset) { _, topic in
                 Link(destination: deepLink(for: topic)) {
                     Text(topic.title)
                         .font(.caption)
@@ -68,7 +71,7 @@ struct WidgetTopicView: View {
                     .foregroundColor(.secondary)
             }
 
-            ForEach(entry.topics.prefix(4)) { topic in
+            ForEach(Array(entry.topics.prefix(4).enumerated()), id: \.offset) { _, topic in
                 Link(destination: deepLink(for: topic)) {
                     HStack {
                         Text(topic.title)
@@ -105,7 +108,7 @@ struct WidgetTopicView: View {
             }
             .padding(.bottom, 4)
 
-            ForEach(entry.topics.prefix(10)) { topic in
+            ForEach(Array(entry.topics.prefix(10).enumerated()), id: \.offset) { _, topic in
                 Link(destination: deepLink(for: topic)) {
                     HStack {
                         Text(topic.title)

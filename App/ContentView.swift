@@ -3,14 +3,16 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
+    @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
 
     var body: some View {
-        TabView {
+        TabView(selection: $deepLinkRouter.selectedMainTab) {
             ForEach(MainTab.visibleTabs(isLoggedIn: session.isLoggedIn)) { tab in
                 tabContent(for: tab)
                     .tabItem {
                         Label(tabTitle(for: tab), systemImage: tab.systemImage)
                     }
+                    .tag(tab)
             }
         }
         .tint(themeManager.current.accentColor)

@@ -118,7 +118,7 @@ func destinationView(for route: Route) -> some View {
                 FollowingFeedView()
                     .navigationTitle("takip")
             case "debe":
-                TopicListView(listType: .debe)
+                DebeView()
                     .navigationTitle("debe")
             default:
                 EmptyView()

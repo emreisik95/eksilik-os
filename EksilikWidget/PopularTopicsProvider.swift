@@ -41,8 +41,10 @@ struct TopicsProvider: AppIntentTimelineProvider {
 
     private func fetchEntry(for intent: EksilikWidgetIntent) async -> TopicEntry {
         if intent.source == .following {
-            let topics = WidgetSnapshotStore.shared.load(source: .following)?.items
-                ?? [messageItem("takip akışı için uygulamayı bir kez aç")]
+            let cachedTopics = WidgetSnapshotStore.shared.load(source: .following)?.items ?? []
+            let topics = cachedTopics.isEmpty
+                ? [messageItem("takip akışı için uygulamayı bir kez aç")]
+                : cachedTopics
             return makeEntry(intent: intent, topics: topics)
         }
 

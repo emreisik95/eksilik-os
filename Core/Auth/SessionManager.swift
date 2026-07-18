@@ -75,5 +75,6 @@ final class SessionManager: ObservableObject {
         UserDefaults.standard.set(false, forKey: "isLoggedIn")
         UserDefaults.standard.set(false, forKey: "isPaidMember")
         UserDefaults.standard.removeObject(forKey: "username")
+        SessionPrivacyCleanup.perform()
     }
 }

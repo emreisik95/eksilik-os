@@ -28,8 +28,10 @@ concurrency:
 
 jobs:
   release:
+    if: github.ref == 'refs/heads/main'
     name: Archive and upload ${{ inputs.release_version }} (${{ inputs.build_number }})
     runs-on: macos-26
+    environment: app-store-production
     timeout-minutes: 60
     env:
       ASC_APP_ID: "1454249683"

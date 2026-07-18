@@ -6,6 +6,10 @@ enum WidgetFeedSource: String, Codable, CaseIterable {
     case following = "takip"
     case debe
     case user
+
+    var isPrivacySensitive: Bool {
+        self == .following
+    }
 }
 
 struct WidgetFeedItem: Codable, Hashable, Identifiable {
