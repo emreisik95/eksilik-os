@@ -26,14 +26,15 @@ enum CookiePersistence {
         }
 
         if let data = try? JSONEncoder().encode(dicts) {
-            UserDefaults.standard.set(data, forKey: key)
+            KeychainHelper.save(key: key, value: data.base64EncodedString())
+            UserDefaults.standard.removeObject(forKey: key)
             print("🍪 Saved \(dicts.count) cookies")
         }
     }
 
-    /// Restore cookies from UserDefaults to HTTPCookieStorage
+    /// Restore cookies from Keychain to HTTPCookieStorage, migrating legacy defaults once.
     static func restore() {
-        guard let data = UserDefaults.standard.data(forKey: key),
+        guard let data = persistedData(),
               let dicts = try? JSONDecoder().decode([[String: String]].self, from: data) else { return }
 
         var count = 0
@@ -56,6 +57,23 @@ enum CookiePersistence {
             }
         }
         print("🍪 Restored \(count) cookies")
+    }
+
+    static func clear() {
+        KeychainHelper.delete(key: key)
+        UserDefaults.standard.removeObject(forKey: key)
+        (HTTPCookieStorage.shared.cookies ?? [])
+            .filter(isEksiCookie)
+            .forEach(HTTPCookieStorage.shared.deleteCookie)
+    }
+
+    @MainActor
+    static func clearWebViewCookies() async {
+        let store = WKWebsiteDataStore.default().httpCookieStore
+        let cookies = await store.allCookies()
+        for cookie in cookies where isEksiCookie(cookie) {
+            await store.delete(cookie)
+        }
     }
 
     /// Check if we have persisted auth cookies
@@ -85,5 +103,21 @@ enum CookiePersistence {
         for cookie in cookies {
             await store.setCookie(cookie)
         }
+    }
+
+    private static func persistedData() -> Data? {
+        if let encoded = KeychainHelper.get(key: key),
+           let data = Data(base64Encoded: encoded) {
+            return data
+        }
+
+        guard let legacyData = UserDefaults.standard.data(forKey: key) else { return nil }
+        KeychainHelper.save(key: key, value: legacyData.base64EncodedString())
+        UserDefaults.standard.removeObject(forKey: key)
+        return legacyData
+    }
+
+    private static func isEksiCookie(_ cookie: HTTPCookie) -> Bool {
+        cookie.domain.lowercased().hasSuffix("eksisozluk.com")
     }
 }

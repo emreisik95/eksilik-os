@@ -9,10 +9,10 @@ options:
 packages:
   Kanna:
     url: https://github.com/tid-kijyun/Kanna.git
-    from: "5.3.0"
+    exactVersion: "5.3.0"
   KeychainAccess:
     url: https://github.com/kishikawakatsumi/KeychainAccess.git
-    from: "4.2.2"
+    exactVersion: "4.2.2"
 
 targets:
   EksilikApp:
@@ -63,8 +63,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik
-        MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "3"
+        MARKETING_VERSION: "2.0.1"
+        CURRENT_PROJECT_VERSION: "10"
+        CODE_SIGN_ENTITLEMENTS: EksilikApp.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
@@ -77,7 +78,7 @@ targets:
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: "Apple Distribution"
           DEVELOPMENT_TEAM: "235UP83FJ4"
-          PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store 2026"
+          PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store AppGroups 2026"
 
   EksilikWidget:
     type: app-extension
@@ -85,6 +86,9 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: EksilikWidget
+      - path: Core/Widget
+    resources:
+      - path: EksilikWidget/PrivacyInfo.xcprivacy
     info:
       path: EksilikWidget-Info.plist
       properties:
@@ -97,8 +101,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik.widget
-        MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "3"
+        MARKETING_VERSION: "2.0.1"
+        CURRENT_PROJECT_VERSION: "10"
+        CODE_SIGN_ENTITLEMENTS: EksilikWidget.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"
       configs:
@@ -106,7 +111,7 @@ targets:
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: "Apple Distribution"
           DEVELOPMENT_TEAM: "235UP83FJ4"
-          PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store 2026"
+          PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store AppGroups 2026"
 
   EksilikTests:
     type: bundle.unit-test

@@ -9,6 +9,10 @@ enum MainTab: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
+    static func visibleTabs(isLoggedIn: Bool) -> [MainTab] {
+        allCases.filter { isLoggedIn || $0 != .events }
+    }
+
     var title: String {
         switch self {
         case .home: return "anasayfa"

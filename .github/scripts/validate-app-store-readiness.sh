@@ -12,10 +12,10 @@ grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' 
     || fail "widget bundle identifier must be nested under the existing App Store listing"
 grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
-[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.0"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget marketing versions must be 2.0.0"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "3"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 3"
+[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.1"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget marketing versions must be 2.0.1"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "10"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 10"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 grep -Fq 'CFBundleDisplayName: "ek$ilik"' project.yml \
@@ -32,10 +32,18 @@ done
     || fail "release targets must use the Apple Distribution certificate"
 [[ "$(grep -Ec '^[[:space:]]+DEVELOPMENT_TEAM: "235UP83FJ4"$' project.yml)" -eq 2 ]] \
     || fail "release signing team must match the existing App Store account"
-grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store 2026"' project.yml \
+grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store AppGroups 2026"' project.yml \
     || fail "app App Store provisioning profile is not configured"
-grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store 2026"' project.yml \
+grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store AppGroups 2026"' project.yml \
     || fail "widget App Store provisioning profile is not configured"
+[[ "$(grep -Ec '^[[:space:]]+CODE_SIGN_ENTITLEMENTS: Eksilik(App|Widget)\.entitlements$' project.yml)" -eq 2 ]] \
+    || fail "app and widget App Group entitlements are not configured"
+for entitlements in EksilikApp.entitlements EksilikWidget.entitlements; do
+    [[ -f "$entitlements" ]] || fail "$entitlements is missing"
+    /usr/libexec/PlistBuddy -c 'Print :com.apple.security.application-groups:0' "$entitlements" 2>/dev/null \
+        | grep -Fxq 'group.emre.isik.Eksilik' \
+        || fail "$entitlements must use the shared Eksilik App Group"
+done
 [[ -f ExportOptions.plist ]] || fail "ExportOptions.plist is missing"
 [[ -f .github/workflows/app-store-release.yml ]] || fail "App Store release workflow is missing"
 grep -Fq 'runs-on: macos-26' .github/workflows/app-store-release.yml \
@@ -60,6 +68,12 @@ widget_build="$(plutil -extract CFBundleVersion raw EksilikWidget-Info.plist)"
 
 privacy_manifest="Resources/PrivacyInfo.xcprivacy"
 [[ -f "$privacy_manifest" ]] || fail "PrivacyInfo.xcprivacy is missing"
+ruby -ryaml -e '
+  resources = YAML.load_file("project.yml").dig("targets", "EksilikWidget", "resources") || []
+  exit(resources.any? { |resource| resource["path"] == "EksilikWidget/PrivacyInfo.xcprivacy" } ? 0 : 1)
+' || fail "widget target must bundle PrivacyInfo.xcprivacy"
+cmp -s "$privacy_manifest" EksilikWidget/PrivacyInfo.xcprivacy \
+    || fail "app and widget privacy manifests must stay identical"
 [[ "$(plutil -extract NSPrivacyTracking raw "$privacy_manifest")" == "false" ]] \
     || fail "privacy manifest tracking declaration is missing"
 plutil -p "$privacy_manifest" | grep -q 'NSPrivacyAccessedAPICategoryUserDefaults' \

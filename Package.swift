@@ -11,7 +11,7 @@ let package = Package(
         .executable(name: "EksilikCoreHarness", targets: ["EksilikCoreHarness"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/tid-kijyun/Kanna.git", from: "5.3.0"),
+        .package(url: "https://github.com/tid-kijyun/Kanna.git", exact: "5.3.0"),
     ],
     targets: [
         .executableTarget(
@@ -32,6 +32,7 @@ let package = Package(
                 "Core/Links/ExternalLinkPolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
                 "Core/Presentation/EntryListChromePolicy.swift",
+                "Core/Presentation/FollowingFeedSection.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",
                 "Core/Presentation/MainTab.swift",
                 "Core/Presentation/SettingsPresentationPolicy.swift",

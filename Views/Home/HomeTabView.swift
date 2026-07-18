@@ -4,6 +4,7 @@ struct HomeTabView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var session: SessionManager
     @EnvironmentObject private var preferences: UserPreferences
+    @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
     @StateObject private var nav = NavigationCoordinator()
     @State private var selectedTab: TopicListViewModel.ListType = .popular
     @State private var selectedYear: Int?
@@ -65,7 +66,13 @@ struct HomeTabView: View {
             }
         }
         .environmentObject(nav)
-        .onAppear(perform: ensureValidSelection)
+        .onAppear {
+            ensureValidSelection()
+            consumePendingDeepLink()
+        }
+        .onChange(of: deepLinkRouter.pendingRoute) { _ in
+            consumePendingDeepLink()
+        }
         .onChange(of: session.isLoggedIn) { _ in
             ensureValidSelection()
         }
@@ -80,6 +87,13 @@ struct HomeTabView: View {
                 isSidebarOpen = false
             }
         }
+    }
+
+    private func consumePendingDeepLink() {
+        guard deepLinkRouter.selectedMainTab == .home,
+              let route = deepLinkRouter.consumeRoute() else { return }
+        nav.popToRoot()
+        nav.push(route)
     }
 
     private var mainSurface: some View {
@@ -120,6 +134,9 @@ struct HomeTabView: View {
     private var tabContent: some View {
         if selectedTab == .debe {
             DebeView()
+                .id(selectedTab)
+        } else if selectedTab == .following {
+            FollowingFeedView()
                 .id(selectedTab)
         } else if selectedTab == .todayInHistory {
             TopicListView(listType: selectedTab, year: selectedYear)

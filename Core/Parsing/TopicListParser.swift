@@ -21,7 +21,9 @@ struct TopicListParser {
             for element in elements {
                 guard let text = element.text, let link = element["href"] else { continue }
 
-                let entryCount = element.at_css("small")?.text ?? ""
+                let entryCount = element.at_css("small")?.text
+                    ?? element.at_css(".detail")?.text
+                    ?? ""
 
                 // Remove the small element content from the title
                 var title = text
@@ -55,5 +57,28 @@ struct TopicListParser {
         parse(html: html, isBlocked: { title in
             blockedTopics.contains(where: { title.contains($0) })
         })
+    }
+
+    static func parseActivityFeed(
+        html: String,
+        page: Int,
+        isBlocked: ((String) -> Bool)? = nil
+    ) -> [Topic] {
+        guard let doc = HTMLParser.parse(html),
+              !Array(doc.css("ul[class*=topic-list] li a")).isEmpty else {
+            return []
+        }
+
+        return parse(html: html, isBlocked: isBlocked)
+            .enumerated()
+            .map { index, topic in
+                Topic(
+                    id: "activity-\(max(1, page))-\(index)-\(topic.id)",
+                    title: topic.title,
+                    slug: topic.slug,
+                    entryCount: topic.entryCount,
+                    link: topic.link
+                )
+            }
     }
 }

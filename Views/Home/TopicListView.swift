@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct TopicListView: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    @EnvironmentObject var blockedStore: BlockedTopicStore
     @StateObject private var viewModel: TopicListViewModel
 
     init(listType: TopicListViewModel.ListType, year: Int? = nil) {
@@ -10,6 +8,17 @@ struct TopicListView: View {
         vm.year = year
         _viewModel = StateObject(wrappedValue: vm)
     }
+
+    var body: some View {
+        TopicListContentView(viewModel: viewModel)
+    }
+}
+
+struct TopicListContentView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var blockedStore: BlockedTopicStore
+    @ObservedObject var viewModel: TopicListViewModel
+    var emptyMessage: String = L10n.Common.noTopics
 
     var body: some View {
         Group {
@@ -21,13 +30,13 @@ struct TopicListView: View {
                     Task { await viewModel.loadTopics() }
                 }
             } else if viewModel.topics.isEmpty {
-                EmptyStateView(message: L10n.Common.noTopics)
+                EmptyStateView(message: emptyMessage)
             } else {
                 topicList
             }
         }
         .background(themeManager.current.backgroundColor)
-        .task {
+        .task(id: viewModel.listType.rawValue) {
             viewModel.configure(blockedStore: blockedStore)
             guard viewModel.topics.isEmpty else { return }
             await viewModel.loadTopics()
@@ -97,6 +106,23 @@ func destinationView(for route: Route) -> some View {
             EntryListView(link: link, title: title)
         case .entryById(let id):
             EntryListView(link: "entry/\(id)", title: "")
+        case .topicFeed(let source):
+            switch source {
+            case "gundem":
+                TopicListView(listType: .popular)
+                    .navigationTitle("gündem")
+            case "bugun":
+                TopicListView(listType: .today)
+                    .navigationTitle("bugün")
+            case "takip":
+                FollowingFeedView()
+                    .navigationTitle("takip")
+            case "debe":
+                DebeView()
+                    .navigationTitle("debe")
+            default:
+                EmptyView()
+            }
         case .profile(let username):
             ProfileView(username: username)
         case .composeEntry(let link):

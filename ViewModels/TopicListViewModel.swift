@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 @MainActor
 final class TopicListViewModel: ObservableObject {
@@ -14,7 +15,7 @@ final class TopicListViewModel: ObservableObject {
     private var loadGeneration = UUID()
 
     enum ListType: String {
-        case popular, today, todayInHistory, events, following, latest, debe, kenar, caylaklar, cop
+        case popular, today, todayInHistory, events, following, followingFavorites, latest, debe, kenar, caylaklar, cop
     }
 
     let listType: ListType
@@ -48,6 +49,7 @@ final class TopicListViewModel: ObservableObject {
             topics = TopicPageMerger.merge(existing: [], incoming: result.topics)
             pagination = result.pagination
             hasMore = result.pagination.hasNextPage && !result.topics.isEmpty
+            persistWidgetSnapshotIfNeeded()
         } catch {
             guard loadGeneration == generation else { return }
             self.error = error.localizedDescription
@@ -102,8 +104,17 @@ final class TopicListViewModel: ObservableObject {
             let topics = try await topicService.fetchFromEndpoint(.events, isBlocked: isBlocked)
             return (topics, .empty)
         case .following:
-            let topics = try await topicService.fetchFromEndpoint(.following, isBlocked: isBlocked)
-            return (topics, .empty)
+            return try await topicService.fetchFollowingTopicsPaginated(
+                section: .written,
+                page: page,
+                isBlocked: isBlocked
+            )
+        case .followingFavorites:
+            return try await topicService.fetchFollowingTopicsPaginated(
+                section: .favorited,
+                page: page,
+                isBlocked: isBlocked
+            )
         case .latest:
             let topics = try await topicService.fetchFromEndpoint(.latest, isBlocked: isBlocked)
             return (topics, .empty)
@@ -120,5 +131,36 @@ final class TopicListViewModel: ObservableObject {
             let topics = try await topicService.fetchFromEndpoint(.cop, isBlocked: isBlocked)
             return (topics, .empty)
         }
+    }
+
+    private func persistWidgetSnapshotIfNeeded() {
+        let source: WidgetFeedSource
+        switch listType {
+        case .popular:
+            source = .popular
+        case .today:
+            source = .today
+        case .following:
+            source = .following
+        case .followingFavorites:
+            return
+        case .debe:
+            source = .debe
+        default:
+            return
+        }
+
+        let items = topics.prefix(15).map { topic in
+            WidgetFeedItem(
+                title: topic.title,
+                subtitle: source == .debe ? "debe" : nil,
+                metadata: topic.entryCount.isEmpty ? nil : topic.entryCount,
+                link: topic.link
+            )
+        }
+        WidgetSnapshotStore.shared.save(
+            WidgetFeedSnapshot(source: source, items: Array(items), updatedAt: Date())
+        )
+        WidgetCenter.shared.reloadTimelines(ofKind: "EksilikWidget")
     }
 }

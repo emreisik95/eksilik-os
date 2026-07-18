@@ -75,6 +75,7 @@ struct RootView: View {
         .environmentObject(preferences)
         .environmentObject(deepLinkRouter)
         .preferredColorScheme(themeManager.current.colorScheme)
+        .onOpenURL { deepLinkRouter.handle($0) }
         .task { await bootstrapWithOfflineFallback() }
     }
 

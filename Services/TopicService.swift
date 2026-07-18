@@ -36,4 +36,21 @@ struct TopicService {
             PaginationParser.parse(html: html)
         )
     }
+
+    func fetchFollowingTopicsPaginated(
+        section: FollowingFeedSection,
+        page: Int,
+        isBlocked: ((String) -> Bool)? = nil
+    ) async throws -> (topics: [Topic], pagination: Pagination) {
+        let html = try await client.fetchHTML(for: section.endpoint(page: page))
+        await SessionManager.shared.updateFromHTML(html)
+        return (
+            TopicListParser.parseActivityFeed(
+                html: html,
+                page: page,
+                isBlocked: isBlocked
+            ),
+            PaginationParser.parse(html: html)
+        )
+    }
 }

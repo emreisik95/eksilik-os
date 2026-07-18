@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -52,7 +52,7 @@ jobs:
           tar -C "$(dirname "$APP_PATH")" -czf "$RUNNER_TEMP/EksilikApp-unsigned.tar.gz" "$(basename "$APP_PATH")"
 
       - name: Upload device artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: EksilikApp-unsigned
           path: ${{ runner.temp }}/EksilikApp-unsigned.tar.gz

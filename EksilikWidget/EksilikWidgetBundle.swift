@@ -5,5 +5,6 @@ import SwiftUI
 struct EksilikWidgetBundle: WidgetBundle {
     var body: some Widget {
         EksilikWidget()
+        EksilikQuickAccessWidget()
     }
 }
