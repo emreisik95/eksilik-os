@@ -74,41 +74,43 @@ jobs:
           sleep 18
 
           axe describe-ui --udid "$UDID" > screenshots/ui/01-home.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/01-home.png
+          xcrun simctl io "$UDID" screenshot screenshots/raw/01-home.png
 
-          axe tap --label "ara" --element-type Button --wait-timeout 10 --udid "$UDID" || true
-          sleep 3
+          axe tap -x 132 -y 898 --post-delay 1 --udid "$UDID"
+          sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/02-search.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/02-search.png
+          xcrun simctl io "$UDID" screenshot screenshots/raw/02-search.png
 
-          axe tap --label "olay" --element-type Button --wait-timeout 10 --udid "$UDID" || true
+          axe tap -x 220 -y 898 --post-delay 1 --udid "$UDID"
           sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/03-events.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/03-events.png
+          xcrun simctl io "$UDID" screenshot screenshots/raw/03-events.png
 
-          axe tap --label "ayarlar" --element-type Button --wait-timeout 10 --udid "$UDID" || true
-          sleep 2
+          axe tap -x 396 -y 898 --post-delay 1 --udid "$UDID"
+          sleep 3
           axe describe-ui --udid "$UDID" > screenshots/ui/04-settings.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/04-settings.png
+          xcrun simctl io "$UDID" screenshot screenshots/raw/04-settings.png
 
-          axe tap --label "çevrimdışı okuma" --wait-timeout 5 --udid "$UDID" || true
+          axe tap --label "entry görünümü" --wait-timeout 10 --udid "$UDID"
           sleep 2
-          axe describe-ui --udid "$UDID" > screenshots/ui/05-offline.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/05-offline.png
+          axe describe-ui --udid "$UDID" > screenshots/ui/05-layouts.json
+          xcrun simctl io "$UDID" screenshot screenshots/raw/05-layouts.png
 
-          axe tap -x 28 -y 56 --post-delay 1 --udid "$UDID" || true
-          axe tap --label "entry görünümü" --wait-timeout 5 --udid "$UDID" || true
+          axe tap -x 28 -y 76 --post-delay 1 --udid "$UDID"
+          axe gesture scroll-up --post-delay 1 --udid "$UDID"
+          axe tap --label "çevrimdışı okuma" --wait-timeout 10 --udid "$UDID"
           sleep 2
-          axe describe-ui --udid "$UDID" > screenshots/ui/06-layouts.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/06-layouts.png
+          axe describe-ui --udid "$UDID" > screenshots/ui/06-offline.json
+          xcrun simctl io "$UDID" screenshot screenshots/raw/06-offline.png
 
-          axe tap -x 28 -y 56 --post-delay 1 --udid "$UDID" || true
-          axe tap --label "anasayfa" --element-type Button --wait-timeout 5 --udid "$UDID" || true
+          axe tap -x 44 -y 898 --post-delay 1 --udid "$UDID"
           sleep 3
           axe tap -x 220 -y 175 --post-delay 1 --udid "$UDID" || true
           sleep 8
+          axe tap --label "anladım" --wait-timeout 5 --udid "$UDID" || true
+          sleep 2
           axe describe-ui --udid "$UDID" > screenshots/ui/07-entries.json
-          axe screenshot --udid "$UDID" --output screenshots/raw/07-entries.png
+          xcrun simctl io "$UDID" screenshot screenshots/raw/07-entries.png
 
       - name: Validate screenshot dimensions
         run: |
@@ -120,6 +122,9 @@ jobs:
             test "$width" -eq 1320
             test "$height" -eq 2868
           done < <(find screenshots/raw -name '*.png' | sort)
+
+          unique_count=$(shasum -a 256 screenshots/raw/*.png | awk '{print $1}' | sort -u | wc -l | tr -d ' ')
+          test "$unique_count" -eq 7
 
       - name: Upload screenshot bundle
         uses: actions/upload-artifact@v4
