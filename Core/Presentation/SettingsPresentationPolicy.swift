@@ -5,6 +5,7 @@ enum SettingsSectionKind: String, CaseIterable, Identifiable, Sendable {
     case home
     case content
     case account
+    case about
     case advanced
 
     var id: String { rawValue }
@@ -15,6 +16,7 @@ enum SettingsSectionKind: String, CaseIterable, Identifiable, Sendable {
         case .home: return "ana sayfa"
         case .content: return "içerik"
         case .account: return "hesap"
+        case .about: return "destek ve yasal"
         case .advanced: return "gelişmiş"
         }
     }
@@ -25,6 +27,7 @@ enum SettingsSectionKind: String, CaseIterable, Identifiable, Sendable {
         case .home: return "house"
         case .content: return "books.vertical"
         case .account: return "person.crop.circle"
+        case .about: return "info.circle"
         case .advanced: return "slider.horizontal.3"
         }
     }
@@ -44,6 +47,8 @@ enum SettingsItem: String, Identifiable, Hashable, Sendable {
     case accountPreferences
     case trackingAndBlocks
     case logout
+    case privacyPolicy
+    case support
     case server
 
     var id: String { rawValue }
@@ -78,6 +83,10 @@ enum SettingsPresentationPolicy {
                 items: isLoggedIn
                     ? [.accountPreferences, .trackingAndBlocks, .logout]
                     : [.login]
+            ),
+            SettingsSectionDescriptor(
+                kind: .about,
+                items: [.privacyPolicy, .support]
             ),
             SettingsSectionDescriptor(
                 kind: .advanced,

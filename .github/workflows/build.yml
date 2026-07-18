@@ -23,6 +23,9 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
+      - name: Validate App Store Readiness
+        run: bash .github/scripts/validate-app-store-readiness.sh
+
       - name: Build
         run: |
           set -o pipefail

@@ -35,6 +35,9 @@ targets:
       path: EksilikApp-Info.plist
       properties:
         CFBundleDisplayName: "ek$ilik"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         CFBundleURLTypes:
           - CFBundleURLSchemes:
@@ -74,6 +77,9 @@ targets:
     info:
       path: EksilikWidget-Info.plist
       properties:
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        ITSAppUsesNonExemptEncryption: false
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

@@ -15,6 +15,7 @@ struct EntryRowView: View {
     @EnvironmentObject var preferences: UserPreferences
     @State private var showActions = false
     @State private var pendingRoute: Route?
+    @State private var moderationMessage: String?
 
     private var style: EntryLayoutStyle { preferences.entryLayoutStyle }
     private var presentation: EntryLayoutPresentation { style.presentation }
@@ -47,10 +48,15 @@ struct EntryRowView: View {
                         pendingRoute = .composeMessage(to: entry.author.nick, subject: "#\(entry.id)")
                     }
                     Button(L10n.Entry.blockAuthor, role: .destructive) {
-                        if let url = URL(string: "https://eksisozluk.com/entry/\(entry.id)") {
-                            UIApplication.shared.open(url)
-                        }
+                        Task { await blockAuthor() }
                     }
+                }
+
+                Button(L10n.Entry.reportEntry, role: .destructive) {
+                    pendingRoute = .webPage(
+                        url: entryURL,
+                        title: L10n.Entry.reportEntry
+                    )
                 }
 
                 Button(L10n.Entry.modlog) {
@@ -69,6 +75,11 @@ struct EntryRowView: View {
             }
             .task(id: entry.id) {
                 await ImagePipeline.shared.prefetch(entry.imageURLs + [entry.author.avatarURL].compactMap { $0 })
+            }
+            .alert("moderasyon", isPresented: moderationAlertBinding) {
+                Button("tamam", role: .cancel) { moderationMessage = nil }
+            } message: {
+                Text(moderationMessage ?? "")
             }
     }
 
@@ -789,6 +800,28 @@ struct EntryRowView: View {
         }
         // baslik-adi--12345 → topic
         return .entryList(link: path, title: "")
+    }
+
+    private var entryURL: String {
+        let baseURL = preferences.baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        return "\(baseURL)/entry/\(entry.id)"
+    }
+
+    private var moderationAlertBinding: Binding<Bool> {
+        Binding(
+            get: { moderationMessage != nil },
+            set: { if !$0 { moderationMessage = nil } }
+        )
+    }
+
+    @MainActor
+    private func blockAuthor() async {
+        do {
+            try await EntryService().blockUser(authorId: entry.authorId)
+            moderationMessage = "\(entry.author.nick) engellendi"
+        } catch {
+            moderationMessage = error.localizedDescription
+        }
     }
 
     private func shareItems(_ items: [Any]) {
