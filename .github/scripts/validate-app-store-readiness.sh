@@ -16,6 +16,8 @@ grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "app and widget marketing versions must be 2.0.0"
 [[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "3"$' project.yml)" -eq 2 ]] \
     || fail "app and widget build numbers must be 3"
+[[ "$(grep -Ec '^[[:space:]]+CODE_SIGN_IDENTITY: "Apple Distribution"$' project.yml)" -eq 2 ]] \
+    || fail "release targets must use the Apple Distribution certificate"
 [[ "$(grep -Ec '^[[:space:]]+DEVELOPMENT_TEAM: "235UP83FJ4"$' project.yml)" -eq 2 ]] \
     || fail "release signing team must match the existing App Store account"
 grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store 2026"' project.yml \
