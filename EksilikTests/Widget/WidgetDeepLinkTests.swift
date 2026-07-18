@@ -28,4 +28,14 @@ final class WidgetDeepLinkTests: XCTestCase {
 
         XCTAssertNil(router.consumeRoute())
     }
+
+    func testQuickAccessDeepLinkSelectsHomeBeforeOpeningItsRoute() throws {
+        let router = DeepLinkRouter()
+        router.selectedMainTab = .settings
+
+        router.handle(try XCTUnwrap(URL(string: "eksilik://feed?source=gundem")))
+
+        XCTAssertEqual(router.selectedMainTab, .home)
+        XCTAssertEqual(router.consumeRoute(), .topicFeed(source: "gundem"))
+    }
 }
