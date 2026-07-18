@@ -64,7 +64,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik
         MARKETING_VERSION: "2.0.1"
-        CURRENT_PROJECT_VERSION: "6"
+        CURRENT_PROJECT_VERSION: "7"
         CODE_SIGN_ENTITLEMENTS: EksilikApp.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"
@@ -100,7 +100,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik.widget
         MARKETING_VERSION: "2.0.1"
-        CURRENT_PROJECT_VERSION: "6"
+        CURRENT_PROJECT_VERSION: "7"
         CODE_SIGN_ENTITLEMENTS: EksilikWidget.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"
