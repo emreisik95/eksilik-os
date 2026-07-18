@@ -1,6 +1,6 @@
 name: EksilikApp
 options:
-  bundleIdPrefix: com.eksilik
+  bundleIdPrefix: emre.isik
   deploymentTarget:
     iOS: "16.0"
   xcodeVersion: "15.0"
@@ -42,7 +42,7 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - eksilik
-            CFBundleURLName: com.eksilik.app
+            CFBundleURLName: emre.isik.Eksilik
         CFBundleIcons:
           CFBundlePrimaryIcon:
             CFBundleIconFiles: []
@@ -55,9 +55,9 @@ targets:
                 - AlternateKlasik
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.eksilik.app
+        PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik
         MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "3"
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
@@ -84,9 +84,9 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.eksilik.app.widget
+        PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik.widget
         MARKETING_VERSION: "2.0.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "3"
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
 
@@ -101,7 +101,7 @@ targets:
       - package: Kanna
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.eksilik.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik.tests
         SWIFT_VERSION: "5.9"
 
 schemes:

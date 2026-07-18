@@ -6,6 +6,15 @@ fail() {
     exit 1
 }
 
+grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik$' project.yml \
+    || fail "app bundle identifier must match the existing App Store listing"
+grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' project.yml \
+    || fail "widget bundle identifier must be nested under the existing App Store listing"
+[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.0"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget marketing versions must be 2.0.0"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "3"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 3"
+
 if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
     xcodegen generate >/dev/null
 fi
