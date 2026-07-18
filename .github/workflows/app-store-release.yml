@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   release:
-    name: Archive and upload TestFlight build 4
+    name: Archive and upload TestFlight build 5
     runs-on: macos-26
     timeout-minutes: 60
     env:
@@ -115,7 +115,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EksilikApp-2.0.1-4
+          name: EksilikApp-2.0.1-5
           path: ${{ runner.temp }}/EksilikExport/EksilikApp.ipa
           if-no-files-found: error
           retention-days: 3
@@ -144,7 +144,7 @@ jobs:
             --app "$ASC_APP_ID" \
             --ipa "$RUNNER_TEMP/EksilikExport/EksilikApp.ipa" \
             --version "2.0.1" \
-            --build-number "4" \
+            --build-number "5" \
             --wait
 
       - name: Remove temporary keychain

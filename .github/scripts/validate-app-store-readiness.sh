@@ -14,8 +14,8 @@ grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
 [[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.1"$' project.yml)" -eq 2 ]] \
     || fail "app and widget marketing versions must be 2.0.1"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "4"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 4"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "5"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 5"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 grep -Fq 'CFBundleDisplayName: "ek$ilik"' project.yml \

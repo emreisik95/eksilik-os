@@ -6,7 +6,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            ForEach(MainTab.allCases) { tab in
+            ForEach(MainTab.visibleTabs(isLoggedIn: session.isLoggedIn)) { tab in
                 tabContent(for: tab)
                     .tabItem {
                         Label(tabTitle(for: tab), systemImage: tab.systemImage)
