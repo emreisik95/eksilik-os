@@ -7,6 +7,10 @@ final class FollowingFeedTests: XCTestCase {
         XCTAssertEqual(FollowingFeedSection.allCases.map(\.title), ["yazdıkları", "favladıkları"])
     }
 
+    func testWrittenSectionUsesEmptyActivityCopy() {
+        XCTAssertEqual(FollowingFeedSection.written.emptyMessage, "yok bişii pek")
+    }
+
     func testWrittenSectionUsesPagedMobileFollowingEndpoint() {
         XCTAssertEqual(
             FollowingFeedSection.written.endpoint(page: 1).path,

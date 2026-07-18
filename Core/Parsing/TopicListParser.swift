@@ -64,6 +64,11 @@ struct TopicListParser {
         page: Int,
         isBlocked: ((String) -> Bool)? = nil
     ) -> [Topic] {
+        guard let doc = HTMLParser.parse(html),
+              !Array(doc.css("ul[class*=topic-list] li a")).isEmpty else {
+            return []
+        }
+
         parse(html: html, isBlocked: isBlocked)
             .enumerated()
             .map { index, topic in
