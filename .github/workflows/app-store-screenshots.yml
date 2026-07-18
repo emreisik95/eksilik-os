@@ -76,38 +76,38 @@ jobs:
           axe describe-ui --udid "$UDID" > screenshots/ui/01-home.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/01-home.png
 
-          axe tap --label "ara" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
+          axe tap --label "ara" --element-type RadioButton --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/02-search.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/02-search.png
 
-          axe tap --label "olay" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
+          axe tap --label "olay" --element-type RadioButton --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/03-events.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/03-events.png
 
-          axe tap --label "ayarlar" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
+          axe tap --label "ayarlar" --element-type RadioButton --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 3
           axe describe-ui --udid "$UDID" > screenshots/ui/04-settings.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/04-settings.png
 
-          axe tap --label "entry görünümü" --wait-timeout 10 --udid "$UDID"
+          axe tap --label "entry görünümü" --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 2
           axe describe-ui --udid "$UDID" > screenshots/ui/05-layouts.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/05-layouts.png
 
           axe gesture swipe-from-left-edge --post-delay 1 --udid "$UDID"
           axe gesture scroll-up --post-delay 1 --udid "$UDID"
-          axe tap --label "çevrimdışı okuma" --wait-timeout 10 --udid "$UDID"
+          axe tap --label "çevrimdışı okuma" --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 2
           axe describe-ui --udid "$UDID" > screenshots/ui/06-offline.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/06-offline.png
 
-          axe tap --label "anasayfa" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
+          axe tap --label "anasayfa" --element-type RadioButton --tap-style physical --wait-timeout 10 --udid "$UDID"
           sleep 3
-          axe tap -x 220 -y 175 --post-delay 1 --udid "$UDID" || true
+          axe tap -x 220 -y 175 --tap-style physical --post-delay 1 --udid "$UDID" || true
           sleep 8
-          axe tap --label "anladım" --wait-timeout 5 --udid "$UDID" || true
+          axe tap --label "anladım" --tap-style physical --wait-timeout 5 --udid "$UDID" || true
           sleep 2
           axe describe-ui --udid "$UDID" > screenshots/ui/07-entries.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/07-entries.png
