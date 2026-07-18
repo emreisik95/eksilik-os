@@ -69,7 +69,7 @@ struct TopicListParser {
             return []
         }
 
-        parse(html: html, isBlocked: isBlocked)
+        return parse(html: html, isBlocked: isBlocked)
             .enumerated()
             .map { index, topic in
                 Topic(
