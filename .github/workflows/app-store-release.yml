@@ -17,7 +17,7 @@ on:
         description: CFBundleVersion for the archive
         required: true
         type: string
-        default: "9"
+        default: "10"
 
 permissions:
   contents: read
