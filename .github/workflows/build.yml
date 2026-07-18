@@ -52,6 +52,9 @@ jobs:
       - name: Test repository contract
         run: bash .github/scripts/test_repository_contract.sh
 
+      - name: Run core verification harness
+        run: swift run EksilikCoreHarness
+
       - name: Enforce production-code test changes
         if: github.event_name == 'pull_request'
         env:
