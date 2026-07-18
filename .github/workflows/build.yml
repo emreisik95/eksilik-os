@@ -72,6 +72,20 @@ jobs:
             "$RUNNER_TEMP/bin/swiftlint"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
+      - name: Generate lint baseline candidate
+        run: |
+          swiftlint lint --strict \
+            --write-baseline "$RUNNER_TEMP/swiftlint-baseline.json" \
+            || test -s "$RUNNER_TEMP/swiftlint-baseline.json"
+
+      - name: Upload lint baseline candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: swiftlint-baseline-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/swiftlint-baseline.json
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Lint Swift in strict mode
         run: swiftlint lint --strict --reporter github-actions-logging
 
