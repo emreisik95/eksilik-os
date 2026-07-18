@@ -40,6 +40,43 @@ final class FollowingFeedTests: XCTestCase {
         )
     }
 
+    func testFollowingMobileRequestsDoNotSendAjaxHeaderThatTriggersServerError() throws {
+        let written = try EksiRouter.buildRequest(for: .followingPage(page: 1))
+        let favorited = try EksiRouter.buildRequest(for: .followingFavorites(page: 1))
+
+        XCTAssertNil(written.value(forHTTPHeaderField: "X-Requested-With"))
+        XCTAssertNil(favorited.value(forHTTPHeaderField: "X-Requested-With"))
+    }
+
+    func testRegularRequestsKeepAjaxHeader() throws {
+        let request = try EksiRouter.buildRequest(for: .popular)
+
+        XCTAssertEqual(
+            request.value(forHTTPHeaderField: "X-Requested-With"),
+            "XMLHttpRequest"
+        )
+    }
+
+    func testActivityParserSeparatesCurrentFeedTitleAndAuthorDetail() {
+        let html = """
+        <ul class="topic-list partial">
+            <li>
+                <a href="/entry/46297732">
+                    pokemon
+                    <div class="detail">altere ses</div>
+                </a>
+            </li>
+        </ul>
+        """
+
+        let topics = TopicListParser.parseActivityFeed(html: html, page: 1)
+
+        XCTAssertEqual(topics.count, 1)
+        XCTAssertEqual(topics[0].title, "pokemon")
+        XCTAssertEqual(topics[0].entryCount, "altere ses")
+        XCTAssertEqual(topics[0].link, "/entry/46297732")
+    }
+
     func testActivityParserPreservesRepeatedTopicsAsSeparateRows() {
         let html = """
         <ul class="topic-list partial">
