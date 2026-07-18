@@ -48,7 +48,7 @@ jobs:
           APP_PATH="$RUNNER_TEMP/EksilikDeviceBuild/Build/Products/Debug-iphoneos/EksilikApp.app"
           test -d "$APP_PATH"
           test -d "$APP_PATH/PlugIns/EksilikWidget.appex"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = "com.eksilik.app"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Info.plist")" = "emre.isik.Eksilik"
           tar -C "$(dirname "$APP_PATH")" -czf "$RUNNER_TEMP/EksilikApp-unsigned.tar.gz" "$(basename "$APP_PATH")"
 
       - name: Upload device artifact
