@@ -39,6 +39,12 @@ struct EksiRouter {
             request.setValue(value, forHTTPHeaderField: key)
         }
 
+        // These mobile follow feeds return HTTP 500 when requested as AJAX,
+        // even though the same authenticated document request succeeds.
+        if endpoint.omitsAjaxHeader {
+            request.setValue(nil, forHTTPHeaderField: "X-Requested-With")
+        }
+
         if let body {
             var params = body
             if let csrfToken {

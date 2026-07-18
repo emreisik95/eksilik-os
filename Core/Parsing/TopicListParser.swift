@@ -21,7 +21,9 @@ struct TopicListParser {
             for element in elements {
                 guard let text = element.text, let link = element["href"] else { continue }
 
-                let entryCount = element.at_css("small")?.text ?? ""
+                let entryCount = element.at_css("small")?.text
+                    ?? element.at_css(".detail")?.text
+                    ?? ""
 
                 // Remove the small element content from the title
                 var title = text

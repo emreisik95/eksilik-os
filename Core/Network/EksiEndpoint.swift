@@ -143,6 +143,15 @@ enum EksiEndpoint {
         }
     }
 
+    var omitsAjaxHeader: Bool {
+        switch self {
+        case .followingPage, .followingFavorites:
+            return true
+        default:
+            return false
+        }
+    }
+
     var queryItems: [URLQueryItem]? {
         switch self {
         case .autocomplete(let query):
