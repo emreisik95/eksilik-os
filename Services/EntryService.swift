@@ -30,6 +30,13 @@ struct EntryService {
         try await client.post(endpoint: .removeVote, body: ["Id": entryId, "rate": "\(rate)"])
     }
 
+    func blockUser(authorId: String) async throws {
+        try await client.post(
+            endpoint: .blockUser,
+            body: ["Id": authorId, "r": "m"]
+        )
+    }
+
     func deleteEntry(id: String) async throws {
         try await client.post(endpoint: .deleteEntry, body: ["Id": id])
     }

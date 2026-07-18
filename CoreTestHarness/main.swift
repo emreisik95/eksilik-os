@@ -556,7 +556,7 @@ private struct Harness {
     mutating func runSettingsPresentationChecks() {
         let signedOut = SettingsPresentationPolicy.sections(isLoggedIn: false)
         expect(
-            signedOut.map(\.kind) == [.appearance, .home, .content, .account, .advanced],
+            signedOut.map(\.kind) == [.appearance, .home, .content, .account, .about, .advanced],
             "settings sections should keep a predictable scanning order"
         )
 
@@ -568,6 +568,10 @@ private struct Harness {
         expect(
             signedOut.first(where: { $0.kind == .account })?.items == [.login],
             "signed-out settings should offer login without account-only actions"
+        )
+        expect(
+            signedOut.first(where: { $0.kind == .about })?.items == [.privacyPolicy, .support],
+            "privacy and support should always be reachable"
         )
 
         let signedIn = SettingsPresentationPolicy.sections(isLoggedIn: true)

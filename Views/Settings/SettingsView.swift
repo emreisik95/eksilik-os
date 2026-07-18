@@ -309,6 +309,26 @@ struct SettingsView: View {
             }
             .buttonStyle(.plain)
 
+        case .privacyPolicy:
+            Link(destination: ProjectLink.privacyPolicy) {
+                SettingsNavigationRow(
+                    icon: "hand.raised",
+                    title: L10n.Settings.privacyPolicy,
+                    subtitle: "verilerin nasıl işlendiğini gör"
+                )
+            }
+            .buttonStyle(.plain)
+
+        case .support:
+            Link(destination: ProjectLink.support) {
+                SettingsNavigationRow(
+                    icon: "questionmark.bubble",
+                    title: L10n.Settings.support,
+                    subtitle: "yardım al veya sorun bildir"
+                )
+            }
+            .buttonStyle(.plain)
+
         case .server:
             NavigationLink {
                 ServerSettingsView(baseURL: $preferences.baseURL)
@@ -394,6 +414,8 @@ struct SettingsView: View {
                 .font(.footnote.weight(.semibold))
             Text("sürüm \(appVersion)")
                 .font(.caption2)
+            Text("ekşi sözlük ile resmi bağlantısı yoktur")
+                .font(.caption2)
         }
         .foregroundColor(themeManager.current.dateColor)
         .frame(maxWidth: .infinity)
@@ -404,6 +426,15 @@ struct SettingsView: View {
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0.0"
     }
+}
+
+private enum ProjectLink {
+    static let privacyPolicy = URL(
+        string: "https://github.com/emreisik95/eksilik-os/blob/main/PRIVACY.md"
+    )!
+    static let support = URL(
+        string: "https://github.com/emreisik95/eksilik-os/blob/main/SUPPORT.md"
+    )!
 }
 
 private struct SettingsNavigationRow: View {

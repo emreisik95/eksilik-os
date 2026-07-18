@@ -7,7 +7,7 @@ final class SettingsPresentationPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             sections.map(\.kind),
-            [.appearance, .home, .content, .account, .advanced]
+            [.appearance, .home, .content, .account, .about, .advanced]
         )
     }
 
@@ -22,9 +22,19 @@ final class SettingsPresentationPolicyTests: XCTestCase {
                 .homeNavigation, .homeTabs,
                 .offlineLibrary, .blockedTopics,
                 .login,
+                .privacyPolicy, .support,
                 .server,
             ]
         )
+    }
+
+    func testPrivacyAndSupportAreAlwaysVisible() {
+        for isLoggedIn in [false, true] {
+            let about = SettingsPresentationPolicy.sections(isLoggedIn: isLoggedIn)
+                .first(where: { $0.kind == .about })
+
+            XCTAssertEqual(about?.items, [.privacyPolicy, .support])
+        }
     }
 
     func testAccountItemsAdaptToSessionState() {

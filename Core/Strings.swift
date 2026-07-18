@@ -42,6 +42,7 @@ enum L10n {
         static let sendMessage = "mesaj gönder"
         static let modlog = "modlog"
         static let blockAuthor = "yazarı engelle"
+        static let reportEntry = "entry'yi bildir"
         static let whoFavorited = "favorileyenler"
         static let cancel = "vazgeç"
         static let favorites = "favorileyenler"
@@ -114,6 +115,8 @@ enum L10n {
         static let logout = "çıkış yap"
         static let about = "hakkında"
         static let version = "sürüm"
+        static let privacyPolicy = "gizlilik politikası"
+        static let support = "destek"
     }
 
     // MARK: - Common

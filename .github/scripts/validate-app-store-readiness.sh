@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+    echo "App Store readiness failed: $1" >&2
+    exit 1
+}
+
+if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
+    xcodegen generate >/dev/null
+fi
+
+app_version="$(plutil -extract CFBundleShortVersionString raw EksilikApp-Info.plist)"
+app_build="$(plutil -extract CFBundleVersion raw EksilikApp-Info.plist)"
+widget_version="$(plutil -extract CFBundleShortVersionString raw EksilikWidget-Info.plist)"
+widget_build="$(plutil -extract CFBundleVersion raw EksilikWidget-Info.plist)"
+
+[[ "$app_version" == '$(MARKETING_VERSION)' ]] || fail "app version must inherit MARKETING_VERSION"
+[[ "$app_build" == '$(CURRENT_PROJECT_VERSION)' ]] || fail "app build must inherit CURRENT_PROJECT_VERSION"
+[[ "$widget_version" == '$(MARKETING_VERSION)' ]] || fail "widget version must inherit MARKETING_VERSION"
+[[ "$widget_build" == '$(CURRENT_PROJECT_VERSION)' ]] || fail "widget build must inherit CURRENT_PROJECT_VERSION"
+
+[[ "$(plutil -extract ITSAppUsesNonExemptEncryption raw EksilikApp-Info.plist 2>/dev/null || true)" == "false" ]] \
+    || fail "encryption exemption must be declared"
+
+privacy_manifest="Resources/PrivacyInfo.xcprivacy"
+[[ -f "$privacy_manifest" ]] || fail "PrivacyInfo.xcprivacy is missing"
+[[ "$(plutil -extract NSPrivacyTracking raw "$privacy_manifest")" == "false" ]] \
+    || fail "privacy manifest tracking declaration is missing"
+plutil -p "$privacy_manifest" | grep -q 'NSPrivacyAccessedAPICategoryUserDefaults' \
+    || fail "UserDefaults required-reason declaration is missing"
+plutil -p "$privacy_manifest" | grep -q 'CA92.1' \
+    || fail "UserDefaults reason CA92.1 is missing"
+
+[[ -s PRIVACY.md ]] || fail "public privacy policy is missing"
+[[ -s SUPPORT.md ]] || fail "public support document is missing"
+grep -q 'Button(L10n.Entry.reportEntry' Views/Entry/EntryRowView.swift \
+    || fail "entry reporting action is missing"
+grep -q 'func blockUser(authorId:' Services/EntryService.swift \
+    || fail "functional author blocking is missing"
+
+for family in AlternateIcon AlternateKlasik; do
+    for scale in 1 2 3; do
+        file="Resources/AlternateIcons/${family}@${scale}x.png"
+        expected=$((60 * scale))
+        width="$(sips -g pixelWidth "$file" 2>/dev/null | awk '/pixelWidth/ {print $2}')"
+        height="$(sips -g pixelHeight "$file" 2>/dev/null | awk '/pixelHeight/ {print $2}')"
+        alpha="$(sips -g hasAlpha "$file" 2>/dev/null | awk '/hasAlpha/ {print $2}')"
+        [[ "$width" == "$expected" && "$height" == "$expected" ]] \
+            || fail "$file must be ${expected}x${expected}"
+        [[ "$alpha" == "no" ]] || fail "$file must not contain transparency"
+    done
+done
+
+echo "PASS: App Store readiness checks"
