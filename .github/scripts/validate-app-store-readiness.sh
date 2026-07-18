@@ -10,10 +10,20 @@ grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik$' project.
     || fail "app bundle identifier must match the existing App Store listing"
 grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' project.yml \
     || fail "widget bundle identifier must be nested under the existing App Store listing"
+grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
+    || fail "device artifact verification must use the existing App Store bundle identifier"
 [[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.0"$' project.yml)" -eq 2 ]] \
     || fail "app and widget marketing versions must be 2.0.0"
 [[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "3"$' project.yml)" -eq 2 ]] \
     || fail "app and widget build numbers must be 3"
+[[ "$(grep -Ec '^[[:space:]]+DEVELOPMENT_TEAM: "235UP83FJ4"$' project.yml)" -eq 2 ]] \
+    || fail "release signing team must match the existing App Store account"
+grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store 2026"' project.yml \
+    || fail "app App Store provisioning profile is not configured"
+grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store 2026"' project.yml \
+    || fail "widget App Store provisioning profile is not configured"
+[[ -f ExportOptions.plist ]] || fail "ExportOptions.plist is missing"
+[[ -f .github/workflows/app-store-release.yml ]] || fail "App Store release workflow is missing"
 
 if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
     xcodegen generate >/dev/null

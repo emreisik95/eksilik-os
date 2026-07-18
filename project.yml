@@ -67,6 +67,9 @@ targets:
           SWIFT_OPTIMIZATION_LEVEL: -Onone
         release:
           SWIFT_OPTIMIZATION_LEVEL: -O
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: "235UP83FJ4"
+          PROVISIONING_PROFILE_SPECIFIER: "Eksilik App Store 2026"
 
   EksilikWidget:
     type: app-extension
@@ -89,6 +92,11 @@ targets:
         CURRENT_PROJECT_VERSION: "3"
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        release:
+          CODE_SIGN_STYLE: Manual
+          DEVELOPMENT_TEAM: "235UP83FJ4"
+          PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store 2026"
 
   EksilikTests:
     type: bundle.unit-test
