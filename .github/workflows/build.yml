@@ -52,9 +52,6 @@ jobs:
       - name: Test repository contract
         run: bash .github/scripts/test_repository_contract.sh
 
-      - name: Run core verification harness
-        run: swift run EksilikCoreHarness
-
       - name: Enforce production-code test changes
         if: github.event_name == 'pull_request'
         env:
@@ -97,6 +94,9 @@ jobs:
 
       - name: Lint Swift in strict mode
         run: swiftlint lint --strict --baseline "$RUNNER_TEMP/swiftlint-baseline.json" --reporter github-actions-logging
+
+      - name: Run core verification harness
+        run: swift run EksilikCoreHarness
 
   build:
     name: Build & Test
