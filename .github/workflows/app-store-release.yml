@@ -8,6 +8,16 @@ on:
         required: true
         type: boolean
         default: true
+      release_version:
+        description: CFBundleShortVersionString for the archive
+        required: true
+        type: string
+        default: "2.0.1"
+      build_number:
+        description: CFBundleVersion for the archive
+        required: true
+        type: string
+        default: "5"
 
 permissions:
   contents: read
@@ -18,7 +28,7 @@ concurrency:
 
 jobs:
   release:
-    name: Archive and upload TestFlight build 5
+    name: Archive and upload ${{ inputs.release_version }} (${{ inputs.build_number }})
     runs-on: macos-26
     timeout-minutes: 60
     env:
@@ -30,6 +40,8 @@ jobs:
       P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
       APP_PROVISIONING_PROFILE_BASE64: ${{ secrets.APP_PROVISIONING_PROFILE_BASE64 }}
       WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.WIDGET_PROVISIONING_PROFILE_BASE64 }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_BUILD_NUMBER: ${{ inputs.build_number }}
 
     steps:
       - name: Check out source
@@ -101,7 +113,19 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/EksilikApp.xcarchive" \
-            -skipPackagePluginValidation
+            -skipPackagePluginValidation \
+            MARKETING_VERSION="$RELEASE_VERSION" \
+            CURRENT_PROJECT_VERSION="$RELEASE_BUILD_NUMBER"
+
+      - name: Verify archived version
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/EksilikApp.xcarchive/Products/Applications/EksilikApp.app"
+          WIDGET_PATH="$APP_PATH/PlugIns/EksilikWidget.appex"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Info.plist")" = "$RELEASE_VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Info.plist")" = "$RELEASE_BUILD_NUMBER"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$WIDGET_PATH/Info.plist")" = "$RELEASE_VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$WIDGET_PATH/Info.plist")" = "$RELEASE_BUILD_NUMBER"
 
       - name: Export IPA
         run: |
@@ -115,7 +139,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: EksilikApp-2.0.1-5
+          name: EksilikApp-${{ inputs.release_version }}-${{ inputs.build_number }}
           path: ${{ runner.temp }}/EksilikExport/EksilikApp.ipa
           if-no-files-found: error
           retention-days: 3
@@ -143,8 +167,8 @@ jobs:
           asc builds upload \
             --app "$ASC_APP_ID" \
             --ipa "$RUNNER_TEMP/EksilikExport/EksilikApp.ipa" \
-            --version "2.0.1" \
-            --build-number "5" \
+            --version "$RELEASE_VERSION" \
+            --build-number "$RELEASE_BUILD_NUMBER" \
             --wait
 
       - name: Remove temporary keychain
