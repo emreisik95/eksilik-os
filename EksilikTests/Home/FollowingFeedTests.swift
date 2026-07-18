@@ -7,36 +7,36 @@ final class FollowingFeedTests: XCTestCase {
         XCTAssertEqual(FollowingFeedSection.allCases.map(\.title), ["yazdıkları", "favladıkları"])
     }
 
-    func testWrittenSectionUsesPagedFollowingEndpoint() {
+    func testWrittenSectionUsesPagedMobileFollowingEndpoint() {
         XCTAssertEqual(
             FollowingFeedSection.written.endpoint(page: 1).path,
-            "/basliklar/takip?p=1"
+            "/basliklar/takipentrymobile?p=1"
         )
         XCTAssertEqual(
             FollowingFeedSection.written.endpoint(page: 4).path,
-            "/basliklar/takip?p=4"
+            "/basliklar/takipentrymobile?p=4"
         )
     }
 
-    func testFavoritedSectionUsesPagedBuddyFavoritesEndpoint() {
+    func testFavoritedSectionUsesPagedMobileFollowingFavoritesEndpoint() {
         XCTAssertEqual(
             FollowingFeedSection.favorited.endpoint(page: 1).path,
-            "/basliklar/badifav?p=1"
+            "/basliklar/takipfavmobile?p=1"
         )
         XCTAssertEqual(
             FollowingFeedSection.favorited.endpoint(page: 4).path,
-            "/basliklar/badifav?p=4"
+            "/basliklar/takipfavmobile?p=4"
         )
     }
 
     func testFollowingEndpointsClampInvalidPages() {
         XCTAssertEqual(
             FollowingFeedSection.written.endpoint(page: 0).path,
-            "/basliklar/takip?p=1"
+            "/basliklar/takipentrymobile?p=1"
         )
         XCTAssertEqual(
             FollowingFeedSection.favorited.endpoint(page: -2).path,
-            "/basliklar/badifav?p=1"
+            "/basliklar/takipfavmobile?p=1"
         )
     }
 
