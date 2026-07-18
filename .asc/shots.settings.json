@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "app": {
+    "bundle_id": "com.eksilik.app",
+    "project": "EksilikApp.xcodeproj",
+    "scheme": "EksilikApp",
+    "simulator_udid": "booted"
+  },
+  "paths": {
+    "plan": ".asc/screenshots.json",
+    "raw_dir": "./screenshots/raw",
+    "framed_dir": "./screenshots/framed"
+  },
+  "pipeline": {
+    "frame_enabled": false,
+    "upload_enabled": false
+  },
+  "upload": {
+    "version_localization_id": "",
+    "device_type": "APP_IPHONE_69",
+    "source_dir": "./screenshots/raw"
+  }
+}

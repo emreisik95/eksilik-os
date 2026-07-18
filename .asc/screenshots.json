@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "app": {
+    "bundle_id": "com.eksilik.app",
+    "udid": "booted",
+    "output_dir": "./screenshots/raw"
+  },
+  "steps": [
+    { "action": "launch" },
+    { "action": "wait", "duration_ms": 15000 },
+    { "action": "screenshot", "name": "home" }
+  ]
+}

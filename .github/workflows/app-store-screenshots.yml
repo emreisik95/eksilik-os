@@ -1,0 +1,132 @@
+name: Capture App Store Screenshots
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/app-store-screenshots.yml"
+      - ".asc/**"
+
+concurrency:
+  group: app-store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    name: Capture iPhone 6.9-inch screens
+    runs-on: macos-15
+    timeout-minutes: 35
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install capture tools
+        run: |
+          brew install xcodegen
+          brew install cameroncooke/axe/axe
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Boot iPhone 16 Pro Max simulator
+        id: simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | jq -r \
+            '.devices[][] | select(.name == "iPhone 16 Pro Max") | .udid' | head -1)
+          test -n "$UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl spawn "$UDID" defaults write NSGlobalDomain AppleLanguages -array tr
+          xcrun simctl spawn "$UDID" defaults write NSGlobalDomain AppleLocale -string tr_TR
+          xcrun simctl ui "$UDID" appearance dark
+          xcrun simctl status_bar "$UDID" override \
+            --time 09:41 \
+            --batteryState charged \
+            --batteryLevel 100 \
+            --wifiBars 3 \
+            --cellularBars 4
+
+      - name: Build and install app
+        env:
+          UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project EksilikApp.xcodeproj \
+            -scheme EksilikApp \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath .build/AppStoreScreenshots \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
+          xcrun simctl install \
+            "$UDID" \
+            .build/AppStoreScreenshots/Build/Products/Debug-iphonesimulator/EksilikApp.app
+
+      - name: Capture real app screens
+        env:
+          UDID: ${{ steps.simulator.outputs.udid }}
+        run: |
+          mkdir -p screenshots/raw screenshots/ui
+          xcrun simctl launch "$UDID" com.eksilik.app
+          sleep 18
+
+          axe describe-ui --udid "$UDID" > screenshots/ui/01-home.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/01-home.png
+
+          axe tap --label "ara" --element-type Button --wait-timeout 10 --udid "$UDID" || true
+          sleep 3
+          axe describe-ui --udid "$UDID" > screenshots/ui/02-search.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/02-search.png
+
+          axe tap --label "olay" --element-type Button --wait-timeout 10 --udid "$UDID" || true
+          sleep 5
+          axe describe-ui --udid "$UDID" > screenshots/ui/03-events.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/03-events.png
+
+          axe tap --label "ayarlar" --element-type Button --wait-timeout 10 --udid "$UDID" || true
+          sleep 2
+          axe describe-ui --udid "$UDID" > screenshots/ui/04-settings.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/04-settings.png
+
+          axe tap --label "çevrimdışı okuma" --wait-timeout 5 --udid "$UDID" || true
+          sleep 2
+          axe describe-ui --udid "$UDID" > screenshots/ui/05-offline.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/05-offline.png
+
+          axe tap -x 28 -y 56 --post-delay 1 --udid "$UDID" || true
+          axe tap --label "entry görünümü" --wait-timeout 5 --udid "$UDID" || true
+          sleep 2
+          axe describe-ui --udid "$UDID" > screenshots/ui/06-layouts.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/06-layouts.png
+
+          axe tap -x 28 -y 56 --post-delay 1 --udid "$UDID" || true
+          axe tap --label "anasayfa" --element-type Button --wait-timeout 5 --udid "$UDID" || true
+          sleep 3
+          axe tap -x 220 -y 175 --post-delay 1 --udid "$UDID" || true
+          sleep 8
+          axe describe-ui --udid "$UDID" > screenshots/ui/07-entries.json
+          axe screenshot --udid "$UDID" --output screenshots/raw/07-entries.png
+
+      - name: Validate screenshot dimensions
+        run: |
+          count=$(find screenshots/raw -name '*.png' | wc -l | tr -d ' ')
+          test "$count" -eq 7
+          while IFS= read -r image; do
+            width=$(sips -g pixelWidth "$image" | awk '/pixelWidth/ {print $2}')
+            height=$(sips -g pixelHeight "$image" | awk '/pixelHeight/ {print $2}')
+            test "$width" -eq 1320
+            test "$height" -eq 2868
+          done < <(find screenshots/raw -name '*.png' | sort)
+
+      - name: Upload screenshot bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: eksilik-app-store-screenshots
+          path: |
+            screenshots/raw
+            screenshots/ui
+          if-no-files-found: error
+          retention-days: 14
