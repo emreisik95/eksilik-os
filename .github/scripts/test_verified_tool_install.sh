@@ -6,6 +6,8 @@ installer="$repo_root/.github/scripts/install_verified_zip_tool.sh"
 [[ -f "$installer" ]] || { echo "Missing tool installer: $installer" >&2; exit 127; }
 tree_installer="$repo_root/.github/scripts/install_verified_zip_tree.sh"
 [[ -f "$tree_installer" ]] || { echo "Missing tool tree installer: $tree_installer" >&2; exit 127; }
+file_installer="$repo_root/.github/scripts/install_verified_file.sh"
+[[ -f "$file_installer" ]] || { echo "Missing verified file installer: $file_installer" >&2; exit 127; }
 
 fixture_dir="$(mktemp -d "${TMPDIR:-/tmp}/eksilik-tool-test.XXXXXX")"
 trap 'rm -rf "$fixture_dir"' EXIT
@@ -56,5 +58,12 @@ bash "$tree_installer" \
 [[ -x "$fixture_dir/install/tree/example-tool" ]]
 [[ -f "$fixture_dir/install/tree/resources/preset.json" ]]
 "$fixture_dir/install/tree/example-tool"
+
+bash "$file_installer" \
+    "file://$fixture_dir/archive/bin/example-tool" \
+    "$(shasum -a 256 "$fixture_dir/archive/bin/example-tool" | awk '{print $1}')" \
+    "$fixture_dir/install/file-tool"
+[[ -x "$fixture_dir/install/file-tool" ]]
+[[ "$("$fixture_dir/install/file-tool")" == "verified-tool" ]]
 
 echo "PASS: verified tool installer"
