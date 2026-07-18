@@ -3,14 +3,20 @@ name: Build Device Artifact
 on:
   pull_request:
     branches: [main]
+  merge_group:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: device-build-${{ github.ref }}
+  group: device-build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+env:
+  XCODEGEN_URL: https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.artifactbundle.zip
+  XCODEGEN_SHA256: ef6d0a23bfb7393387f98e321ffd78a487231172e2e78c48d3c26275c263fd0c
+  XCODEGEN_ARCHIVE_DIRECTORY: xcodegen.artifactbundle/xcodegen-2.46.0-macosx/bin
 
 jobs:
   device-build:
@@ -20,17 +26,25 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
+      - name: Install verified XcodeGen 2.46.0
+        run: |
+          bash .github/scripts/install_verified_zip_tree.sh \
+            "$XCODEGEN_URL" \
+            "$XCODEGEN_SHA256" \
+            "$XCODEGEN_ARCHIVE_DIRECTORY" \
+            "$RUNNER_TEMP/xcodegen"
+          echo "$RUNNER_TEMP/xcodegen" >> "$GITHUB_PATH"
 
       - name: Generate Xcode project
         run: xcodegen generate
 
       - name: Build for iPhone
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild build \
             -project EksilikApp.xcodeproj \
             -scheme EksilikApp \
@@ -41,10 +55,11 @@ jobs:
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY='' | xcpretty
+            CODE_SIGN_IDENTITY='' 2>&1 | tee "$RUNNER_TEMP/xcodebuild-device.log"
 
       - name: Package device app
         run: |
+          set -euo pipefail
           APP_PATH="$RUNNER_TEMP/EksilikDeviceBuild/Build/Products/Debug-iphoneos/EksilikApp.app"
           test -d "$APP_PATH"
           test -d "$APP_PATH/PlugIns/EksilikWidget.appex"
@@ -52,9 +67,18 @@ jobs:
           tar -C "$(dirname "$APP_PATH")" -czf "$RUNNER_TEMP/EksilikApp-unsigned.tar.gz" "$(basename "$APP_PATH")"
 
       - name: Upload device artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: EksilikApp-unsigned
           path: ${{ runner.temp }}/EksilikApp-unsigned.tar.gz
           if-no-files-found: error
           retention-days: 3
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: device-build-log-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/xcodebuild-device.log
+          if-no-files-found: warn
+          retention-days: 7

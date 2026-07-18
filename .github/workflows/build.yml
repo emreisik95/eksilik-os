@@ -5,59 +5,171 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  merge_group:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  XCODEGEN_URL: https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.artifactbundle.zip
+  XCODEGEN_SHA256: ef6d0a23bfb7393387f98e321ffd78a487231172e2e78c48d3c26275c263fd0c
+  XCODEGEN_ARCHIVE_DIRECTORY: xcodegen.artifactbundle/xcodegen-2.46.0-macosx/bin
+
 jobs:
-  build:
-    name: Build & Test
-    runs-on: macos-15
+  policy:
+    name: Repository Policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
+      - name: Lint shell policy scripts
+        run: find .github/scripts -type f -name '*.sh' -print0 | xargs -0 shellcheck
 
-      - name: Generate Xcode Project
-        run: xcodegen generate
+      - name: Test coverage gate
+        run: bash .github/scripts/test_coverage_gate.sh
 
-      - name: Validate App Store Readiness
-        run: bash .github/scripts/validate-app-store-readiness.sh
+      - name: Test TDD contract
+        run: bash .github/scripts/test_tdd_contract.sh
 
-      - name: Build
-        run: |
-          set -o pipefail
-          xcodebuild build \
-            -project EksilikApp.xcodeproj \
-            -scheme EksilikApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-            -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+      - name: Test verified tool installers
+        run: bash .github/scripts/test_verified_tool_install.sh
 
-      - name: Test
-        run: |
-          set -o pipefail
-          xcodebuild test \
-            -project EksilikApp.xcodeproj \
-            -scheme EksilikApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-            -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO | xcpretty
+      - name: Test repository contract
+        run: bash .github/scripts/test_repository_contract.sh
+
+      - name: Enforce production-code test changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/check_tdd_contract.sh "$BASE_SHA" "$HEAD_SHA"
 
   swiftlint:
     name: SwiftLint
     runs-on: macos-15
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: SwiftLint
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install verified SwiftLint 0.65.0
         run: |
-          if command -v swiftlint &> /dev/null; then
-            swiftlint lint --reporter github-actions-logging
-          else
-            echo "SwiftLint not installed, skipping"
-          fi
+          bash .github/scripts/install_verified_zip_tool.sh \
+            "https://github.com/realm/SwiftLint/releases/download/0.65.0/portable_swiftlint.zip" \
+            "d6cb0aa7a2f5f1ef306fc9e37bcb54dc9a26facc8f7784ac0c3dd3eccf5c6ba6" \
+            "swiftlint" \
+            "$RUNNER_TEMP/bin/swiftlint"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Lint Swift in strict mode
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  build:
+    name: Build & Test
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install verified XcodeGen 2.46.0
+        run: |
+          bash .github/scripts/install_verified_zip_tree.sh \
+            "$XCODEGEN_URL" \
+            "$XCODEGEN_SHA256" \
+            "$XCODEGEN_ARCHIVE_DIRECTORY" \
+            "$RUNNER_TEMP/xcodegen"
+          echo "$RUNNER_TEMP/xcodegen" >> "$GITHUB_PATH"
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Validate App Store readiness
+        run: bash .github/scripts/validate-app-store-readiness.sh
+
+      - name: Test with code coverage
+        run: |
+          set -euo pipefail
+          RESULT_BUNDLE="$RUNNER_TEMP/EksilikTests.xcresult"
+          BUILD_LOG="$RUNNER_TEMP/xcodebuild-test.log"
+          rm -rf "$RESULT_BUNDLE"
+          xcodebuild test \
+            -project EksilikApp.xcodeproj \
+            -scheme EksilikApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -derivedDataPath "$RUNNER_TEMP/EksilikDerivedData" \
+            -resultBundlePath "$RESULT_BUNDLE" \
+            -enableCodeCoverage YES \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$BUILD_LOG"
+
+      - name: Enforce coverage baseline
+        id: coverage
+        run: |
+          set -euo pipefail
+          xcrun xccov view --report --json \
+            "$RUNNER_TEMP/EksilikTests.xcresult" \
+            > "$RUNNER_TEMP/coverage.json"
+          bash .github/scripts/check_coverage.sh \
+            "$RUNNER_TEMP/coverage.json" \
+            .github/coverage-baseline.json
+
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/EksilikTests.xcresult
+            ${{ runner.temp }}/coverage.json
+            ${{ runner.temp }}/xcodebuild-test.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later
+
+  quality-gate:
+    name: Quality Gate
+    if: always()
+    needs: [policy, swiftlint, build, dependency-review]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every quality check
+        env:
+          POLICY_RESULT: ${{ needs.policy.result }}
+          SWIFTLINT_RESULT: ${{ needs.swiftlint.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPENDENCY_RESULT: ${{ needs.dependency-review.result }}
+        run: |
+          test "$POLICY_RESULT" = success
+          test "$SWIFTLINT_RESULT" = success
+          test "$BUILD_RESULT" = success
+          test "$DEPENDENCY_RESULT" = success -o "$DEPENDENCY_RESULT" = skipped

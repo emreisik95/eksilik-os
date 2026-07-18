@@ -57,7 +57,7 @@ build_workflow=".github/workflows/build.yml"
 grep -Fq -- '-enableCodeCoverage YES' "$build_workflow" || fail "CI must enable Xcode coverage"
 grep -Fq 'check_coverage.sh' "$build_workflow" || fail "CI must enforce the coverage baseline"
 grep -Fq 'check_tdd_contract.sh' "$build_workflow" || fail "CI must enforce the TDD change contract"
-grep -Fq 'check_repository_contract.sh' "$build_workflow" || fail "CI must enforce repository policy"
+grep -Fq 'test_repository_contract.sh' "$build_workflow" || fail "CI must enforce repository policy"
 grep -Fq 'name: Quality Gate' "$build_workflow" || fail "CI must expose a stable Quality Gate"
 grep -Fq 'swiftlint lint --strict' "$build_workflow" || fail "SwiftLint must run in strict mode"
 if grep -Fq 'SwiftLint not installed, skipping' "$build_workflow"; then
@@ -81,4 +81,3 @@ grep -Fq 'Green test evidence' .github/pull_request_template.md || fail "PR temp
 grep -Fq 'minimumLineCoverage' .github/coverage-baseline.json || fail "coverage baseline is invalid"
 
 echo "PASS: repository excellence contract"
-
