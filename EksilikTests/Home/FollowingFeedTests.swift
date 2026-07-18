@@ -77,6 +77,30 @@ final class FollowingFeedTests: XCTestCase {
         XCTAssertEqual(topics[0].link, "/entry/46297732")
     }
 
+    func testActivityParserIgnoresNavigationAndFooterLinksWhenWrittenFeedIsEmpty() {
+        let html = """
+        <section id="content-body">
+            <nav>
+                <ul>
+                    <li><a href="/basliklar/takipentrymobile">yazdıkları</a></li>
+                    <li><a href="/basliklar/takipfavmobile">favladıkları</a></li>
+                </ul>
+            </nav>
+            <p>yok bişii pek</p>
+            <footer>
+                <ul>
+                    <li><a href="/iletisim">iletişim</a></li>
+                    <li><a href="/seffaflik">şeffaflık raporları</a></li>
+                </ul>
+            </footer>
+        </section>
+        """
+
+        let topics = TopicListParser.parseActivityFeed(html: html, page: 1)
+
+        XCTAssertTrue(topics.isEmpty)
+    }
+
     func testActivityParserPreservesRepeatedTopicsAsSeparateRows() {
         let html = """
         <ul class="topic-list partial">
