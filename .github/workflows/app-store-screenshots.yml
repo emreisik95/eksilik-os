@@ -76,17 +76,17 @@ jobs:
           axe describe-ui --udid "$UDID" > screenshots/ui/01-home.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/01-home.png
 
-          axe tap -x 132 -y 898 --post-delay 1 --udid "$UDID"
+          axe tap --label "ara" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
           sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/02-search.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/02-search.png
 
-          axe tap -x 220 -y 898 --post-delay 1 --udid "$UDID"
+          axe tap --label "olay" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
           sleep 5
           axe describe-ui --udid "$UDID" > screenshots/ui/03-events.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/03-events.png
 
-          axe tap -x 396 -y 898 --post-delay 1 --udid "$UDID"
+          axe tap --label "ayarlar" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
           sleep 3
           axe describe-ui --udid "$UDID" > screenshots/ui/04-settings.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/04-settings.png
@@ -96,14 +96,14 @@ jobs:
           axe describe-ui --udid "$UDID" > screenshots/ui/05-layouts.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/05-layouts.png
 
-          axe tap -x 28 -y 76 --post-delay 1 --udid "$UDID"
+          axe gesture swipe-from-left-edge --post-delay 1 --udid "$UDID"
           axe gesture scroll-up --post-delay 1 --udid "$UDID"
           axe tap --label "çevrimdışı okuma" --wait-timeout 10 --udid "$UDID"
           sleep 2
           axe describe-ui --udid "$UDID" > screenshots/ui/06-offline.json
           xcrun simctl io "$UDID" screenshot screenshots/raw/06-offline.png
 
-          axe tap -x 44 -y 898 --post-delay 1 --udid "$UDID"
+          axe tap --label "anasayfa" --element-type RadioButton --wait-timeout 10 --udid "$UDID"
           sleep 3
           axe tap -x 220 -y 175 --post-delay 1 --udid "$UDID" || true
           sleep 8
