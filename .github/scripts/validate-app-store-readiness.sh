@@ -70,8 +70,10 @@ privacy_manifest="Resources/PrivacyInfo.xcprivacy"
 [[ -f "$privacy_manifest" ]] || fail "PrivacyInfo.xcprivacy is missing"
 ruby -ryaml -e '
   resources = YAML.load_file("project.yml").dig("targets", "EksilikWidget", "resources") || []
-  exit(resources.any? { |resource| resource["path"] == "Resources/PrivacyInfo.xcprivacy" } ? 0 : 1)
+  exit(resources.any? { |resource| resource["path"] == "EksilikWidget/PrivacyInfo.xcprivacy" } ? 0 : 1)
 ' || fail "widget target must bundle PrivacyInfo.xcprivacy"
+cmp -s "$privacy_manifest" EksilikWidget/PrivacyInfo.xcprivacy \
+    || fail "app and widget privacy manifests must stay identical"
 [[ "$(plutil -extract NSPrivacyTracking raw "$privacy_manifest")" == "false" ]] \
     || fail "privacy manifest tracking declaration is missing"
 plutil -p "$privacy_manifest" | grep -q 'NSPrivacyAccessedAPICategoryUserDefaults' \

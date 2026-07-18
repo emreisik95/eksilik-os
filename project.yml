@@ -87,6 +87,8 @@ targets:
     sources:
       - path: EksilikWidget
       - path: Core/Widget
+    resources:
+      - path: EksilikWidget/PrivacyInfo.xcprivacy
     info:
       path: EksilikWidget-Info.plist
       properties:

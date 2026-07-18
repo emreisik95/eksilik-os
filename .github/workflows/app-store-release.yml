@@ -131,6 +131,7 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PATH/Info.plist")" = "$RELEASE_BUILD_NUMBER"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$WIDGET_PATH/Info.plist")" = "$RELEASE_VERSION"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$WIDGET_PATH/Info.plist")" = "$RELEASE_BUILD_NUMBER"
+          test -f "$WIDGET_PATH/PrivacyInfo.xcprivacy"
 
       - name: Export IPA
         run: |
