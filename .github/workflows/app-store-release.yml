@@ -22,6 +22,11 @@ on:
 permissions:
   contents: read
 
+env:
+  XCODEGEN_URL: https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.artifactbundle.zip
+  XCODEGEN_SHA256: ef6d0a23bfb7393387f98e321ffd78a487231172e2e78c48d3c26275c263fd0c
+  XCODEGEN_ARCHIVE_DIRECTORY: xcodegen.artifactbundle/xcodegen-2.46.0-macosx/bin
+
 concurrency:
   group: app-store-release
   cancel-in-progress: false
@@ -40,7 +45,9 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Verify release secrets
         env:
@@ -64,8 +71,36 @@ jobs:
             test -n "${!name}" || { echo "Missing required secret: $name" >&2; exit 1; }
           done
 
-      - name: Install release tools
-        run: brew install xcodegen asc
+      - name: Install verified release tools
+        run: |
+          set -euo pipefail
+          bash .github/scripts/install_verified_zip_tree.sh \
+            "$XCODEGEN_URL" \
+            "$XCODEGEN_SHA256" \
+            "$XCODEGEN_ARCHIVE_DIRECTORY" \
+            "$RUNNER_TEMP/xcodegen"
+
+          case "$(uname -m)" in
+            arm64)
+              ASC_URL="https://github.com/rorkai/App-Store-Connect-CLI/releases/download/3.1.0/asc_3.1.0_macOS_arm64"
+              ASC_SHA256="1c79e6da889ca665470f6cebe033b48897352ab001b04bca04555a86020368c9"
+              ;;
+            x86_64)
+              ASC_URL="https://github.com/rorkai/App-Store-Connect-CLI/releases/download/3.1.0/asc_3.1.0_macOS_amd64"
+              ASC_SHA256="9d9fd71c7ef105f3510dc24e9833af53b1ea4df38b61a8a66630fb8c30d345e5"
+              ;;
+            *)
+              echo "Unsupported runner architecture: $(uname -m)" >&2
+              exit 1
+              ;;
+          esac
+          bash .github/scripts/install_verified_file.sh \
+            "$ASC_URL" \
+            "$ASC_SHA256" \
+            "$RUNNER_TEMP/bin/asc"
+
+          echo "$RUNNER_TEMP/xcodegen" >> "$GITHUB_PATH"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
       - name: Generate Xcode project
         run: xcodegen generate
@@ -82,6 +117,7 @@ jobs:
           WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.WIDGET_PROVISIONING_PROFILE_BASE64 }}
         run: |
           set -euo pipefail
+          umask 077
           CERTIFICATE_PATH="$RUNNER_TEMP/apple-distribution.p12"
           APP_PROFILE_PATH="$RUNNER_TEMP/eksilik-app.mobileprovision"
           WIDGET_PROFILE_PATH="$RUNNER_TEMP/eksilik-widget.mobileprovision"
@@ -105,7 +141,9 @@ jobs:
             local uuid
             uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$plist")"
             mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-            cp "$source" "$HOME/Library/MobileDevice/Provisioning Profiles/$uuid.mobileprovision"
+            local destination="$HOME/Library/MobileDevice/Provisioning Profiles/$uuid.mobileprovision"
+            cp "$source" "$destination"
+            printf '%s\n' "$destination" >> "$RUNNER_TEMP/installed-profiles.txt"
           }
 
           install_profile "$APP_PROFILE_PATH"
@@ -152,6 +190,7 @@ jobs:
           ASC_PRIVATE_KEY_BASE64: ${{ secrets.ASC_PRIVATE_KEY_BASE64 }}
         run: |
           set -euo pipefail
+          umask 077
           PRIVATE_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
           printf '%s' "$ASC_PRIVATE_KEY_BASE64" | base64 --decode > "$PRIVATE_KEY_PATH"
           chmod 600 "$PRIVATE_KEY_PATH"
@@ -179,9 +218,20 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
+          if [[ -f "$RUNNER_TEMP/installed-profiles.txt" ]]; then
+            while IFS= read -r profile; do
+              rm -f "$profile"
+            done < "$RUNNER_TEMP/installed-profiles.txt"
+          fi
           rm -f \
             "$RUNNER_TEMP/apple-distribution.p12" \
             "$RUNNER_TEMP/eksilik-app.mobileprovision" \
             "$RUNNER_TEMP/eksilik-widget.mobileprovision" \
-            "$RUNNER_TEMP/profile.plist"
+            "$RUNNER_TEMP/profile.plist" \
+            "$RUNNER_TEMP/installed-profiles.txt"
           find "$RUNNER_TEMP" -maxdepth 1 -name 'AuthKey_*.p8' -delete
+          rm -rf \
+            "${RUNNER_TEMP:?}/EksilikApp.xcarchive" \
+            "${RUNNER_TEMP:?}/EksilikExport" \
+            "${RUNNER_TEMP:?}/xcodegen" \
+            "${RUNNER_TEMP:?}/bin"

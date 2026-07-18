@@ -18,6 +18,7 @@ grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "app and widget build numbers must be 10"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
+# shellcheck disable=SC2016
 grep -Fq 'CFBundleDisplayName: "ek$ilik"' project.yml \
     || fail "widget display name is required by App Store validation"
 for orientation in \
@@ -58,9 +59,14 @@ app_build="$(plutil -extract CFBundleVersion raw EksilikApp-Info.plist)"
 widget_version="$(plutil -extract CFBundleShortVersionString raw EksilikWidget-Info.plist)"
 widget_build="$(plutil -extract CFBundleVersion raw EksilikWidget-Info.plist)"
 
+# These are literal Xcode build-setting placeholders.
+# shellcheck disable=SC2016
 [[ "$app_version" == '$(MARKETING_VERSION)' ]] || fail "app version must inherit MARKETING_VERSION"
+# shellcheck disable=SC2016
 [[ "$app_build" == '$(CURRENT_PROJECT_VERSION)' ]] || fail "app build must inherit CURRENT_PROJECT_VERSION"
+# shellcheck disable=SC2016
 [[ "$widget_version" == '$(MARKETING_VERSION)' ]] || fail "widget version must inherit MARKETING_VERSION"
+# shellcheck disable=SC2016
 [[ "$widget_build" == '$(CURRENT_PROJECT_VERSION)' ]] || fail "widget build must inherit CURRENT_PROJECT_VERSION"
 
 [[ "$(plutil -extract ITSAppUsesNonExemptEncryption raw EksilikApp-Info.plist 2>/dev/null || true)" == "false" ]] \

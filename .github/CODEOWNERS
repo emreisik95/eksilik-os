@@ -1,0 +1,9 @@
+# Default ownership
+* @emreisik95
+
+# Security-sensitive automation and release configuration
+/.github/ @emreisik95
+/project.yml @emreisik95
+/ExportOptions.plist @emreisik95
+/*.entitlements @emreisik95
+/*PrivacyInfo.xcprivacy @emreisik95

@@ -1,0 +1,8 @@
+excluded:
+  - .build
+  - .swiftpm
+  - DerivedData
+  - EksilikApp.xcodeproj
+
+trailing_comma:
+  mandatory_comma: true
