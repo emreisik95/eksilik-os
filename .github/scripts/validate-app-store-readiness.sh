@@ -16,6 +16,18 @@ grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "app and widget marketing versions must be 2.0.0"
 [[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "3"$' project.yml)" -eq 2 ]] \
     || fail "app and widget build numbers must be 3"
+[[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget must preserve the existing iPhone and iPad device families"
+grep -Fq 'CFBundleDisplayName: "ek$ilik"' project.yml \
+    || fail "widget display name is required by App Store validation"
+for orientation in \
+    UIInterfaceOrientationPortrait \
+    UIInterfaceOrientationPortraitUpsideDown \
+    UIInterfaceOrientationLandscapeLeft \
+    UIInterfaceOrientationLandscapeRight; do
+    grep -Fq -- "- $orientation" project.yml \
+        || fail "iPad multitasking orientation $orientation is missing"
+done
 [[ "$(grep -Ec '^[[:space:]]+CODE_SIGN_IDENTITY: "Apple Distribution"$' project.yml)" -eq 2 ]] \
     || fail "release targets must use the Apple Distribution certificate"
 [[ "$(grep -Ec '^[[:space:]]+DEVELOPMENT_TEAM: "235UP83FJ4"$' project.yml)" -eq 2 ]] \
@@ -26,6 +38,8 @@ grep -Fq 'PROVISIONING_PROFILE_SPECIFIER: "Eksilik Widget App Store 2026"' proje
     || fail "widget App Store provisioning profile is not configured"
 [[ -f ExportOptions.plist ]] || fail "ExportOptions.plist is missing"
 [[ -f .github/workflows/app-store-release.yml ]] || fail "App Store release workflow is missing"
+grep -Fq 'runs-on: macos-26' .github/workflows/app-store-release.yml \
+    || fail "App Store releases must use Xcode 26 or later"
 
 if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
     xcodegen generate >/dev/null
