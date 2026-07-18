@@ -10,6 +10,10 @@ fail() {
 }
 
 required_files=(
+    .swiftlint.yml
+    .swiftlint-baseline.json
+    .github/scripts/materialize_swiftlint_baseline.sh
+    .github/scripts/test_swiftlint_baseline.sh
     .github/CODEOWNERS
     .github/coverage-baseline.json
     .github/pull_request_template.md
@@ -60,6 +64,12 @@ grep -Fq 'check_tdd_contract.sh' "$build_workflow" || fail "CI must enforce the 
 grep -Fq 'test_repository_contract.sh' "$build_workflow" || fail "CI must enforce repository policy"
 grep -Fq 'name: Quality Gate' "$build_workflow" || fail "CI must expose a stable Quality Gate"
 grep -Fq 'swiftlint lint --strict' "$build_workflow" || fail "SwiftLint must run in strict mode"
+grep -Fq 'materialize_swiftlint_baseline.sh' "$build_workflow" \
+    || fail "SwiftLint baseline must be portable across checkout paths"
+# The workflow must contain the literal runner expression.
+# shellcheck disable=SC2016
+grep -Fq -- '--baseline "$RUNNER_TEMP/swiftlint-baseline.json"' "$build_workflow" \
+    || fail "SwiftLint must reject violations added after the reviewed baseline"
 if grep -Fq 'SwiftLint not installed, skipping' "$build_workflow"; then
     fail "SwiftLint may not silently skip"
 fi
