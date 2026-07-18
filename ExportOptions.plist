@@ -11,9 +11,9 @@
     <key>provisioningProfiles</key>
     <dict>
         <key>emre.isik.Eksilik</key>
-        <string>Eksilik App Store 2026</string>
+        <string>Eksilik App Store AppGroups 2026</string>
         <key>emre.isik.Eksilik.widget</key>
-        <string>Eksilik Widget App Store 2026</string>
+        <string>Eksilik Widget App Store AppGroups 2026</string>
     </dict>
     <key>signingCertificate</key>
     <string>Apple Distribution</string>
