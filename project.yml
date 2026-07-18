@@ -85,6 +85,7 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: EksilikWidget
+      - path: Core/Widget
     info:
       path: EksilikWidget-Info.plist
       properties:

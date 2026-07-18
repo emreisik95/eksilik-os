@@ -12,6 +12,7 @@ struct WidgetTopicView: View {
         switch entry.source {
         case .gundem: return "gündem"
         case .bugun: return "bugün"
+        case .following: return "takip"
         case .debe: return "debe"
         case .caylaklar: return "çaylaklar"
         case .user: return entry.username ?? "kullanıcı"
@@ -75,8 +76,8 @@ struct WidgetTopicView: View {
                             .lineLimit(2)
                             .foregroundColor(theme.textColor)
                         Spacer()
-                        if !topic.entryCount.isEmpty {
-                            Text(topic.entryCount)
+                        if let metadata = topic.metadata, !metadata.isEmpty {
+                            Text(metadata)
                                 .font(.caption2)
                                 .foregroundColor(theme.accentColor)
                         }
@@ -112,8 +113,8 @@ struct WidgetTopicView: View {
                             .lineLimit(2)
                             .foregroundColor(theme.textColor)
                         Spacer()
-                        if !topic.entryCount.isEmpty {
-                            Text(topic.entryCount)
+                        if let metadata = topic.metadata, !metadata.isEmpty {
+                            Text(metadata)
                                 .font(.caption2)
                                 .foregroundColor(theme.accentColor)
                         }
@@ -128,11 +129,39 @@ struct WidgetTopicView: View {
         .themedBackground(theme: theme)
     }
 
-    private func deepLink(for topic: WidgetTopic) -> URL {
+    private func deepLink(for topic: WidgetFeedItem) -> URL {
+        if topic.link.isEmpty {
+            return feedDeepLink
+        }
+        if topic.link.hasPrefix("/entry/"),
+           let id = topic.link.split(separator: "/").last {
+            var components = URLComponents()
+            components.scheme = "eksilik"
+            components.host = "entry"
+            components.path = "/\(id)"
+            return components.url ?? feedDeepLink
+        }
         var components = URLComponents()
         components.scheme = "eksilik"
         components.host = "topic"
         components.queryItems = [URLQueryItem(name: "link", value: topic.link)]
+        return components.url ?? feedDeepLink
+    }
+
+    private var feedDeepLink: URL {
+        let source: String
+        switch entry.source {
+        case .gundem: source = "gundem"
+        case .bugun: source = "bugun"
+        case .following: source = "takip"
+        case .debe: source = "debe"
+        case .caylaklar: source = "bugun"
+        case .user: source = "gundem"
+        }
+        var components = URLComponents()
+        components.scheme = "eksilik"
+        components.host = "feed"
+        components.queryItems = [URLQueryItem(name: "source", value: source)]
         return components.url ?? URL(fileURLWithPath: "/")
     }
 }

@@ -97,6 +97,23 @@ func destinationView(for route: Route) -> some View {
             EntryListView(link: link, title: title)
         case .entryById(let id):
             EntryListView(link: "entry/\(id)", title: "")
+        case .topicFeed(let source):
+            switch source {
+            case "gundem":
+                TopicListView(listType: .popular)
+                    .navigationTitle("gündem")
+            case "bugun":
+                TopicListView(listType: .today)
+                    .navigationTitle("bugün")
+            case "takip":
+                TopicListView(listType: .following)
+                    .navigationTitle("takip")
+            case "debe":
+                TopicListView(listType: .debe)
+                    .navigationTitle("debe")
+            default:
+                EmptyView()
+            }
         case .profile(let username):
             ProfileView(username: username)
         case .composeEntry(let link):

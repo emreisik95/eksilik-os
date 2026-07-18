@@ -20,6 +20,13 @@ final class DeepLinkRouter: ObservableObject {
             if let id = url.pathComponents.last, !id.isEmpty {
                 pendingRoute = .entryById(id: id)
             }
+        case "feed":
+            let supportedSources = Set(["gundem", "bugun", "takip", "debe"])
+            if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let source = components.queryItems?.first(where: { $0.name == "source" })?.value,
+               supportedSources.contains(source) {
+                pendingRoute = .topicFeed(source: source)
+            }
         case "profile":
             if let username = url.pathComponents.last, !username.isEmpty {
                 pendingRoute = .profile(username: username)

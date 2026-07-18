@@ -19,12 +19,13 @@ struct EksilikWidgetIntent: WidgetConfigurationIntent {
 }
 
 enum WidgetSource: String, AppEnum {
-    case gundem, bugun, debe, caylaklar, user
+    case gundem, bugun, following, debe, caylaklar, user
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Kaynak"
     static var caseDisplayRepresentations: [WidgetSource: DisplayRepresentation] = [
         .gundem: "gündem",
         .bugun: "bugün",
+        .following: "takip ettiklerim",
         .debe: "debe",
         .caylaklar: "çaylaklar",
         .user: "kullanıcı entry'leri",
