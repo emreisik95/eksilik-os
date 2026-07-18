@@ -18,6 +18,7 @@ struct TopicListContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var blockedStore: BlockedTopicStore
     @ObservedObject var viewModel: TopicListViewModel
+    var emptyMessage: String = L10n.Common.noTopics
 
     var body: some View {
         Group {
@@ -29,7 +30,7 @@ struct TopicListContentView: View {
                     Task { await viewModel.loadTopics() }
                 }
             } else if viewModel.topics.isEmpty {
-                EmptyStateView(message: L10n.Common.noTopics)
+                EmptyStateView(message: emptyMessage)
             } else {
                 topicList
             }

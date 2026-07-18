@@ -19,7 +19,10 @@ struct FollowingFeedView: View {
         VStack(spacing: 0) {
             sectionPicker
 
-            TopicListContentView(viewModel: activeViewModel)
+            TopicListContentView(
+                viewModel: activeViewModel,
+                emptyMessage: selectedSection.emptyMessage
+            )
                 .id(selectedSection)
         }
         .background(themeManager.current.backgroundColor)

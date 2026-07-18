@@ -11,6 +11,13 @@ enum FollowingFeedSection: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    var emptyMessage: String {
+        switch self {
+        case .written: return "yok bişii pek"
+        case .favorited: return L10n.Common.noTopics
+        }
+    }
+
     func endpoint(page: Int) -> EksiEndpoint {
         switch self {
         case .written:
