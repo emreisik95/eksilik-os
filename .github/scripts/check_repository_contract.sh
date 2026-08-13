@@ -29,7 +29,6 @@ required_files=(
     .github/scripts/bootstrap_xcode_cloud.sh
     .github/scripts/test_xcode_cloud_bootstrap.sh
     ci_scripts/ci_post_clone.sh
-    Package.resolved
     EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
     CODE_OF_CONDUCT.md
     CONTRIBUTING.md
@@ -108,10 +107,13 @@ grep -Fq "\"\$xcodegen_binary\" generate" "$xcode_cloud_bootstrap" \
     || fail "Xcode Cloud must generate the project before the build"
 grep -Fq -- "--spec \"\$repo_root/project.yml\"" "$xcode_cloud_bootstrap" \
     || fail "Xcode Cloud must generate from the reviewed project spec"
-grep -Fq 'Package.resolved' "$xcode_cloud_bootstrap" \
-    || fail "Xcode Cloud must install the reviewed Swift package resolution"
-cmp -s Package.resolved EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved \
-    || fail "the Xcode project package resolution must match the reviewed root lockfile"
+project_package_lock='EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
+grep -Fq 'project Package.resolved is missing' "$xcode_cloud_bootstrap" \
+    || fail "Xcode Cloud must verify the reviewed Swift package resolution"
+git ls-files --error-unmatch "$project_package_lock" >/dev/null 2>&1 \
+    || fail "the Xcode project package resolution must be versioned"
+grep -Fq '"identity" : "keychainaccess"' "$project_package_lock" \
+    || fail "the resolved package graph must include KeychainAccess"
 grep -Fq 'bootstrap_xcode_cloud.sh' ci_scripts/ci_post_clone.sh \
     || fail "Xcode Cloud post-clone must invoke the verified bootstrap"
 

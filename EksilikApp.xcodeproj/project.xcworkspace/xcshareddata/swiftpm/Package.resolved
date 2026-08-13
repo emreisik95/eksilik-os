@@ -8,6 +8,15 @@
         "revision" : "3c73af6d3859d9240db60aef233941a715387744",
         "version" : "6.1.0"
       }
+    },
+    {
+      "identity" : "keychainaccess",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
+      "state" : {
+        "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
+        "version" : "4.2.2"
+      }
     }
   ],
   "version" : 2

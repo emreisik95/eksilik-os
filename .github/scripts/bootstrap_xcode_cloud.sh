@@ -9,13 +9,15 @@ if [[ -z "$xcodegen_binary" ]]; then
     xcodegen_sha256="ef6d0a23bfb7393387f98e321ffd78a487231172e2e78c48d3c26275c263fd0c"
     archive_directory="xcodegen.artifactbundle/xcodegen-2.46.0-macosx/bin"
     tools_directory="${CI_DERIVED_DATA_PATH:-${TMPDIR:-/tmp}}/eksilik-xcode-cloud-tools"
-
-    bash "$repo_root/.github/scripts/install_verified_zip_tree.sh" \
-        "$xcodegen_url" \
-        "$xcodegen_sha256" \
-        "$archive_directory" \
-        "$tools_directory"
     xcodegen_binary="$tools_directory/xcodegen"
+
+    if [[ ! -x "$xcodegen_binary" ]]; then
+        bash "$repo_root/.github/scripts/install_verified_zip_tree.sh" \
+            "$xcodegen_url" \
+            "$xcodegen_sha256" \
+            "$archive_directory" \
+            "$tools_directory"
+    fi
 fi
 
 [[ -x "$xcodegen_binary" ]] || {
@@ -32,13 +34,10 @@ fi
     exit 1
 }
 
-package_lock="$repo_root/Package.resolved"
 project_package_lock="$repo_root/EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-[[ -f "$package_lock" ]] || {
-    echo "Xcode Cloud bootstrap failed: Package.resolved is missing" >&2
+[[ -f "$project_package_lock" ]] || {
+    echo "Xcode Cloud bootstrap failed: project Package.resolved is missing" >&2
     exit 1
 }
-mkdir -p "$(dirname "$project_package_lock")"
-cp "$package_lock" "$project_package_lock"
 
 echo "Xcode Cloud project generated with verified XcodeGen 2.46.0"

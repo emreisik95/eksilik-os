@@ -6,9 +6,10 @@ bootstrap="$repo_root/.github/scripts/bootstrap_xcode_cloud.sh"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/eksilik-xcode-cloud-bootstrap.XXXXXX")"
 trap 'rm -rf "$fixture"' EXIT
 
-mkdir -p "$fixture/repository"
+resolved="$fixture/repository/EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+mkdir -p "$(dirname "$resolved")"
 printf 'name: Fixture\n' > "$fixture/repository/project.yml"
-printf '{"pins":[],"version":2}\n' > "$fixture/repository/Package.resolved"
+printf '{"pins":[],"version":2}\n' > "$resolved"
 
 cat > "$fixture/fake-xcodegen" <<'SCRIPT'
 #!/usr/bin/env bash
@@ -35,8 +36,7 @@ chmod +x "$fixture/fake-xcodegen"
 XCODEGEN_BINARY="$fixture/fake-xcodegen" \
     bash "$bootstrap" "$fixture/repository"
 
-resolved="$fixture/repository/EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-cmp -s "$fixture/repository/Package.resolved" "$resolved" \
-    || { echo "Xcode Cloud bootstrap did not install the resolved package graph" >&2; exit 1; }
+grep -Fq '"version":2' "$resolved" \
+    || { echo "Xcode Cloud bootstrap did not preserve the resolved package graph" >&2; exit 1; }
 
 echo "PASS: Xcode Cloud bootstrap contract"
