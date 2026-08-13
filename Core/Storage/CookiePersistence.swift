@@ -72,7 +72,7 @@ enum CookiePersistence {
         let store = WKWebsiteDataStore.default().httpCookieStore
         let cookies = await store.allCookies()
         for cookie in cookies where isEksiCookie(cookie) {
-            await store.delete(cookie)
+            await store.deleteCookie(cookie)
         }
     }
 
