@@ -1315,14 +1315,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				SDKROOT = iphoneos;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1357,7 +1357,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -1365,7 +1365,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik App Store AppGroups 2026";
 				SDKROOT = iphoneos;
@@ -1380,7 +1380,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1388,7 +1388,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
@@ -1539,7 +1539,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1548,7 +1548,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik Widget App Store AppGroups 2026";
 				SDKROOT = iphoneos;

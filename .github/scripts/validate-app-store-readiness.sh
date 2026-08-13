@@ -12,10 +12,10 @@ grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' 
     || fail "widget bundle identifier must be nested under the existing App Store listing"
 grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
-[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.1"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget marketing versions must be 2.0.1"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "11"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 11"
+[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.2"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget marketing versions must be 2.0.2"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "12"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 12"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 # shellcheck disable=SC2016

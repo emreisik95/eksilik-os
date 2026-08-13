@@ -20,7 +20,7 @@ body:
     id: version
     attributes:
       label: App version and build
-      placeholder: 2.0.1 (10)
+      placeholder: 2.0.2 (12)
     validations:
       required: true
   - type: input
