@@ -31,7 +31,8 @@ Pods/
 .DS_Store
 
 # Generated
-EksilikApp.xcodeproj/
+# Keep the shared Xcode project versioned: Xcode Cloud resolves its container
+# before ci_post_clone.sh can regenerate it from project.yml.
 EksilikApp-Info.plist
 EksilikWidget-Info.plist
 
