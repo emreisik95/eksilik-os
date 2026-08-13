@@ -76,4 +76,15 @@ final class TopicRequestTests: XCTestCase {
         XCTAssertTrue(EntryFilterTransitionPolicy.shouldResetContent(from: .none, to: .eksiseyler))
         XCTAssertFalse(EntryFilterTransitionPolicy.shouldResetContent(from: .eksiseyler, to: .eksiseyler))
     }
+
+    func testEksiSeylerHasASpecificEmptyState() {
+        XCTAssertEqual(
+            EntryFilterPresentation.emptyMessage(for: .eksiseyler),
+            "bu başlık ekşi şeyler'de yer almıyor"
+        )
+        XCTAssertEqual(
+            EntryFilterPresentation.emptyMessage(for: .nice),
+            "bu filtrede entry bulunamadı"
+        )
+    }
 }

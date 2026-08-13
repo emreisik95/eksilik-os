@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-struct EntryRowView: View {
+struct EntryRowView: View { // swiftlint:disable:this type_body_length
     let entry: Entry
     let isEven: Bool
     let onFavorite: () -> Void

@@ -81,6 +81,7 @@ let package = Package(
                 "Core/Links/InternalLinkPolicy.swift",
                 "Core/Messages/MessageComposePolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
+                "Core/Presentation/EntryFilterPresentation.swift",
                 "Core/Presentation/EntryListChromePolicy.swift",
                 "Core/Presentation/FollowingFeedSection.swift",
                 "Core/Presentation/HomeNavigationStyle.swift",

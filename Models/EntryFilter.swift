@@ -94,15 +94,19 @@ enum EntryFilter: Equatable, Sendable {
             guard let keywords = items["keywords"], !keywords.isEmpty else { return .none }
             return keywords == "http://" ? .links : .search(keywords)
         case "nice":
-            switch items["period"]?.lowercased() {
-            case "week": return .niceWeek
-            case "month": return .niceMonth
-            case "3months": return .nice3Months
-            case "alltime": return .niceAllTime
-            default: return .nice
-            }
+            return inferredNiceFilter(period: items["period"])
         default:
             return .none
+        }
+    }
+
+    private static func inferredNiceFilter(period: String?) -> EntryFilter {
+        switch period?.lowercased() {
+        case "week": return .niceWeek
+        case "month": return .niceMonth
+        case "3months": return .nice3Months
+        case "alltime": return .niceAllTime
+        default: return .nice
         }
     }
 }

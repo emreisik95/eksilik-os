@@ -1,5 +1,6 @@
-import Foundation
+import Foundation // swiftlint:disable file_length
 
+// swiftlint:disable:next type_body_length
 private struct Harness {
     private(set) var failures: [String] = []
     private(set) var checks = 0
@@ -104,6 +105,7 @@ private struct Harness {
         expect(entryPage.isTracked, "topic tracking state should be parsed")
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runTopicRequestChecks() {
         let today = TopicRequest(link: "/ornek-baslik--42?day=2026-07-16")
         expect(
@@ -176,6 +178,11 @@ private struct Harness {
         expect(
             !EntryFilterTransitionPolicy.shouldResetContent(from: .eksiseyler, to: .eksiseyler),
             "reloading the same filter should not discard visible content"
+        )
+        expect(
+            EntryFilterPresentation.emptyMessage(for: .eksiseyler)
+                == "bu başlık ekşi şeyler'de yer almıyor",
+            "Ekşi Şeyler should explain a scoped empty result"
         )
     }
 
@@ -378,6 +385,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runSearchPresentationChecks() {
         expect(
             SearchPresentation.state(
@@ -573,6 +581,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runEntryListChromeChecks() {
         expect(
             EntryListChromePolicy.paginationTouchTargetSize >= 44,
@@ -817,6 +826,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runMessageParsingChecks() {
         expect(
             FormURLEncoder.encode(["Message": "a&b = c+d", "To": "altere ses"])

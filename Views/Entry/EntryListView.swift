@@ -35,7 +35,7 @@ struct EntryListView: View {
                     Image(systemName: "tray")
                         .font(.title)
                         .foregroundColor(.gray)
-                    Text(filteredEmptyMessage)
+                    Text(EntryFilterPresentation.emptyMessage(for: viewModel.activeFilter))
                         .foregroundColor(.gray)
                         .font(.subheadline)
                     Button("tümüne dön") {
@@ -169,13 +169,6 @@ struct EntryListView: View {
     }
 
     // MARK: - Filter Bar
-
-    private var filteredEmptyMessage: String {
-        if viewModel.activeFilter == .eksiseyler {
-            return "bu başlık ekşi şeyler'de yer almıyor"
-        }
-        return "bu filtrede entry bulunamadı"
-    }
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {

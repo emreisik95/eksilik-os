@@ -97,6 +97,7 @@ struct TopicListContentView: View {
 }
 
 @ViewBuilder
+// swiftlint:disable:next cyclomatic_complexity function_body_length
 func destinationView(for route: Route) -> some View {
     Group {
         switch route {
