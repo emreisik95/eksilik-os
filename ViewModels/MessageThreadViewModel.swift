@@ -6,7 +6,7 @@ final class MessageThreadViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
-    private let client = HTTPClient.shared
+    private let messageService = MessageService()
     let threadLink: String
     let threadTitle: String
 
@@ -20,8 +20,7 @@ final class MessageThreadViewModel: ObservableObject {
         error = nil
 
         do {
-            let html = try await client.fetchHTML(for: .messageThread(id: threadLink))
-            messages = MessageContentParser.parse(html: html)
+            messages = try await messageService.fetchThread(id: threadLink, participant: threadTitle)
         } catch {
             self.error = error.localizedDescription
         }

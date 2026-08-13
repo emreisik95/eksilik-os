@@ -50,9 +50,12 @@ struct EksiRouter {
             if let csrfToken {
                 params["__RequestVerificationToken"] = csrfToken
             }
-            let bodyString = params.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? $0.value)" }.joined(separator: "&")
+            let bodyString = FormURLEncoder.encode(params)
             request.httpBody = bodyString.data(using: .utf8)
-            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            request.setValue(
+                "application/x-www-form-urlencoded; charset=utf-8",
+                forHTTPHeaderField: "Content-Type"
+            )
         }
 
         return request

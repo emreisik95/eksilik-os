@@ -49,4 +49,19 @@ final class SkeletonLayoutTests: XCTestCase {
             ["1", "2", "3"]
         )
     }
+
+    func testSkeletonPulseIsOpacityOnlyDeterministicAndBounded() {
+        let samples = stride(from: 0.0, through: 3.4, by: 0.1).map {
+            SkeletonMotionPolicy.opacity(elapsed: $0, reduceMotion: false)
+        }
+
+        XCTAssertTrue(samples.allSatisfy { (0.48...1).contains($0) })
+        XCTAssertEqual(SkeletonMotionPolicy.opacity(elapsed: 0, reduceMotion: false), 1, accuracy: 0.001)
+        XCTAssertEqual(SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: false), 0.48, accuracy: 0.001)
+        XCTAssertEqual(SkeletonMotionPolicy.opacity(elapsed: 1.7, reduceMotion: false), 1, accuracy: 0.001)
+    }
+
+    func testSkeletonPulseStopsForReduceMotion() {
+        XCTAssertEqual(SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: true), 1)
+    }
 }

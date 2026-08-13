@@ -65,11 +65,21 @@ enum HTMLContentRenderer {
                 continue
             }
             let query = String(result[queryRange])
-
-            let replacement = " <a class=\"star-ref\" href=\"/?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)\">(bkz: \(query))</a>"
+            guard let lookupLink = InternalLinkPolicy.topicLookupLink(for: query) else { continue }
+            let displayQuery = htmlEscaped(query)
+            let replacement = " <a class=\"star-ref\" href=\"/\(lookupLink)\">(bkz: \(displayQuery))</a>"
             result.replaceSubrange(fullRange, with: replacement)
         }
 
         return result
+    }
+
+    private static func htmlEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "'", with: "&#39;")
     }
 }

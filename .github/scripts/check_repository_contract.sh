@@ -26,6 +26,8 @@ required_files=(
     .github/workflows/codeql.yml
     .github/workflows/device-build.yml
     .github/workflows/app-store-release.yml
+    .github/scripts/bootstrap_xcode_cloud.sh
+    ci_scripts/ci_post_clone.sh
     CODE_OF_CONDUCT.md
     CONTRIBUTING.md
     README.md
@@ -93,5 +95,17 @@ fi
 grep -Fq 'Red test evidence' .github/pull_request_template.md || fail "PR template must request red evidence"
 grep -Fq 'Green test evidence' .github/pull_request_template.md || fail "PR template must request green evidence"
 grep -Fq 'minimumLineCoverage' .github/coverage-baseline.json || fail "coverage baseline is invalid"
+
+xcode_cloud_bootstrap=".github/scripts/bootstrap_xcode_cloud.sh"
+grep -Fq 'ef6d0a23bfb7393387f98e321ffd78a487231172e2e78c48d3c26275c263fd0c' "$xcode_cloud_bootstrap" \
+    || fail "Xcode Cloud must verify the pinned XcodeGen archive"
+grep -Fq 'xcodegen-2.46.0-macosx/bin' "$xcode_cloud_bootstrap" \
+    || fail "Xcode Cloud must use the reviewed XcodeGen binary"
+grep -Fq "\"\$xcodegen_binary\" generate" "$xcode_cloud_bootstrap" \
+    || fail "Xcode Cloud must generate the project before the build"
+grep -Fq -- "--spec \"\$repo_root/project.yml\"" "$xcode_cloud_bootstrap" \
+    || fail "Xcode Cloud must generate from the reviewed project spec"
+grep -Fq 'bootstrap_xcode_cloud.sh' ci_scripts/ci_post_clone.sh \
+    || fail "Xcode Cloud post-clone must invoke the verified bootstrap"
 
 echo "PASS: repository excellence contract"

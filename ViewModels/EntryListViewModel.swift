@@ -21,13 +21,24 @@ final class EntryListViewModel: ObservableObject {
     private var loadGeneration = UUID()
 
     init(link: String) {
-        self.currentRequest = TopicRequest(link: link)
+        let request = TopicRequest(link: link)
+        self.currentRequest = request
+        self.activeFilter = request.entryFilter
     }
 
     /// Apply a filter and reload entries
     func applyFilter(_ filter: EntryFilter) async {
+        let shouldResetContent = EntryFilterTransitionPolicy.shouldResetContent(
+            from: activeFilter,
+            to: filter
+        )
         activeFilter = filter
         currentRequest = currentRequest.applying(filter: filter)
+        if shouldResetContent {
+            entries = []
+            showAllLinks = []
+            pagination = .empty
+        }
         await loadEntries()
     }
 

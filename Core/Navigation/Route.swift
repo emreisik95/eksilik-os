@@ -6,9 +6,10 @@ enum Route: Hashable {
     case entryById(id: String)
     case topicFeed(source: String)
     case profile(username: String)
+    case messageList
     case messageThread(link: String, title: String)
     case composeEntry(topicLink: String)
-    case composeMessage(to: String, subject: String)
+    case composeMessage(recipient: String, subject: String, threadID: String?)
     case favoriteUsers(entryId: String)
     case settings
     case themePicker

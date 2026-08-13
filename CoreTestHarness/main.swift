@@ -159,6 +159,24 @@ private struct Harness {
             canonicalPage.pathAndQuery == "yeni-baslik--42?a=popular&p=105",
             "canonical topic replacement should preserve the topic ID, filter, and requested page"
         )
+        let eksiSeyler = TopicRequest(link: "/ornek--42?a=eksiseyler&p=3")
+        expect(
+            eksiSeyler.entryFilter == .eksiseyler,
+            "incoming Ekşi Şeyler links should activate the matching filter"
+        )
+        expect(
+            eksiSeyler.replacingTopic(slug: "yeni-ornek", id: "42").settingPage(8).pathAndQuery
+                == "yeni-ornek--42?a=eksiseyler&p=8",
+            "Ekşi Şeyler scope should survive canonical replacement and direct page jumps"
+        )
+        expect(
+            EntryFilterTransitionPolicy.shouldResetContent(from: .none, to: .eksiseyler),
+            "changing to Ekşi Şeyler should clear entries from the previous scope"
+        )
+        expect(
+            !EntryFilterTransitionPolicy.shouldResetContent(from: .eksiseyler, to: .eksiseyler),
+            "reloading the same filter should not discard visible content"
+        )
     }
 
     mutating func runMainTabChecks() {
@@ -200,6 +218,14 @@ private struct Harness {
                 minimumRows: 5
             ) == 5,
             "short viewports should keep the intended minimum placeholder count"
+        )
+        expect(
+            abs(SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: false) - 0.48) < 0.001,
+            "skeletons should pulse through opacity without a layout animation"
+        )
+        expect(
+            SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: true) == 1,
+            "skeleton motion should stop when Reduce Motion is enabled"
         )
 
         let existing = [
@@ -415,10 +441,54 @@ private struct Harness {
         )
         expect(SearchPresentation.resolve(query: " #123 ") == .entry(id: "123"), "entry queries should route by ID")
         expect(
-            SearchPresentation.resolve(query: "@sherlockun besinci sezonu") == .profile(username: "sherlockun besinci sezonu"),
+            SearchPresentation.resolve(query: "@sherlockun besinci sezonu")
+                == .profile(username: "sherlockun besinci sezonu"),
             "author queries should preserve the displayed nickname"
         )
+        expect(
+            SearchPresentation.resolve(query: "swift & ios")
+                == .topic(link: "?q=swift%20%26%20ios", title: "swift & ios"),
+            "topic searches should use the server's canonical query resolver"
+        )
         expect(SearchPresentation.resolve(query: "#abc") == nil, "malformed entry queries should not route as topics")
+    }
+
+    mutating func runInternalLinkChecks() {
+        expect(
+            InternalLinkPolicy.topicLookupLink(for: "valla mı lan") == "?q=valla%20m%C4%B1%20lan",
+            "topic lookup links should safely encode Turkish and whitespace"
+        )
+        expect(
+            InternalLinkPolicy.destination(
+                for: "applewebdata://5E9E913A-50CE-4B18-8504-A9F1669BE324/?q=valla%20mi%20lan"
+            ) == .topicLookup(query: "valla mi lan"),
+            "applewebdata bkz links should resolve through the canonical topic lookup"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/?q=swift+ios") == .topicLookup(query: "swift ios"),
+            "plus-separated bkz queries should decode as spaces"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/entry/12345") == .entry(id: "12345"),
+            "entry paths should resolve by numeric ID"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "https://eksisozluk.com/biri/sherlockun%20besinci%20sezonu")
+                == .profile(username: "sherlockun besinci sezonu"),
+            "same-site absolute profile links should remain native"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "https://example.com/entry/123") == nil,
+            "external hosts should never be interpreted as native links"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "//example.com/entry/123") == nil,
+            "external network-path references should never be interpreted as native links"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/entry/not-a-number") == nil,
+            "malformed entry links should be ignored instead of reaching navigation"
+        )
     }
 
     mutating func runImageURLChecks() {
@@ -550,6 +620,24 @@ private struct Harness {
         expect(
             !EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: true),
             "filter swipe onboarding should stay dismissed after completion"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: " 7 ", totalPages: 20) == 7,
+            "manual page input should trim whitespace"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: "0", totalPages: 20) == 1
+                && PaginationSelectionPolicy.page(from: "999", totalPages: 20) == 20,
+            "manual page input should stay inside the available range"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: "2.5", totalPages: 20) == nil,
+            "manual page input should reject non-integer values"
+        )
+        expect(
+            PaginationSelectionPolicy.quickPages(currentPage: 10, totalPages: 20)
+                == [1, 8, 9, 10, 11, 12, 20],
+            "quick page choices should combine boundaries with nearby pages"
         )
     }
 
@@ -728,6 +816,99 @@ private struct Harness {
             "profile connection requests should keep the server-provided relative path"
         )
     }
+
+    mutating func runMessageParsingChecks() {
+        expect(
+            FormURLEncoder.encode(["Message": "a&b = c+d", "To": "altere ses"])
+                == "Message=a%26b%20%3D%20c%2Bd&To=altere%20ses",
+            "message form fields should safely encode reserved characters"
+        )
+        let threadHTML = """
+        <ul id="threads">
+          <li class="unread">
+            <article>
+              <a href="/mesaj/42">
+                <h2>altere ses <small>3</small></h2>
+                <p>son mesaj</p>
+              </a>
+              <footer><time>şimdi</time></footer>
+            </article>
+          </li>
+        </ul>
+        """
+        let thread = MessageParser.parseThreadList(html: threadHTML).first
+        expect(thread?.id == "42", "message thread links should normalize to one server identifier")
+        expect(thread?.username == "altere ses", "message parsing should remove the count from the username")
+        expect(thread?.messageCount == "3", "message parsing should retain the conversation count")
+        expect(thread?.isUnread == true, "message parsing should retain unread state")
+        expect(
+            MessageParser.threadIdentifier(from: "https://example.com/mesaj/42") == nil,
+            "external message-looking links should be rejected"
+        )
+        expect(
+            MessageParser.threadIdentifier(from: "//example.com/mesaj/42") == nil,
+            "external network-path message links should be rejected"
+        )
+
+        let conversationHTML = """
+        <ul id="message-thread">
+          <li>
+            <article data-message-id="501">
+              <h3><a>altere ses</a></h3>
+              <p>ilk <strong>mesaj</strong></p>
+              <time>10:15</time>
+            </article>
+          </li>
+        </ul>
+        """
+        let message = MessageContentParser.parse(html: conversationHTML).first
+        expect(message?.id == "501", "conversation messages should retain stable server IDs")
+        expect(
+            message?.contentHTML.contains("<strong>mesaj</strong>") == true,
+            "message content should retain inline HTML"
+        )
+        expect(
+            MessageComposePolicy.payload(recipient: " altere ses ", subject: " #501 ", body: " merhaba ")
+                == ["To": "altere ses", "Message": "(#501) merhaba"],
+            "message sending should normalize the server form payload"
+        )
+        expect(
+            MessageComposePolicy.payload(
+                recipient: "ayatasagun",
+                subject: "",
+                body: "yanıt",
+                threadID: "2541826"
+            ) == ["To": "ayatasagun", "Message": "yanıt", "ThreadId": "2541826", "IsReply": "True"],
+            "message replies should preserve the live ThreadId and IsReply server fields"
+        )
+        expect(
+            !MessageComposePolicy.canSend(recipient: "altere ses", body: "merhaba", isSending: true),
+            "message sending should prevent duplicate submissions"
+        )
+
+        let currentConversationHTML = """
+        <div id="message-thread">
+          <article class="incoming">
+            <p>gelen</p><time>10:15</time>
+            <a class="message-report-link" data-id="1995151134">bildir</a>
+          </article>
+          <article class="outgoing"><p>yanıt</p><time>10:16</time></article>
+        </div>
+        """
+        let currentMessages = MessageContentParser.parse(
+            html: currentConversationHTML,
+            currentUsername: "sherlockun besinci sezonu",
+            participant: "ayatasagun"
+        )
+        expect(
+            currentMessages.map(\.direction) == [.incoming, .outgoing],
+            "live message classes should retain direction"
+        )
+        expect(
+            currentMessages.map(\.sender) == ["ayatasagun", "sherlockun besinci sezonu"],
+            "live message direction should derive the visible sender"
+        )
+    }
 }
 
 private var harness = Harness()
@@ -738,6 +919,7 @@ harness.runStableLoadingChecks()
 harness.runEntryLayoutStyleChecks()
 harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
+harness.runInternalLinkChecks()
 harness.runImageURLChecks()
 harness.runExternalLinkChecks()
 harness.runEntryListChromeChecks()
@@ -745,6 +927,7 @@ harness.runSettingsPresentationChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
+harness.runMessageParsingChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

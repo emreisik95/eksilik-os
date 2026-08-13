@@ -125,14 +125,16 @@ func destinationView(for route: Route) -> some View {
             }
         case .profile(let username):
             ProfileView(username: username)
+        case .messageList:
+            MessageListView()
         case .composeEntry(let link):
             EntryComposeView(topicLink: link)
         case .favoriteUsers(let entryId):
             FavoriteUsersView(entryId: entryId)
         case .messageThread(let link, let title):
             MessageThreadView(link: link, title: title)
-        case .composeMessage(let to, let subject):
-            MessageComposeView(recipient: to, subject: subject)
+        case .composeMessage(let recipient, let subject, let threadID):
+            MessageComposeView(recipient: recipient, subject: subject, threadID: threadID)
         case .login:
             LoginView()
         case .settings:

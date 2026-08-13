@@ -70,4 +70,45 @@ enum EntryFilter: Equatable, Sendable {
         case .niceAllTime: return "tumu"
         }
     }
+
+    static func inferred(from queryItems: [TopicQueryItem]) -> EntryFilter {
+        let items = Dictionary(
+            queryItems.map { ($0.name.lowercased(), $0.value ?? "") },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        let action = items["a"]?.lowercased()
+
+        switch action {
+        case "dailynice":
+            return .dailyNice
+        case "eksiseyler":
+            return .eksiseyler
+        case "gorseller":
+            return .images
+        case "caylaklar":
+            return .caylak
+        case "search":
+            guard let author = items["author"], !author.isEmpty else { return .none }
+            return .author(author)
+        case "find":
+            guard let keywords = items["keywords"], !keywords.isEmpty else { return .none }
+            return keywords == "http://" ? .links : .search(keywords)
+        case "nice":
+            switch items["period"]?.lowercased() {
+            case "week": return .niceWeek
+            case "month": return .niceMonth
+            case "3months": return .nice3Months
+            case "alltime": return .niceAllTime
+            default: return .nice
+            }
+        default:
+            return .none
+        }
+    }
+}
+
+enum EntryFilterTransitionPolicy {
+    static func shouldResetContent(from current: EntryFilter, to next: EntryFilter) -> Bool {
+        current != next
+    }
 }

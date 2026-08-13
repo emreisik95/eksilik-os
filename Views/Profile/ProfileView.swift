@@ -43,6 +43,22 @@ struct ProfileView: View {
         }
         .navigationTitle(viewModel.profile?.nick ?? viewModel.username)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if isRoot && session.isLoggedIn {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(value: Route.messageList) {
+                        Image(systemName: session.hasUnreadMessages ? "envelope.badge.fill" : "envelope")
+                            .foregroundColor(
+                                session.hasUnreadMessages
+                                    ? themeManager.current.accentColor
+                                    : themeManager.current.labelColor
+                            )
+                    }
+                    .accessibilityLabel(L10n.Message.title)
+                    .accessibilityValue(session.hasUnreadMessages ? "okunmamış mesaj var" : "")
+                }
+            }
+        }
         .task { await viewModel.loadProfile() }
         .fullScreenCover(item: $galleryPresentation) { presentation in
             ImageLightboxView(presentation: presentation)

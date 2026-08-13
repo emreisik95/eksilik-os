@@ -75,7 +75,6 @@ struct SearchView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(themeManager.current.accentColor)
                     .frame(minHeight: 44)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
             }
 
@@ -86,7 +85,6 @@ struct SearchView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 14)
-        .animation(.easeInOut(duration: 0.18), value: isSearchFocused)
     }
 
     @ViewBuilder

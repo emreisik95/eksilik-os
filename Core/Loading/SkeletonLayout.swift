@@ -35,6 +35,23 @@ enum SkeletonLayout {
     }
 }
 
+enum SkeletonMotionPolicy {
+    private static let halfCycle = 0.85
+    private static let minimumOpacity = 0.48
+
+    static func opacity(elapsed: TimeInterval, reduceMotion: Bool) -> Double {
+        guard !reduceMotion else { return 1 }
+
+        let period = halfCycle * 2
+        let positiveElapsed = max(0, elapsed)
+        let phase = positiveElapsed.truncatingRemainder(dividingBy: period)
+        let progress = phase <= halfCycle
+            ? phase / halfCycle
+            : (period - phase) / halfCycle
+        return 1 - ((1 - minimumOpacity) * min(max(progress, 0), 1))
+    }
+}
+
 enum TopicPageMerger {
     static func merge(existing: [Topic], incoming: [Topic]) -> [Topic] {
         var seen = Set(existing.map(\.id))

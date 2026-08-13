@@ -60,30 +60,17 @@ struct EntryTextView: UIViewRepresentable {
                 return false
             }
 
-            // Internal eksisozluk links (relative URLs rendered as applewebdata://)
-            if link.contains("applewebdata://") {
-                // Extract the path: applewebdata://UUID/baslik--id or applewebdata://UUID/entry/123
-                let components = link.components(separatedBy: "/")
-                // Skip scheme + empty + host, take the rest
-                let pathParts = components.dropFirst(3) // drop "applewebdata:", "", "UUID"
-                let path = pathParts.joined(separator: "/")
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-                    .removingPercentEncoding ?? ""
-
-                if !path.isEmpty {
-                    print("🔗 Internal link: \(path)")
-                    onInternalLink?(path)
-                }
+            // Relative HTML links are rendered as applewebdata URLs. Pass the
+            // untouched URL to the shared policy so query delimiters are not lost.
+            if URL.scheme?.lowercased() == "applewebdata" {
+                onInternalLink?(link)
                 return false
             }
 
             // eksisozluk.com links — treat as internal
-            if link.contains("eksisozluk.com/") {
-                let path = link.components(separatedBy: "eksisozluk.com/").last ?? ""
-                if !path.isEmpty {
-                    print("🔗 Eksi link: \(path)")
-                    onInternalLink?(path)
-                }
+            if let host = URL.host?.lowercased(),
+               host == "eksisozluk.com" || host == "www.eksisozluk.com" {
+                onInternalLink?(link)
                 return false
             }
 
