@@ -32,4 +32,13 @@ fi
     exit 1
 }
 
+package_lock="$repo_root/Package.resolved"
+project_package_lock="$repo_root/EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+[[ -f "$package_lock" ]] || {
+    echo "Xcode Cloud bootstrap failed: Package.resolved is missing" >&2
+    exit 1
+}
+mkdir -p "$(dirname "$project_package_lock")"
+cp "$package_lock" "$project_package_lock"
+
 echo "Xcode Cloud project generated with verified XcodeGen 2.46.0"

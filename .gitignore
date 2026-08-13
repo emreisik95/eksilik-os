@@ -19,6 +19,7 @@ build/
 .build/
 .swiftpm/
 Package.resolved
+!EksilikApp.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # CocoaPods
 Pods/
