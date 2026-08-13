@@ -1072,8 +1072,8 @@
 			projectRoot = "";
 			targets = (
 				CCF2E3F1C16879A8D0005187 /* EksilikApp */,
-				8C0AE8BB3F570D37699100E1 /* EksilikTests */,
 				6CD1A791E3493C5A870C99A2 /* EksilikWidget */,
+				8C0AE8BB3F570D37699100E1 /* EksilikTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1315,7 +1315,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1357,7 +1357,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -1380,7 +1380,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1539,7 +1539,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 10;
+				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
