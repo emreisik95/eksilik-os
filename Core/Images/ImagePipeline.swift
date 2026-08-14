@@ -51,7 +51,7 @@ actor ImagePipeline {
         let task = Task<UIImage, Error> {
             var request = URLRequest(url: url)
             request.setValue("image/avif,image/webp,image/apng,image/*,*/*;q=0.8", forHTTPHeaderField: "Accept")
-            request.setValue("https://eksisozluk.com/", forHTTPHeaderField: "Referer")
+            request.setValue(ImageRequestPolicy.referer(for: url), forHTTPHeaderField: "Referer")
             let (data, response) = try await session.data(for: request)
             guard let response = response as? HTTPURLResponse,
                   (200...299).contains(response.statusCode) else {

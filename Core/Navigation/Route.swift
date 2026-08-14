@@ -8,6 +8,7 @@ enum Route: Hashable {
     case profile(username: String)
     case messageList
     case messageThread(link: String, title: String)
+    case seylerArticle(url: String, title: String)
     case composeEntry(topicLink: String)
     case composeMessage(recipient: String, subject: String, threadID: String?)
     case favoriteUsers(entryId: String)

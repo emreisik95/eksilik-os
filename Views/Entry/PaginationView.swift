@@ -96,120 +96,144 @@ private struct PagePickerSheet: View {
 
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
-    @State private var pageText: String
-    @FocusState private var isInputFocused: Bool
+    @State private var selectedPage: Int
 
     init(pagination: Pagination, onSelect: @escaping (Int) -> Void) {
         self.pagination = pagination
         self.onSelect = onSelect
-        _pageText = State(initialValue: String(pagination.currentPage))
+        _selectedPage = State(initialValue: PaginationSelectionPolicy.clampedPage(
+            pagination.currentPage,
+            totalPages: pagination.totalPages
+        ))
     }
 
-    private var selectedPage: Int? {
-        PaginationSelectionPolicy.page(from: pageText, totalPages: pagination.totalPages)
-    }
-
-    private var quickPages: [Int] {
-        PaginationSelectionPolicy.quickPages(
+    private var anchorPages: [Int] {
+        PaginationSelectionPolicy.anchorPages(
             currentPage: pagination.currentPage,
             totalPages: pagination.totalPages
         )
     }
 
+    private var pageRange: ClosedRange<Int> {
+        1...max(1, pagination.totalPages)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("sayfaya git")
-                    .font(.title2.bold())
-                    .foregroundColor(themeManager.current.labelColor)
-                Text("toplam \(pagination.totalPages) sayfa")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+        VStack(spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("sayfayı kaydır")
+                        .font(.title2.bold())
+                        .foregroundColor(themeManager.current.labelColor)
+                    Text("1–\(max(1, pagination.totalPages)) arasında seç")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.caption.bold())
+                        .foregroundColor(themeManager.current.labelColor)
+                        .frame(width: 36, height: 36)
+                        .background(themeManager.current.cellSecondaryColor, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("sayfa seçiciyi kapat")
             }
 
-            HStack(spacing: 10) {
-                HStack(spacing: 8) {
-                    Image(systemName: "number")
-                        .foregroundColor(themeManager.current.accentColor)
-                    TextField("sayfa", text: $pageText)
-                        .keyboardType(.numberPad)
-                        .focused($isInputFocused)
-                        .font(.title3.weight(.semibold).monospacedDigit())
-                        .foregroundColor(themeManager.current.labelColor)
-                        .accessibilityLabel("sayfa numarası")
+            HStack(spacing: 6) {
+                ForEach(anchorPages, id: \.self) { page in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) {
+                            selectedPage = page
+                        }
+                    } label: {
+                        VStack(spacing: 2) {
+                            Text(anchorLabel(for: page))
+                                .font(.caption2.weight(.semibold))
+                            Text("\(page)")
+                                .font(.subheadline.bold().monospacedDigit())
+                        }
+                        .foregroundColor(
+                            selectedPage == page
+                                ? themeManager.current.backgroundColor
+                                : themeManager.current.labelColor
+                        )
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .background(
+                            selectedPage == page
+                                ? themeManager.current.accentColor
+                                : themeManager.current.cellSecondaryColor,
+                            in: RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(anchorLabel(for: page)), \(page). sayfa")
                 }
-                .padding(.horizontal, 14)
-                .frame(height: 52)
-                .background(
-                    themeManager.current.cellSecondaryColor,
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                )
+            }
 
-                Button("git") {
-                    submitManualPage()
+            ZStack {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(themeManager.current.cellPrimaryColor)
+
+                Picker("sayfa", selection: $selectedPage) {
+                    ForEach(pageRange, id: \.self) { page in
+                        Text("\(page). sayfa")
+                            .font(.title3.weight(.semibold).monospacedDigit())
+                            .tag(page)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .labelsHidden()
+                .frame(height: 168)
+                .clipped()
+                .tint(themeManager.current.accentColor)
+                .accessibilityValue("\(selectedPage), toplam \(max(1, pagination.totalPages))")
+            }
+            .frame(height: 172)
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(themeManager.current.separatorColor.opacity(0.18), lineWidth: 1)
+            }
+
+            Button {
+                select(selectedPage)
+            } label: {
+                HStack(spacing: 8) {
+                    Text("\(selectedPage). sayfaya git")
+                        .monospacedDigit()
+                    Image(systemName: "arrow.right")
                 }
                 .font(.body.weight(.bold))
                 .foregroundColor(themeManager.current.backgroundColor)
-                .frame(width: 70, height: 52)
+                .frame(maxWidth: .infinity, minHeight: 52)
                 .background(
                     themeManager.current.accentColor,
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    in: RoundedRectangle(cornerRadius: 15, style: .continuous)
                 )
-                .disabled(selectedPage == nil)
-                .opacity(selectedPage == nil ? 0.4 : 1)
             }
-
-            if !pageText.isEmpty, selectedPage == nil {
-                Label("yalnızca sayfa numarası yaz", systemImage: "exclamationmark.circle")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Text("hızlı seçim")
-                .font(.headline)
-                .foregroundColor(themeManager.current.labelColor)
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 52), spacing: 10)], spacing: 10) {
-                ForEach(quickPages, id: \.self) { page in
-                    Button {
-                        select(page)
-                    } label: {
-                        Text("\(page)")
-                            .font(.body.weight(page == pagination.currentPage ? .bold : .medium).monospacedDigit())
-                            .foregroundColor(
-                                page == pagination.currentPage
-                                    ? themeManager.current.backgroundColor
-                                    : themeManager.current.labelColor
-                            )
-                            .frame(maxWidth: .infinity, minHeight: 46)
-                            .background(
-                                page == pagination.currentPage
-                                    ? themeManager.current.accentColor
-                                    : themeManager.current.cellSecondaryColor,
-                                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(page). sayfa")
-                    .accessibilityValue(page == pagination.currentPage ? "seçili" : "")
-                }
-            }
-
-            Spacer(minLength: 0)
+            .buttonStyle(.plain)
+            .accessibilityHint("seçilen sayfayı açar")
         }
         .padding(20)
         .background(themeManager.current.backgroundColor.ignoresSafeArea())
-        .onSubmit(submitManualPage)
     }
 
-    private func submitManualPage() {
-        guard let selectedPage else { return }
-        select(selectedPage)
+    private func anchorLabel(for page: Int) -> String {
+        if page == pagination.currentPage { return "şu an" }
+        if page == 1 { return "ilk" }
+        return "son"
     }
 
     private func select(_ page: Int) {
-        isInputFocused = false
-        onSelect(page)
+        let page = PaginationSelectionPolicy.clampedPage(page, totalPages: pagination.totalPages)
+        if page != pagination.currentPage {
+            onSelect(page)
+        }
         dismiss()
     }
 }

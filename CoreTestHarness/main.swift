@@ -326,13 +326,27 @@ private struct Harness {
         )
 
         let defaultIDs = HomeTabCatalog.defaultOrder
-        expect(defaultIDs.count == 9, "the home tab catalog should include every supported topic list")
+        expect(defaultIDs.count == 10, "the home tab catalog should include every supported content destination")
+        expect(
+            defaultIDs.contains("eksiSeyler"),
+            "the real Ekşi Şeyler feed should be a reorderable home destination"
+        )
         expect(Set(defaultIDs).count == defaultIDs.count, "home tab identifiers should be unique")
 
         let normalized = HomeTabCatalog.normalizedOrder(["today", "future", "today"])
         expect(normalized.first == "today", "a stored custom tab should keep its leading position")
         expect(!normalized.contains("future"), "unknown stored tabs should be removed")
         expect(Set(normalized) == Set(defaultIDs), "missing known tabs should be appended during migration")
+
+        let legacyVisible = defaultIDs.filter { $0 != "eksiSeyler" }
+        expect(
+            HomeTabCatalog.migratedVisibility(legacyVisible) == legacyVisible + ["eksiSeyler"],
+            "users who showed every former tab should see the newly added Ekşi Şeyler destination"
+        )
+        expect(
+            HomeTabCatalog.migratedVisibility(["popular", "today"]) == ["popular", "today"],
+            "a deliberately reduced visible-tab selection should stay reduced"
+        )
 
         let moved = HomeTabCatalog.moving(
             defaultIDs,
@@ -501,6 +515,12 @@ private struct Harness {
 
     mutating func runImageURLChecks() {
         expect(
+            ImageRequestPolicy.referer(
+                for: URL(string: "https://seyler.ekstat.com/img/story.jpg")!
+            ) == "https://eksiseyler.com/",
+            "Ekşi Şeyler images should use the matching editorial referer"
+        )
+        expect(
             ImageURLNormalizer.normalize("//cdn.example.com/photo.jpg")?.absoluteString == "https://cdn.example.com/photo.jpg",
             "protocol-relative image URLs should use HTTPS"
         )
@@ -647,6 +667,14 @@ private struct Harness {
             PaginationSelectionPolicy.quickPages(currentPage: 10, totalPages: 20)
                 == [1, 8, 9, 10, 11, 12, 20],
             "quick page choices should combine boundaries with nearby pages"
+        )
+        expect(
+            PaginationSelectionPolicy.clampedPage(999, totalPages: 20) == 20,
+            "wheel selection should clamp to the final available page"
+        )
+        expect(
+            PaginationSelectionPolicy.anchorPages(currentPage: 10, totalPages: 20) == [1, 10, 20],
+            "wheel shortcuts should expose first, current, and last without duplicates"
         )
     }
 
@@ -829,6 +857,18 @@ private struct Harness {
     // swiftlint:disable:next function_body_length
     mutating func runMessageParsingChecks() {
         expect(
+            EksiEndpoint.messages(page: nil).omitsAjaxHeader,
+            "message inbox should use a document GET because the live server rejects AJAX"
+        )
+        expect(
+            EksiEndpoint.messageThread(id: "2541826").omitsAjaxHeader,
+            "message conversations should use a document GET because the live server rejects AJAX"
+        )
+        expect(
+            !EksiEndpoint.sendMessage.omitsAjaxHeader && EksiEndpoint.sendMessage.method == .post,
+            "message sending should keep its POST contract"
+        )
+        expect(
             FormURLEncoder.encode(["Message": "a&b = c+d", "To": "altere ses"])
                 == "Message=a%26b%20%3D%20c%2Bd&To=altere%20ses",
             "message form fields should safely encode reserved characters"
@@ -919,6 +959,37 @@ private struct Harness {
             "live message direction should derive the visible sender"
         )
     }
+
+    mutating func runSeylerChecks() {
+        let html = """
+        <a class="hero-item" href="https://eksiseyler.com/ilk-hikaye">
+          <img src="/public/images/layout/empty.png" style="background-image:url('https://seyler.ekstat.com/hero.jpg')">
+          <span class="hero-headline">İlk Hikaye</span>
+        </a>
+        <div class="content-box">
+          <div class="content-img"><a href="/ikinci-hikaye"><img data-src="//seyler.ekstat.com/second.jpg"></a></div>
+          <div class="content-meta"><span class="meta-category">BİLİM</span><span class="meta-stats">1,2b</span></div>
+          <div class="content-title"><a href="/ikinci-hikaye">İkinci Hikaye</a></div>
+        </div>
+        <div class="mashup-box"><div class="mashup-title"><a href="/ikinci-hikaye">Tekrar</a></div></div>
+        <div class="content-box">
+          <div class="content-title"><a href="https://example.com/disarisi">Dışarı</a></div>
+        </div>
+        """
+        let stories = SeylerParser.parse(html: html)
+        expect(
+            stories.map(\.title) == ["İlk Hikaye", "İkinci Hikaye"],
+            "Ekşi Şeyler cards should preserve order and remove duplicates"
+        )
+        expect(stories.first?.isFeatured == true, "the hero card should remain featured")
+        expect(stories.last?.category == "BİLİM", "editorial card metadata should be retained")
+        expect(
+            stories.last?.imageURL?.absoluteString == "https://seyler.ekstat.com/second.jpg",
+            "lazy image URLs should normalize"
+        )
+        expect(SeylerCategory.allCases.count == 7, "the native feed should expose all visible editorial categories")
+        expect(SeylerCategory.entertainment.path == "/kategori/eglence", "category paths should match the live site")
+    }
 }
 
 private var harness = Harness()
@@ -938,6 +1009,7 @@ await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
 harness.runMessageParsingChecks()
+harness.runSeylerChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

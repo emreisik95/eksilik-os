@@ -49,6 +49,15 @@ enum ImageURLNormalizer {
     }
 }
 
+enum ImageRequestPolicy {
+    static func referer(for url: URL) -> String {
+        if url.host?.lowercased() == "seyler.ekstat.com" {
+            return "https://eksiseyler.com/"
+        }
+        return "https://eksisozluk.com/"
+    }
+}
+
 struct ImageGalleryPresentation: Identifiable, Equatable {
     let id = UUID()
     let imageURLs: [String]

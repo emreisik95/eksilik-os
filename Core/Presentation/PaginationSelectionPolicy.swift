@@ -1,6 +1,10 @@
 import Foundation
 
 enum PaginationSelectionPolicy {
+    static func clampedPage(_ page: Int, totalPages: Int) -> Int {
+        min(max(1, page), max(1, totalPages))
+    }
+
     static func page(from input: String, totalPages: Int) -> Int? {
         let input = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty,
@@ -9,7 +13,13 @@ enum PaginationSelectionPolicy {
             return nil
         }
 
-        return min(max(1, value), max(1, totalPages))
+        return clampedPage(value, totalPages: totalPages)
+    }
+
+    static func anchorPages(currentPage: Int, totalPages: Int) -> [Int] {
+        let totalPages = max(1, totalPages)
+        let currentPage = clampedPage(currentPage, totalPages: totalPages)
+        return Array(Set([1, currentPage, totalPages])).sorted()
     }
 
     static func quickPages(currentPage: Int, totalPages: Int) -> [Int] {

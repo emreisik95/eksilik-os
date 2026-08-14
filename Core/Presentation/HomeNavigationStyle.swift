@@ -62,6 +62,7 @@ struct HomeTabDefinition: Identifiable, Hashable, Sendable {
         HomeTabDefinition(id: "popular", name: "gündem", systemImage: "flame", requiresLogin: false),
         HomeTabDefinition(id: "today", name: "bugün", systemImage: "sun.max", requiresLogin: false),
         HomeTabDefinition(id: "debe", name: "debe", systemImage: "crown", requiresLogin: false),
+        HomeTabDefinition(id: "eksiSeyler", name: "şeyler", systemImage: "sparkles", requiresLogin: false),
         HomeTabDefinition(id: "todayInHistory", name: "tarihte bugün", systemImage: "calendar", requiresLogin: false),
         HomeTabDefinition(id: "latest", name: "son", systemImage: "clock", requiresLogin: true),
         HomeTabDefinition(id: "following", name: "takip", systemImage: "bell", requiresLogin: true),
@@ -73,6 +74,15 @@ struct HomeTabDefinition: Identifiable, Hashable, Sendable {
 
 enum HomeTabCatalog {
     static let defaultOrder = HomeTabDefinition.all.map(\.id)
+
+    static func migratedVisibility(_ storedVisible: [String]) -> [String] {
+        guard !storedVisible.isEmpty else { return [] }
+        let legacyVisible = defaultOrder.filter { $0 != "eksiSeyler" }
+        if Set(storedVisible) == Set(legacyVisible) {
+            return storedVisible + ["eksiSeyler"]
+        }
+        return storedVisible.filter(Set(defaultOrder).contains)
+    }
 
     static func normalizedOrder(_ storedOrder: [String]) -> [String] {
         let known = Set(defaultOrder)

@@ -14,8 +14,8 @@ grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
 [[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget marketing versions must be 2.0.2"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "12"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 12"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "13"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 13"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 # shellcheck disable=SC2016
@@ -105,6 +105,25 @@ for family in AlternateIcon AlternateKlasik; do
             || fail "$file must be ${expected}x${expected}"
         [[ "$alpha" == "no" ]] || fail "$file must not contain transparency"
     done
+
+    for ipad_file in \
+        "Resources/AlternateIcons/${family}~ipad.png:76" \
+        "Resources/AlternateIcons/${family}@2x~ipad.png:152"; do
+        file="${ipad_file%:*}"
+        expected="${ipad_file##*:}"
+        [[ -f "$file" ]] || fail "$file is missing"
+        width="$(sips -g pixelWidth "$file" 2>/dev/null | awk '/pixelWidth/ {print $2}')"
+        height="$(sips -g pixelHeight "$file" 2>/dev/null | awk '/pixelHeight/ {print $2}')"
+        alpha="$(sips -g hasAlpha "$file" 2>/dev/null | awk '/hasAlpha/ {print $2}')"
+        [[ "$width" == "$expected" && "$height" == "$expected" ]] \
+            || fail "$file must be ${expected}x${expected}"
+        [[ "$alpha" == "no" ]] || fail "$file must not contain transparency"
+    done
+
+    /usr/libexec/PlistBuddy \
+        -c "Print :CFBundleIcons~ipad:CFBundleAlternateIcons:${family}:CFBundleIconFiles:0" \
+        EksilikApp-Info.plist 2>/dev/null | grep -Fxq "$family" \
+        || fail "CFBundleIcons~ipad must reference $family"
 done
 
 echo "PASS: App Store readiness checks"

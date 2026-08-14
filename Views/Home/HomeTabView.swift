@@ -135,6 +135,9 @@ struct HomeTabView: View {
         if selectedTab == .debe {
             DebeView()
                 .id(selectedTab)
+        } else if selectedTab == .eksiSeyler {
+            SeylerFeedView()
+                .id(selectedTab)
         } else if selectedTab == .following {
             FollowingFeedView()
                 .id(selectedTab)

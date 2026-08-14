@@ -30,4 +30,26 @@ final class PaginationSelectionPolicyTests: XCTestCase {
             [1, 16, 17, 18, 19, 20]
         )
     }
+
+    func testWheelSelectionClampsToAvailablePages() {
+        XCTAssertEqual(PaginationSelectionPolicy.clampedPage(-4, totalPages: 20), 1)
+        XCTAssertEqual(PaginationSelectionPolicy.clampedPage(7, totalPages: 20), 7)
+        XCTAssertEqual(PaginationSelectionPolicy.clampedPage(999, totalPages: 20), 20)
+        XCTAssertEqual(PaginationSelectionPolicy.clampedPage(4, totalPages: 0), 1)
+    }
+
+    func testWheelAnchorsKeepFirstCurrentAndLastWithoutDuplicates() {
+        XCTAssertEqual(
+            PaginationSelectionPolicy.anchorPages(currentPage: 10, totalPages: 20),
+            [1, 10, 20]
+        )
+        XCTAssertEqual(
+            PaginationSelectionPolicy.anchorPages(currentPage: 1, totalPages: 4),
+            [1, 4]
+        )
+        XCTAssertEqual(
+            PaginationSelectionPolicy.anchorPages(currentPage: 1, totalPages: 1),
+            [1]
+        )
+    }
 }
