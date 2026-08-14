@@ -133,14 +133,11 @@ struct HomeTabView: View {
     @ViewBuilder
     private var tabContent: some View {
         if selectedTab == .debe {
-            DebeView()
-                .id(selectedTab)
+            DebeView().id(selectedTab)
         } else if selectedTab == .eksiSeyler {
-            SeylerFeedView()
-                .id(selectedTab)
+            SeylerFeedView().id(selectedTab)
         } else if selectedTab == .following {
-            FollowingFeedView()
-                .id(selectedTab)
+            FollowingFeedView().id(selectedTab)
         } else if selectedTab == .todayInHistory {
             TopicListView(listType: selectedTab, year: selectedYear)
                 .id("todayInHistory-\(selectedYear ?? 0)")

@@ -31,7 +31,10 @@ private struct SeylerWebView: UIViewRepresentable {
         configuration.websiteDataStore = .default()
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
-        webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148"
+        webView.customUserAgent = [
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+            "AppleWebKit/605.1.15 Mobile/15E148",
+        ].joined(separator: " ")
         webView.load(URLRequest(url: url))
         return webView
     }

@@ -90,6 +90,8 @@ final class TopicListViewModel: ObservableObject {
         topics.removeAll { $0.title == title }
     }
 
+    // The enum switch intentionally keeps every supported home source explicit.
+    // swiftlint:disable:next cyclomatic_complexity
     private func fetchPage(
         _ page: Int,
         isBlocked: @escaping (String) -> Bool

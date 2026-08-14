@@ -77,7 +77,6 @@ enum AppTheme: Int, CaseIterable, Identifiable {
 
     var id: Int { rawValue }
 
-    // swiftlint:disable:next cyclomatic_complexity
     var name: String {
         switch self {
         case .dark: return "gece"
@@ -98,7 +97,6 @@ enum AppTheme: Int, CaseIterable, Identifiable {
         }
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     var summary: String {
         switch self {
         case .dark: return "ekşi yeşili, dengeli koyu yüzey"
@@ -119,8 +117,6 @@ enum AppTheme: Int, CaseIterable, Identifiable {
         }
     }
 
-    // Exhaustive declarative color mapping is intentionally kept in one place.
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
     var palette: ThemePalette {
         switch self {
         case .dark:
@@ -267,6 +263,8 @@ enum AppTheme: Int, CaseIterable, Identifiable {
         palette.spoilerBackground.hexString
     }
 
+    // Exhaustive declarative palette construction intentionally names every token.
+    // swiftlint:disable:next function_parameter_count
     private static func palette(
         background: UInt32,
         primary: UInt32,

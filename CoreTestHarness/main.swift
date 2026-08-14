@@ -299,6 +299,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runHomeNavigationChecks() {
         expect(
             HomeNavigationStyle.allCases.count == 5,
