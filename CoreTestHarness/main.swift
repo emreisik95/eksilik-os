@@ -269,6 +269,9 @@ private struct Harness {
             EntryLayoutStyle.resolve(storedValue: EntryLayoutStyle.xFeed.rawValue) == .xFeed,
             "a stored entry layout should round-trip"
         )
+    }
+
+    mutating func runEntryLayoutMigrationChecks() {
         expect(
             EntryLayoutStyle.resolve(storedValue: "compact") == .xFeed,
             "the old compact preference should migrate to the X layout"
@@ -296,6 +299,39 @@ private struct Harness {
         expect(
             !EntryLayoutStyle.minimal.presentation.showsAvatar,
             "the minimal layout should remove the author avatar"
+        )
+    }
+
+    mutating func runEntryRenderingChecks() {
+        expect(
+            EntryRowRenderingPolicy.style(preferred: .classic, override: .reddit) == .reddit,
+            "a preview override should select the requested production renderer"
+        )
+        expect(
+            EntryRowRenderingPolicy.style(preferred: .instagram, override: nil) == .instagram,
+            "normal rows should keep the user's selected renderer"
+        )
+        let baseMetrics = EntryLayoutMetrics(
+            fontSize: 15,
+            presentation: EntryLayoutStyle.classic.presentation
+        )
+        let largeMetrics = EntryLayoutMetrics(
+            fontSize: 24,
+            presentation: EntryLayoutStyle.classic.presentation
+        )
+        expect(
+            largeMetrics.horizontalPadding > baseMetrics.horizontalPadding
+                && largeMetrics.contentSpacing > baseMetrics.contentSpacing,
+            "entry geometry should grow with the configured font size"
+        )
+        expect(
+            largeMetrics.minimumActionTarget >= 44,
+            "adaptive entry controls should preserve a 44-point tap target"
+        )
+        let firstPageIdentity = EntryListContentIdentity(layout: .classic, page: 1, filter: .none)
+        expect(
+            firstPageIdentity != EntryListContentIdentity(layout: .classic, page: 2, filter: .none),
+            "a newly loaded page should receive a fresh list identity and start at the top"
         )
     }
 
@@ -335,6 +371,14 @@ private struct Harness {
         expect(
             HomeTabCatalog.initialID == "popular",
             "Gündem should remain the initial home selection"
+        )
+        expect(
+            MainTabReselectionPolicy.shouldResetHome(current: .home, selection: .home),
+            "reselecting the active Home tab should request a Gündem reset"
+        )
+        expect(
+            !MainTabReselectionPolicy.shouldResetHome(current: .search, selection: .home),
+            "opening Home from another tab should not masquerade as a reselection"
         )
         expect(Set(defaultIDs).count == defaultIDs.count, "home tab identifiers should be unique")
 
@@ -731,6 +775,31 @@ private struct Harness {
             SettingsPresentationPolicy.adjustedFontSize(24, delta: 1) == 24,
             "font controls should not go above the supported maximum"
         )
+        let baseMetrics = SettingsPresentationPolicy.layoutMetrics(fontSize: 15)
+        let largeMetrics = SettingsPresentationPolicy.layoutMetrics(fontSize: 24)
+        expect(
+            largeMetrics.rowMinimumHeight > baseMetrics.rowMinimumHeight
+                && largeMetrics.horizontalPadding > baseMetrics.horizontalPadding,
+            "Settings geometry should grow together with configured text"
+        )
+        expect(
+            largeMetrics.controlMinimumSize >= 44,
+            "adaptive Settings controls should preserve minimum tap targets"
+        )
+    }
+
+    mutating func runAppIconChecks() {
+        expect(
+            AppIconPresentationPolicy.choices.map(\.title)
+                == ["oldschool", "light", "ornament", "noir", "aurora", "depth", "forest"],
+            "app icon choices should expose the oldschool primary icon and every generated alternate"
+        )
+        expect(
+            AppIconPresentationPolicy.choices.allSatisfy {
+                AppIconPresentationPolicy.title(for: $0.iconName) == $0.title
+            },
+            "app icon names should round-trip through the Settings presentation policy"
+        )
     }
 
     mutating func runOfflinePlanningChecks() async {
@@ -794,6 +863,53 @@ private struct Harness {
             expect(quarantinedFiles.contains { $0.hasPrefix("manifest-corrupt-") }, "a corrupt manifest should be quarantined")
         } catch {
             expect(false, "offline storage round-trip failed: \(error)")
+        }
+    }
+
+    mutating func runOfflineSeylerStorageChecks() async {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EksilikSeylerHarness-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let sourceURL = URL(string: "https://eksiseyler.com/cevrimdisi-yazi")!
+        let heroURL = URL(string: "https://seyler.ekstat.com/hero.jpg")!
+        let article = SeylerArticle(
+            sourceURL: sourceURL,
+            title: "çevrimdışı yazı",
+            summary: "özet",
+            category: "bilim",
+            date: "14.08.2026",
+            readCount: "42",
+            shareCount: nil,
+            heroImageURL: heroURL,
+            authors: ["yazar"],
+            blocks: [.paragraph("ilk paragraf")]
+        )
+        let store = OfflineSeylerStore(rootURL: root)
+
+        do {
+            let saved = try await store.saveArticle(article)
+            let loaded = try await store.loadArticle(sourceURL: sourceURL)
+            expect(loaded.article == article, "offline Şeyler articles should round-trip atomically")
+
+            let localMedia = try await store.saveMedia(
+                Data("image".utf8),
+                articleID: saved.id,
+                sourceURL: heroURL
+            )
+            let resolvedMedia = await store.localMediaURL(articleID: saved.id, sourceURL: heroURL)
+            expect(resolvedMedia == localMedia, "offline Şeyler media should resolve to its local file")
+
+            try await store.deleteArticle(id: saved.id)
+            let remainingArticles = try await store.listArticles()
+            let deletedMedia = await store.localMediaURL(articleID: saved.id, sourceURL: heroURL)
+            expect(remainingArticles.isEmpty, "deleting an offline Şeyler article should remove it")
+            expect(
+                deletedMedia == nil,
+                "deleting an offline Şeyler article should remove its downloaded media"
+            )
+        } catch {
+            expect(false, "offline Şeyler storage round-trip failed: \(error)")
         }
     }
 
@@ -865,10 +981,24 @@ private struct Harness {
         expect(people.first?.followsYou == true, "reverse-follow state should be retained")
         expect(people.first?.isFollowing == true, "current following state should be retained")
         expect(people.last?.avatarURL == nil, "site default SVG avatars should use the native placeholder")
+    }
+
+    mutating func runProfileConnectionRequestChecks() {
         expect(
             EksiEndpoint.profileConnections(path: "/takipci/sherlockun-besinci-sezonu").path
                 == "/takipci/sherlockun-besinci-sezonu",
             "profile connection requests should keep the server-provided relative path"
+        )
+        expect(
+            EksiEndpoint.profileConnections(path: "/takipci/sherlockun-besinci-sezonu").omitsAjaxHeader,
+            "profile connection pages should use full document requests"
+        )
+        expect(
+            ProfileIdentityPolicy.matchesAuthenticatedUser(
+                authenticatedUsername: "Sherlockun Beşinci Sezonu",
+                profileUsername: " sherlockun beşinci sezonu "
+            ),
+            "profile avatar identity should be matched case-insensitively"
         )
     }
 
@@ -966,6 +1096,22 @@ private struct Harness {
             !MessageComposePolicy.canSend(recipient: "altere ses", body: "merhaba", isSending: true),
             "message sending should prevent duplicate submissions"
         )
+        expect(
+            MessageBubblePresentation.side(
+                direction: .outgoing,
+                sender: "sherlockun besinci sezonu",
+                currentUsername: "sherlockun besinci sezonu"
+            ) == .trailing,
+            "outgoing messages should align to the trailing edge"
+        )
+        expect(
+            MessageBubblePresentation.side(
+                direction: .unknown,
+                sender: "altere ses",
+                currentUsername: "sherlockun besinci sezonu"
+            ) == .leading,
+            "legacy incoming messages should align to the leading edge"
+        )
 
         let currentConversationHTML = """
         <div id="message-thread">
@@ -1022,6 +1168,34 @@ private struct Harness {
         expect(SeylerCategory.entertainment.path == "/kategori/eglence", "category paths should match the live site")
     }
 
+    mutating func runOfflineSeylerChecks() {
+        let offlineSource = URL(string: "https://eksiseyler.com/ornek-yazi")!
+        let offlineArticle = SeylerArticle(
+            sourceURL: offlineSource,
+            title: "çevrimdışı yazı",
+            summary: nil,
+            category: nil,
+            date: nil,
+            readCount: nil,
+            shareCount: nil,
+            heroImageURL: nil,
+            authors: [],
+            blocks: [.paragraph("metin")]
+        )
+        expect(
+            OfflineSeylerArticle(article: offlineArticle).id
+                == OfflineSeylerArticle(article: offlineArticle).id,
+            "saved Şeyler articles should have a stable source-based identity"
+        )
+        expect(
+            (try? JSONDecoder().decode(
+                SeylerArticle.self,
+                from: JSONEncoder().encode(offlineArticle)
+            )) == offlineArticle,
+            "native Şeyler articles should survive an offline JSON round trip"
+        )
+    }
+
     mutating func runSeylerArticleChecks() {
         let articleHTML = """
         <div class="content-detail" id="content-body-area">
@@ -1073,6 +1247,8 @@ harness.runTopicRequestChecks()
 harness.runMainTabChecks()
 harness.runStableLoadingChecks()
 harness.runEntryLayoutStyleChecks()
+harness.runEntryLayoutMigrationChecks()
+harness.runEntryRenderingChecks()
 harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
 harness.runInternalLinkChecks()
@@ -1080,11 +1256,15 @@ harness.runImageURLChecks()
 harness.runExternalLinkChecks()
 harness.runEntryListChromeChecks()
 harness.runSettingsPresentationChecks()
+harness.runAppIconChecks()
 await harness.runOfflinePlanningChecks()
+await harness.runOfflineSeylerStorageChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
+harness.runProfileConnectionRequestChecks()
 harness.runMessageParsingChecks()
 harness.runSeylerChecks()
+harness.runOfflineSeylerChecks()
 harness.runSeylerArticleChecks()
 
 if harness.failures.isEmpty {

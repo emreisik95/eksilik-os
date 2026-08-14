@@ -21,4 +21,25 @@ final class MainTabTests: XCTestCase {
             [.home, .search, .profile, .settings]
         )
     }
+
+    func testOnlyReselectingTheCurrentHomeTabRequestsAGundemReset() {
+        XCTAssertTrue(
+            MainTabReselectionPolicy.shouldResetHome(
+                current: .home,
+                selection: .home
+            )
+        )
+        XCTAssertFalse(
+            MainTabReselectionPolicy.shouldResetHome(
+                current: .search,
+                selection: .home
+            )
+        )
+        XCTAssertFalse(
+            MainTabReselectionPolicy.shouldResetHome(
+                current: .home,
+                selection: .settings
+            )
+        )
+    }
 }

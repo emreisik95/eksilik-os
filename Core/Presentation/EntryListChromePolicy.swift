@@ -63,3 +63,15 @@ enum EntryListChromePolicy {
         !hasSeen
     }
 }
+
+struct EntryListContentIdentity: Hashable, Sendable {
+    let layout: EntryLayoutStyle
+    let page: Int
+    let filter: EntryFilter
+
+    init(layout: EntryLayoutStyle, page: Int, filter: EntryFilter) {
+        self.layout = layout
+        self.page = max(1, page)
+        self.filter = filter
+    }
+}

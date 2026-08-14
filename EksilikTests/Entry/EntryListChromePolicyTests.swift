@@ -37,4 +37,29 @@ final class EntryListChromePolicyTests: XCTestCase {
         XCTAssertTrue(EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: false))
         XCTAssertFalse(EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: true))
     }
+
+    func testListIdentityChangesForANewPageOrLayoutButNotTheSameContentState() {
+        let first = EntryListContentIdentity(
+            layout: .classic,
+            page: 1,
+            filter: .none
+        )
+
+        XCTAssertEqual(
+            first,
+            EntryListContentIdentity(layout: .classic, page: 1, filter: .none)
+        )
+        XCTAssertNotEqual(
+            first,
+            EntryListContentIdentity(layout: .classic, page: 2, filter: .none)
+        )
+        XCTAssertNotEqual(
+            first,
+            EntryListContentIdentity(layout: .reader, page: 1, filter: .none)
+        )
+        XCTAssertNotEqual(
+            first,
+            EntryListContentIdentity(layout: .classic, page: 1, filter: .images)
+        )
+    }
 }

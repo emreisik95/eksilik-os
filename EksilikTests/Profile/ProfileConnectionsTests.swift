@@ -69,4 +69,27 @@ final class ProfileConnectionsTests: XCTestCase {
             "/takip/sherlockun-besinci-sezonu"
         )
     }
+
+    func testProfileConnectionsUseAFullDocumentRequest() {
+        XCTAssertTrue(
+            EksiEndpoint.profileConnections(
+                path: "/takipci/sherlockun-besinci-sezonu"
+            ).omitsAjaxHeader
+        )
+    }
+
+    func testOnlyTheAuthenticatedUsersProfileCanUpdateTheSettingsAvatar() {
+        XCTAssertTrue(
+            ProfileIdentityPolicy.matchesAuthenticatedUser(
+                authenticatedUsername: "Sherlockun Beşinci Sezonu",
+                profileUsername: " sherlockun beşinci sezonu "
+            )
+        )
+        XCTAssertFalse(
+            ProfileIdentityPolicy.matchesAuthenticatedUser(
+                authenticatedUsername: "sherlockun beşinci sezonu",
+                profileUsername: "altere ses"
+            )
+        )
+    }
 }

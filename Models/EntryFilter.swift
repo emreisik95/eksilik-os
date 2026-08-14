@@ -1,6 +1,6 @@
 import Foundation
 
-enum EntryFilter: Equatable, Sendable {
+enum EntryFilter: Equatable, Hashable, Sendable {
     case none
     case dailyNice
     case eksiseyler

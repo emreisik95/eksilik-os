@@ -222,3 +222,37 @@ struct EntryLayoutPresentation: Equatable, Sendable {
     let separatorHeight: Double
     let cornerRadius: Double
 }
+
+enum EntryRowRenderingPolicy {
+    static func style(
+        preferred: EntryLayoutStyle,
+        override: EntryLayoutStyle?
+    ) -> EntryLayoutStyle {
+        override ?? preferred
+    }
+}
+
+struct EntryLayoutMetrics: Equatable, Sendable {
+    let scale: Double
+    let horizontalPadding: Double
+    let verticalPadding: Double
+    let contentSpacing: Double
+    let imageScale: Double
+    let avatarScale: Double
+    let minimumActionTarget: Double
+    let actionSpacing: Double
+    let cornerRadius: Double
+
+    init(fontSize: Int, presentation: EntryLayoutPresentation) {
+        let proposedScale = 1 + (Double(fontSize) - 15) * 0.045
+        scale = min(1.45, max(0.9, proposedScale))
+        horizontalPadding = presentation.horizontalPadding * scale
+        verticalPadding = presentation.verticalPadding * scale
+        contentSpacing = presentation.contentSpacing * scale
+        imageScale = scale
+        avatarScale = min(1.35, max(0.95, scale))
+        minimumActionTarget = 44 * min(1.25, max(1, scale))
+        actionSpacing = 8 * scale
+        cornerRadius = presentation.cornerRadius * scale
+    }
+}

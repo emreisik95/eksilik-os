@@ -1,17 +1,32 @@
 import SwiftUI
+import UIKit
 
 struct ImageLightboxView: View {
     let imageURLs: [String]
+    let allowsLocalFiles: Bool
     @State private var selectedIndex: Int
     @Environment(\.dismiss) private var dismiss
 
     init(presentation: ImageGalleryPresentation) {
         imageURLs = presentation.imageURLs
+        allowsLocalFiles = presentation.allowsLocalFiles
         _selectedIndex = State(initialValue: presentation.initialIndex)
     }
 
     private var normalizedURLs: [String] {
-        ImageURLNormalizer.normalizeStrings(imageURLs)
+        var seen = Set<String>()
+        return imageURLs.compactMap { rawValue in
+            let value: String?
+            if allowsLocalFiles,
+               let url = URL(string: rawValue),
+               url.isFileURL {
+                value = url.absoluteString
+            } else {
+                value = ImageURLNormalizer.normalize(rawValue)?.absoluteString
+            }
+            guard let value, seen.insert(value).inserted else { return nil }
+            return value
+        }
     }
 
     var body: some View {
@@ -29,7 +44,7 @@ struct ImageLightboxView: View {
             } else {
                 TabView(selection: boundedSelection) {
                     ForEach(Array(normalizedURLs.enumerated()), id: \.element) { index, url in
-                        ZoomableRemoteImage(url: url)
+                        ZoomableImage(url: url)
                             .tag(index)
                     }
                 }
@@ -66,7 +81,9 @@ struct ImageLightboxView: View {
         .statusBarHidden(true)
         .task {
             selectedIndex = min(max(selectedIndex, 0), max(normalizedURLs.count - 1, 0))
-            await ImagePipeline.shared.prefetch(normalizedURLs)
+            await ImagePipeline.shared.prefetch(
+                normalizedURLs.filter { URL(string: $0)?.isFileURL != true }
+            )
         }
     }
 
@@ -78,7 +95,7 @@ struct ImageLightboxView: View {
     }
 }
 
-private struct ZoomableRemoteImage: View {
+private struct ZoomableImage: View {
     let url: String
     @State private var scale: CGFloat = 1
     @State private var committedScale: CGFloat = 1
@@ -86,7 +103,7 @@ private struct ZoomableRemoteImage: View {
     @State private var committedOffset: CGSize = .zero
 
     var body: some View {
-        CachedRemoteImage(url: url, contentMode: .fit)
+        image
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .scaleEffect(scale)
             .offset(offset)
@@ -105,6 +122,23 @@ private struct ZoomableRemoteImage: View {
                     }
                 }
             }
+    }
+
+    @ViewBuilder
+    private var image: some View {
+        if let localURL = URL(string: url), localURL.isFileURL {
+            if let localImage = UIImage(contentsOfFile: localURL.path) {
+                Image(uiImage: localImage)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                Image(systemName: "photo.badge.exclamationmark")
+                    .font(.largeTitle)
+                    .foregroundColor(.white.opacity(0.8))
+            }
+        } else {
+            CachedRemoteImage(url: url, contentMode: .fit)
+        }
     }
 
     private var magnificationGesture: some Gesture {

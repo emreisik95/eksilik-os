@@ -209,7 +209,7 @@ enum OfflineMediaKey {
     }
 }
 
-private enum OfflineIdentifier {
+enum OfflineIdentifier {
     static func value(for value: String) -> String {
         var hash: UInt64 = 14_695_981_039_346_656_037
         for byte in value.utf8 {

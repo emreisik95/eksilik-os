@@ -46,6 +46,15 @@ final class UserProfileViewModel: ObservableObject {
 
     func loadProfile() async {
         guard profile == nil, !isLoading else { return }
+        await fetchProfileAndEntries()
+    }
+
+    func refreshProfile() async {
+        guard !isLoading else { return }
+        await fetchProfileAndEntries()
+    }
+
+    private func fetchProfileAndEntries() async {
         isLoading = true
         error = nil
         defer { isLoading = false }
@@ -55,7 +64,7 @@ final class UserProfileViewModel: ObservableObject {
             profile = result
             prefetchImages()
             // Entries are loaded separately via AJAX tab endpoints
-            await loadEntries(filter: selectedTab.rawValue)
+            await loadEntries(filter: currentFilter)
         } catch {
             self.error = error.localizedDescription
         }

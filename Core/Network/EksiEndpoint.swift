@@ -145,7 +145,8 @@ enum EksiEndpoint {
 
     var omitsAjaxHeader: Bool {
         switch self {
-        case .followingPage, .followingFavorites, .messages, .messageThread:
+        case .followingPage, .followingFavorites, .profileConnections,
+             .messages, .messageThread:
             return true
         default:
             return false

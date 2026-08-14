@@ -1,21 +1,29 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @EnvironmentObject private var themeManager: ThemeManager
-    @EnvironmentObject private var session: SessionManager
-    @EnvironmentObject private var preferences: UserPreferences
+    @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var preferences: UserPreferences
 
-    @State private var currentIconName: String? = UIApplication.shared.alternateIconName
-    @State private var showLogoutConfirmation = false
+    @State var currentIconName: String? = UIApplication.shared.alternateIconName
+    @State var showLogoutConfirmation = false
 
     private var sections: [SettingsSectionDescriptor] {
         SettingsPresentationPolicy.sections(isLoggedIn: session.isLoggedIn)
     }
 
+    var layoutMetrics: SettingsLayoutMetrics {
+        SettingsPresentationPolicy.layoutMetrics(fontSize: preferences.selectedFontSize)
+    }
+
+    var layoutScale: CGFloat { CGFloat(layoutMetrics.scale) }
+    var rowMinimumHeight: CGFloat { CGFloat(layoutMetrics.rowMinimumHeight) }
+    var horizontalPadding: CGFloat { CGFloat(layoutMetrics.horizontalPadding) }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 22) {
+                LazyVStack(spacing: CGFloat(layoutMetrics.sectionSpacing)) {
                     accountHeader
 
                     ForEach(sections) { section in
@@ -24,9 +32,9 @@ struct SettingsView: View {
 
                     versionFooter
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-                .padding(.bottom, 32)
+                .padding(.horizontal, 16 * layoutScale)
+                .padding(.top, 8 * layoutScale)
+                .padding(.bottom, 32 * layoutScale)
             }
             .background(themeManager.current.backgroundColor.ignoresSafeArea())
             .navigationTitle(L10n.Settings.title)
@@ -46,23 +54,37 @@ struct SettingsView: View {
             } message: {
                 Text("Bu cihazdaki ekşi sözlük oturumu kapatılacak.")
             }
+            .task(id: session.username) {
+                await refreshAccountAvatarIfNeeded()
+            }
         }
     }
 
     private var accountHeader: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(themeManager.current.accentColor.opacity(0.16))
-                Image(systemName: session.isLoggedIn
-                    ? "person.crop.circle.fill"
-                    : "person.crop.circle.badge.questionmark")
-                    .font(.system(size: 31, weight: .medium))
-                    .foregroundColor(themeManager.current.accentColor)
+        HStack(spacing: 14 * layoutScale) {
+            Group {
+                if session.isLoggedIn, let avatarURL = session.profileAvatarURL {
+                    CachedRemoteImage(url: avatarURL, showsRetry: false)
+                        .clipShape(Circle())
+                } else {
+                    ZStack {
+                        Circle()
+                            .fill(themeManager.current.accentColor.opacity(0.16))
+                        Image(systemName: session.isLoggedIn
+                            ? "person.crop.circle.fill"
+                            : "person.crop.circle.badge.questionmark")
+                            .font(.system(size: 31 * min(1.3, max(1, layoutScale)), weight: .medium))
+                            .foregroundColor(themeManager.current.accentColor)
+                    }
+                }
             }
-            .frame(width: 58, height: 58)
+            .frame(
+                width: 58 * min(1.3, max(1, layoutScale)),
+                height: 58 * min(1.3, max(1, layoutScale))
+            )
+            .accessibilityLabel(session.isLoggedIn ? "profil fotoğrafı" : "misafir profili")
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 5 * layoutScale) {
                 Text(session.isLoggedIn ? (session.username ?? "ekşi sözlük hesabı") : "misafir modundasın")
                     .settingsFont(baseSize: 17, weight: .semibold)
                     .foregroundColor(themeManager.current.labelColor)
@@ -74,14 +96,14 @@ struct SettingsView: View {
                     .lineLimit(2)
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * layoutScale)
 
             Image(systemName: session.isLoggedIn ? "checkmark.seal.fill" : "lock.open")
                 .font(.title3)
                 .foregroundColor(themeManager.current.accentColor)
                 .accessibilityHidden(true)
         }
-        .padding(18)
+        .padding(CGFloat(layoutMetrics.cardPadding))
         .background(
             LinearGradient(
                 colors: [
@@ -91,10 +113,16 @@ struct SettingsView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            in: RoundedRectangle(
+                cornerRadius: CGFloat(layoutMetrics.cornerRadius) + 4,
+                style: .continuous
+            )
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
+            RoundedRectangle(
+                cornerRadius: CGFloat(layoutMetrics.cornerRadius) + 4,
+                style: .continuous
+            )
                 .stroke(themeManager.current.accentColor.opacity(0.16), lineWidth: 1)
         }
         .accessibilityElement(children: .combine)
@@ -107,309 +135,55 @@ struct SettingsView: View {
         return session.isPaidMember ? "reklamsız üyelik etkin" : "oturum açık"
     }
 
+    @MainActor
+    private func refreshAccountAvatarIfNeeded() async {
+        guard session.isLoggedIn,
+              session.profileAvatarURL == nil,
+              let username = session.username,
+              !username.isEmpty else { return }
+        _ = try? await UserService().fetchProfile(username: username)
+    }
+
     private func settingsSection(_ section: SettingsSectionDescriptor) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10 * layoutScale) {
             Label(section.kind.title, systemImage: section.kind.systemImage)
                 .settingsFont(baseSize: 15, weight: .bold)
                 .foregroundColor(themeManager.current.labelColor)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 4 * layoutScale)
 
             VStack(spacing: 0) {
                 ForEach(Array(section.items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 {
                         Divider()
                             .overlay(themeManager.current.separatorColor.opacity(0.22))
-                            .padding(.leading, 62)
+                            .padding(.leading, rowMinimumHeight)
                     }
                     settingsItem(item)
                 }
             }
             .background(
                 themeManager.current.cellPrimaryColor,
-                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                in: RoundedRectangle(
+                    cornerRadius: CGFloat(layoutMetrics.cornerRadius),
+                    style: .continuous
+                )
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(
+                    cornerRadius: CGFloat(layoutMetrics.cornerRadius),
+                    style: .continuous
+                )
                     .stroke(themeManager.current.separatorColor.opacity(0.18), lineWidth: 1)
             }
         }
     }
 
-    @ViewBuilder
-    private func settingsItem(_ item: SettingsItem) -> some View {
-        switch item {
-        case .theme:
-            NavigationLink {
-                ThemePickerView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "circle.lefthalf.filled",
-                    title: "tema",
-                    detail: themeManager.current.name
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .entryLayout:
-            NavigationLink {
-                EntryLayoutPickerView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "rectangle.split.3x1",
-                    title: "entry görünümü",
-                    detail: preferences.entryLayoutStyle.name
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .fontSize:
-            fontSizeRow
-
-        case .filterStyle:
-            HStack(spacing: 12) {
-                SettingsRowIcon(systemImage: "line.3.horizontal.decrease.circle")
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("filtre görünümü")
-                        .settingsFont(baseSize: 17)
-                        .foregroundColor(themeManager.current.labelColor)
-                    Text("metin yerine sade ikonlar kullan")
-                        .settingsFont(baseSize: 12)
-                        .foregroundColor(themeManager.current.dateColor)
-                }
-                Spacer(minLength: 8)
-                Toggle("", isOn: $preferences.useIconFilters)
-                    .labelsHidden()
-                    .tint(themeManager.current.accentColor)
-            }
-            .padding(.horizontal, 14)
-            .frame(minHeight: 62)
-
-        case .appIcon:
-            NavigationLink {
-                AppIconPickerView(selectedIconName: $currentIconName)
-            } label: {
-                SettingsNavigationRow(
-                    icon: "app.dashed",
-                    title: "uygulama ikonu",
-                    detail: currentIconTitle
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .homeNavigation:
-            NavigationLink {
-                HomeNavigationStylePickerView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "rectangle.bottomthird.inset.filled",
-                    title: "navigasyon görünümü",
-                    detail: preferences.homeNavigationStyle.name
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .homeTabs:
-            NavigationLink {
-                TabCustomizationView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "square.grid.2x2",
-                    title: "sekmeleri düzenle",
-                    subtitle: "sırala, göster veya gizle"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .offlineLibrary:
-            NavigationLink {
-                OfflineLibraryView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "arrow.down.circle",
-                    title: "çevrimdışı okuma",
-                    subtitle: "indirilen başlıkları yönet"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .blockedTopics:
-            NavigationLink {
-                BlockedTopicsView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "eye.slash",
-                    title: "engellenen başlıklar",
-                    subtitle: "içerik filtrelerini düzenle"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .login:
-            NavigationLink {
-                LoginView()
-            } label: {
-                SettingsNavigationRow(
-                    icon: "person.badge.key",
-                    title: "giriş yap",
-                    subtitle: "mevcut ekşi sözlük oturumunu kullan",
-                    isAccented: true
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .accountPreferences:
-            NavigationLink {
-                if let url = URL(string: "\(preferences.baseURL)/ayarlar/tercihler") {
-                    EksiWebView(url: url)
-                        .navigationTitle("tercihler")
-                        .navigationBarTitleDisplayMode(.inline)
-                } else {
-                    ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
-                }
-            } label: {
-                SettingsNavigationRow(
-                    icon: "person.text.rectangle",
-                    title: "hesap tercihleri",
-                    subtitle: "web hesabındaki seçenekler"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .trackingAndBlocks:
-            NavigationLink {
-                if let url = URL(string: "\(preferences.baseURL)/takip-engellenmis") {
-                    EksiWebView(url: url)
-                        .navigationTitle("takip / engellenmişler")
-                        .navigationBarTitleDisplayMode(.inline)
-                } else {
-                    ErrorView(message: "sunucu adresi geçersiz", showRetry: false)
-                }
-            } label: {
-                SettingsNavigationRow(
-                    icon: "person.2.slash",
-                    title: "takip ve engellenmişler"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .logout:
-            Button {
-                showLogoutConfirmation = true
-            } label: {
-                HStack(spacing: 12) {
-                    SettingsRowIcon(systemImage: "rectangle.portrait.and.arrow.right", tint: .red)
-                    Text("çıkış yap")
-                        .settingsFont(baseSize: 17, weight: .medium)
-                        .foregroundColor(.red)
-                    Spacer()
-                }
-                .padding(.horizontal, 14)
-                .frame(minHeight: 62)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-        case .privacyPolicy:
-            Link(destination: ProjectLink.privacyPolicy) {
-                SettingsNavigationRow(
-                    icon: "hand.raised",
-                    title: L10n.Settings.privacyPolicy,
-                    subtitle: "verilerin nasıl işlendiğini gör"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .support:
-            Link(destination: ProjectLink.support) {
-                SettingsNavigationRow(
-                    icon: "questionmark.bubble",
-                    title: L10n.Settings.support,
-                    subtitle: "yardım al veya sorun bildir"
-                )
-            }
-            .buttonStyle(.plain)
-
-        case .server:
-            NavigationLink {
-                ServerSettingsView(baseURL: $preferences.baseURL)
-            } label: {
-                SettingsNavigationRow(
-                    icon: "network",
-                    title: "sunucu adresi",
-                    detail: URL(string: preferences.baseURL)?.host ?? "özel"
-                )
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private var fontSizeRow: some View {
-        HStack(spacing: 12) {
-            SettingsRowIcon(systemImage: "textformat.size")
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text("yazı boyutu")
-                    .settingsFont(baseSize: 17)
-                    .foregroundColor(themeManager.current.labelColor)
-                Text("başlık ve entry metinleri")
-                    .settingsFont(baseSize: 12)
-                    .foregroundColor(themeManager.current.dateColor)
-            }
-
-            Spacer(minLength: 4)
-
-            HStack(spacing: 4) {
-                fontButton(systemImage: "minus", delta: -1)
-
-                Text("\(preferences.selectedFontSize)")
-                    .settingsFont(baseSize: 15, weight: .semibold, design: .monospaced)
-                    .foregroundColor(themeManager.current.labelColor)
-                    .frame(minWidth: 28)
-                    .accessibilityLabel("\(preferences.selectedFontSize) punto")
-
-                fontButton(systemImage: "plus", delta: 1)
-            }
-        }
-        .padding(.horizontal, 14)
-        .frame(minHeight: 62)
-    }
-
-    private func fontButton(systemImage: String, delta: Int) -> some View {
-        let nextSize = SettingsPresentationPolicy.adjustedFontSize(
-            preferences.selectedFontSize,
-            delta: delta
-        )
-        let isEnabled = nextSize != preferences.selectedFontSize
-
-        return Button {
-            preferences.selectedFontSize = nextSize
-        } label: {
-            Image(systemName: systemImage)
-                .font(.caption.weight(.bold))
-                .foregroundColor(themeManager.current.accentColor)
-                .frame(width: 44, height: 44)
-                .background(
-                    themeManager.current.cellSecondaryColor,
-                    in: Circle()
-                )
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.32)
-        .accessibilityLabel(delta < 0 ? "yazıyı küçült" : "yazıyı büyüt")
-    }
-
-    private var currentIconTitle: String {
-        switch currentIconName {
-        case "AlternateIcon": return "light"
-        case "AlternateKlasik": return "oldschool"
-        default: return "default"
-        }
+    var currentIconTitle: String {
+        AppIconPresentationPolicy.title(for: currentIconName)
     }
 
     private var versionFooter: some View {
-        VStack(spacing: 5) {
+        VStack(spacing: 5 * layoutScale) {
             Text("ek$ilik")
                 .settingsFont(baseSize: 13, weight: .semibold)
             Text("sürüm \(appVersion)")
@@ -419,7 +193,7 @@ struct SettingsView: View {
         }
         .foregroundColor(themeManager.current.dateColor)
         .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        .padding(.top, 4 * layoutScale)
         .accessibilityElement(children: .combine)
     }
 
@@ -428,17 +202,9 @@ struct SettingsView: View {
     }
 }
 
-private enum ProjectLink {
-    static let privacyPolicy = URL(
-        string: "https://github.com/emreisik95/eksilik-os/blob/main/PRIVACY.md"
-    )!
-    static let support = URL(
-        string: "https://github.com/emreisik95/eksilik-os/blob/main/SUPPORT.md"
-    )!
-}
-
-private struct SettingsNavigationRow: View {
+struct SettingsNavigationRow: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var preferences: UserPreferences
 
     let icon: String
     let title: String
@@ -446,11 +212,17 @@ private struct SettingsNavigationRow: View {
     var detail: String?
     var isAccented = false
 
+    private var metrics: SettingsLayoutMetrics {
+        SettingsPresentationPolicy.layoutMetrics(fontSize: preferences.selectedFontSize)
+    }
+
+    private var scale: CGFloat { CGFloat(metrics.scale) }
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * scale) {
             SettingsRowIcon(systemImage: icon)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 3 * scale) {
                 Text(title)
                     .settingsFont(baseSize: 17, weight: isAccented ? .semibold : .regular)
                     .foregroundColor(isAccented
@@ -460,11 +232,11 @@ private struct SettingsNavigationRow: View {
                     Text(subtitle)
                         .settingsFont(baseSize: 12)
                         .foregroundColor(themeManager.current.dateColor)
-                        .lineLimit(1)
+                        .lineLimit(scale > 1.2 ? 2 : 1)
                 }
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * scale)
 
             if let detail {
                 Text(detail)
@@ -479,26 +251,33 @@ private struct SettingsNavigationRow: View {
                 .foregroundColor(themeManager.current.dateColor.opacity(0.65))
                 .accessibilityHidden(true)
         }
-        .padding(.horizontal, 14)
-        .frame(minHeight: 62)
+        .padding(.horizontal, CGFloat(metrics.horizontalPadding))
+        .frame(minHeight: CGFloat(metrics.rowMinimumHeight))
         .contentShape(Rectangle())
     }
 }
 
-private struct SettingsRowIcon: View {
+struct SettingsRowIcon: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var preferences: UserPreferences
 
     let systemImage: String
     var tint: Color?
 
     var body: some View {
         let color = tint ?? themeManager.current.accentColor
+        let metrics = SettingsPresentationPolicy.layoutMetrics(fontSize: preferences.selectedFontSize)
+        let scale = CGFloat(metrics.scale)
+        let containerSize = CGFloat(metrics.iconContainerSize)
 
         Image(systemName: systemImage)
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: 16 * min(1.3, max(1, scale)), weight: .semibold))
             .foregroundColor(color)
-            .frame(width: 36, height: 36)
-            .background(color.opacity(0.13), in: RoundedRectangle(cornerRadius: 10))
+            .frame(width: containerSize, height: containerSize)
+            .background(
+                color.opacity(0.13),
+                in: RoundedRectangle(cornerRadius: 10 * min(1.25, max(1, scale)))
+            )
             .accessibilityHidden(true)
     }
 }

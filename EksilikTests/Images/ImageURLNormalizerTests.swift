@@ -61,6 +61,18 @@ final class ImageURLNormalizerTests: XCTestCase {
         ))
     }
 
+    func testTrustedOfflineGalleryPreservesLocalFileURLs() throws {
+        let local = FileManager.default.temporaryDirectory
+            .appendingPathComponent("saved-seyler-image.jpg")
+        let presentation = try XCTUnwrap(ImageGalleryPresentation(
+            resolvedImageURLs: [local],
+            initialIndex: 0
+        ))
+
+        XCTAssertEqual(presentation.imageURLs, [local.absoluteString])
+        XCTAssertTrue(presentation.allowsLocalFiles)
+    }
+
     func testImageRefererMatchesTheOwningEditorialSite() throws {
         let seylerImage = try XCTUnwrap(URL(string: "https://seyler.ekstat.com/img/story.jpg"))
         let sozlukImage = try XCTUnwrap(URL(string: "https://img.ekstat.com/profiles/avatar.jpg"))

@@ -98,4 +98,31 @@ enum SettingsPresentationPolicy {
     static func adjustedFontSize(_ current: Int, delta: Int) -> Int {
         min(fontSizeRange.upperBound, max(fontSizeRange.lowerBound, current + delta))
     }
+
+    static func layoutMetrics(fontSize: Int) -> SettingsLayoutMetrics {
+        SettingsLayoutMetrics(fontSize: fontSize)
+    }
+}
+
+struct SettingsLayoutMetrics: Equatable, Sendable {
+    let scale: Double
+    let rowMinimumHeight: Double
+    let horizontalPadding: Double
+    let sectionSpacing: Double
+    let controlMinimumSize: Double
+    let iconContainerSize: Double
+    let cardPadding: Double
+    let cornerRadius: Double
+
+    init(fontSize: Int) {
+        let proposedScale = 1 + (Double(fontSize) - 15) * 0.045
+        scale = min(1.45, max(0.9, proposedScale))
+        rowMinimumHeight = 62 * max(1, scale)
+        horizontalPadding = 14 * scale
+        sectionSpacing = 22 * scale
+        controlMinimumSize = 44 * min(1.25, max(1, scale))
+        iconContainerSize = 36 * min(1.3, max(1, scale))
+        cardPadding = 18 * scale
+        cornerRadius = 20 * min(1.25, max(1, scale))
+    }
 }

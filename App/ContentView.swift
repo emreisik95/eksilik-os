@@ -6,7 +6,7 @@ struct ContentView: View {
     @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
 
     var body: some View {
-        TabView(selection: $deepLinkRouter.selectedMainTab) {
+        TabView(selection: mainTabSelection) {
             ForEach(MainTab.visibleTabs(isLoggedIn: session.isLoggedIn)) { tab in
                 tabContent(for: tab)
                     .tabItem {
@@ -16,6 +16,13 @@ struct ContentView: View {
             }
         }
         .tint(themeManager.current.accentColor)
+    }
+
+    private var mainTabSelection: Binding<MainTab> {
+        Binding(
+            get: { deepLinkRouter.selectedMainTab },
+            set: { deepLinkRouter.selectMainTab($0) }
+        )
     }
 
     @ViewBuilder
