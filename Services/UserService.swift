@@ -7,7 +7,12 @@ struct UserService {
         let encoded = username.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? username
         let html = try await client.fetchHTML(for: .profile(username: encoded))
         await SessionManager.shared.updateFromHTML(html)
-        return UserProfileParser.parse(html: html)
+        let profile = UserProfileParser.parse(html: html)
+        await SessionManager.shared.updateProfileIdentity(
+            username: profile.nick,
+            avatarURL: profile.avatarURL
+        )
+        return profile
     }
 
     func fetchProfileEntries(username: String, filter: String, page: Int = 1) async throws -> [UserProfile.ProfileEntry] {

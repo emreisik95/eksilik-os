@@ -6,6 +6,7 @@ final class MessageComposeViewModel: ObservableObject {
     @Published var messageText = ""
     @Published private(set) var isSending = false
     @Published private(set) var didSend = false
+    @Published private(set) var sendGeneration = 0
     @Published var error: String?
 
     let subject: String
@@ -47,6 +48,7 @@ final class MessageComposeViewModel: ObservableObject {
         }
 
         isSending = true
+        didSend = false
         error = nil
         defer { isSending = false }
 
@@ -58,7 +60,9 @@ final class MessageComposeViewModel: ObservableObject {
                 threadID: threadID,
                 csrfToken: csrfToken
             )
+            messageText = ""
             didSend = true
+            sendGeneration &+= 1
         } catch {
             self.error = error.localizedDescription
         }

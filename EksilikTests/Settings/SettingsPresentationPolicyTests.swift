@@ -52,4 +52,26 @@ final class SettingsPresentationPolicyTests: XCTestCase {
         XCTAssertEqual(SettingsPresentationPolicy.adjustedFontSize(15, delta: 1), 16)
         XCTAssertEqual(SettingsPresentationPolicy.adjustedFontSize(24, delta: 1), 24)
     }
+
+    func testSettingsGeometryGrowsWithTheConfiguredFontSizeAndKeepsTapTargets() {
+        let base = SettingsPresentationPolicy.layoutMetrics(fontSize: 15)
+        let large = SettingsPresentationPolicy.layoutMetrics(fontSize: 24)
+
+        XCTAssertEqual(base.rowMinimumHeight, 62, accuracy: 0.001)
+        XCTAssertGreaterThan(large.rowMinimumHeight, base.rowMinimumHeight)
+        XCTAssertGreaterThan(large.horizontalPadding, base.horizontalPadding)
+        XCTAssertGreaterThan(large.sectionSpacing, base.sectionSpacing)
+        XCTAssertGreaterThanOrEqual(large.controlMinimumSize, 44)
+    }
+
+    func testSettingsGeometryClampsUntrustedStoredSizes() {
+        XCTAssertGreaterThanOrEqual(
+            SettingsPresentationPolicy.layoutMetrics(fontSize: -100).scale,
+            0.9
+        )
+        XCTAssertLessThanOrEqual(
+            SettingsPresentationPolicy.layoutMetrics(fontSize: 1_000).scale,
+            1.45
+        )
+    }
 }

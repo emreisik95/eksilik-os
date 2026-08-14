@@ -11,11 +11,15 @@ final class SessionManager: ObservableObject {
     @Published var hasUnreadEvents: Bool = false
     @Published private(set) var csrfToken: String?
     @Published var isPaidMember: Bool = false
+    @Published private(set) var profileAvatarURL: String?
+
+    private static let profileAvatarURLKey = "profileAvatarURL"
 
     private init() {
         isLoggedIn = UserDefaults.standard.bool(forKey: "isLoggedIn")
         username = UserDefaults.standard.string(forKey: "username")
         isPaidMember = UserDefaults.standard.bool(forKey: "isPaidMember")
+        profileAvatarURL = UserDefaults.standard.string(forKey: Self.profileAvatarURLKey)
     }
 
     func updateFromHTML(_ html: String) {
@@ -27,6 +31,15 @@ final class SessionManager: ObservableObject {
         if isLoggedIn && !state.isLoggedIn {
             clearSession()
             return
+        }
+
+        if state.isLoggedIn,
+           let incomingUsername = state.username,
+           !ProfileIdentityPolicy.matchesAuthenticatedUser(
+                authenticatedUsername: username,
+                profileUsername: incomingUsername
+           ) {
+            clearProfileAvatar()
         }
 
         isLoggedIn = state.isLoggedIn
@@ -52,10 +65,31 @@ final class SessionManager: ObservableObject {
     func onLoginSuccess(username: String? = nil) {
         isLoggedIn = true
         if let name = username, !name.isEmpty {
+            if !ProfileIdentityPolicy.matchesAuthenticatedUser(
+                authenticatedUsername: self.username,
+                profileUsername: name
+            ) {
+                clearProfileAvatar()
+            }
             self.username = name
             UserDefaults.standard.set(name, forKey: "username")
         }
         UserDefaults.standard.set(true, forKey: "isLoggedIn")
+    }
+
+    func updateProfileIdentity(username profileUsername: String, avatarURL: String?) {
+        guard ProfileIdentityPolicy.matchesAuthenticatedUser(
+            authenticatedUsername: username,
+            profileUsername: profileUsername
+        ) else { return }
+
+        let normalized = avatarURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+        profileAvatarURL = normalized?.isEmpty == false ? normalized : nil
+        if let profileAvatarURL {
+            UserDefaults.standard.set(profileAvatarURL, forKey: Self.profileAvatarURLKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.profileAvatarURLKey)
+        }
     }
 
     func logout() {
@@ -75,6 +109,12 @@ final class SessionManager: ObservableObject {
         UserDefaults.standard.set(false, forKey: "isLoggedIn")
         UserDefaults.standard.set(false, forKey: "isPaidMember")
         UserDefaults.standard.removeObject(forKey: "username")
+        clearProfileAvatar()
         SessionPrivacyCleanup.perform()
+    }
+
+    private func clearProfileAvatar() {
+        profileAvatarURL = nil
+        UserDefaults.standard.removeObject(forKey: Self.profileAvatarURLKey)
     }
 }

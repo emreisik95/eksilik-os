@@ -9,11 +9,7 @@ struct AppIconPickerView: View {
         GridItem(.adaptive(minimum: 138), spacing: 14),
     ]
 
-    private let choices = [
-        AppIconChoice(title: "default", iconName: nil, imageName: "AppIcon"),
-        AppIconChoice(title: "light", iconName: "AlternateIcon", imageName: "AlternateIcon@2x"),
-        AppIconChoice(title: "oldschool", iconName: "AlternateKlasik", imageName: "AlternateKlasik@2x"),
-    ]
+    private let choices = AppIconPresentationPolicy.choices
 
     var body: some View {
         ScrollView {
@@ -116,12 +112,4 @@ struct AppIconPickerView: View {
             }
         }
     }
-}
-
-private struct AppIconChoice: Identifiable {
-    let title: String
-    let iconName: String?
-    let imageName: String
-
-    var id: String { iconName ?? "default" }
 }

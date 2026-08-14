@@ -120,6 +120,7 @@ private extension ProfileView {
                 }
             }
         }
+        .refreshable { await viewModel.refreshProfile() }
     }
 
     // MARK: - Header
@@ -127,82 +128,78 @@ private extension ProfileView {
     @ViewBuilder
     private func profileHeader(_ profile: UserProfile) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 12) {
-                // Username + bio on the left
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(profile.nick)
-                            .font(.title2.bold())
-                            .foregroundColor(themeManager.current.labelColor)
-                        if profile.isVerified {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(themeManager.current.accentColor)
-                                .font(.subheadline)
-                        }
-                    }
+            profileIdentity(profile)
+            profileBadges(profile)
+            profileStats(profile)
+            profileJoinDate(profile)
+        }
+    }
 
-                    if let bio = profile.bio, !bio.isEmpty {
-                        Text(bio)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
+    private func profileIdentity(_ profile: UserProfile) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                if profile.isVerified {
+                    Label("doğrulanmış yazar", systemImage: "checkmark.seal.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(themeManager.current.accentColor)
                 }
-
-                Spacer()
-
-                // Avatar on the right
-                if let avatarURL = profile.avatarURL {
-                    CachedRemoteImage(url: avatarURL)
+                if let bio = profile.bio, !bio.isEmpty {
+                    Text(bio).font(.subheadline).foregroundColor(.gray)
+                }
+            }
+            Spacer()
+            if let avatarURL = profile.avatarURL {
+                CachedRemoteImage(url: avatarURL)
                     .frame(width: 70, height: 70)
                     .clipShape(Circle())
                     .contentShape(Circle())
                     .onTapGesture { openLightbox(images: [avatarURL], index: 0) }
-                }
             }
+        }
+    }
 
-            // Badges
-            if !profile.badges.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(Array(profile.badges.enumerated()), id: \.offset) { index, badge in
-                            CachedRemoteImage(url: badge.imageURL, contentMode: .fit, showsRetry: false)
+    @ViewBuilder
+    private func profileBadges(_ profile: UserProfile) -> some View {
+        if !profile.badges.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(Array(profile.badges.enumerated()), id: \.offset) { index, badge in
+                        CachedRemoteImage(url: badge.imageURL, contentMode: .fit, showsRetry: false)
                             .frame(width: 24, height: 24)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 openLightbox(images: profile.badges.map(\.imageURL), index: index)
                             }
-                        }
                     }
                 }
             }
+        }
+    }
 
-            // Stats row
-            HStack(spacing: 8) {
-                profileStat(value: profile.entryCount, label: "entry")
-                profileStat(
-                    value: profile.followerCount,
-                    label: "takipçi",
-                    path: profile.followerLink,
-                    destinationTitle: "takipçiler"
-                )
-                profileStat(
-                    value: profile.followingCount,
-                    label: "takip",
-                    path: profile.followingLink,
-                    destinationTitle: "takip ettikleri"
-                )
-            }
+    private func profileStats(_ profile: UserProfile) -> some View {
+        HStack(spacing: 8) {
+            profileStat(value: profile.entryCount, label: "entry")
+            profileStat(
+                value: profile.followerCount,
+                label: "takipçi",
+                path: profile.followerLink,
+                destinationTitle: "takipçiler"
+            )
+            profileStat(
+                value: profile.followingCount,
+                label: "takip",
+                path: profile.followingLink,
+                destinationTitle: "takip ettikleri"
+            )
+        }
+    }
 
-            // Join date
-            if let joinDate = profile.joinDate {
-                HStack(spacing: 4) {
-                    Image(systemName: "calendar")
-                        .font(.caption2)
-                    Text(joinDate)
-                        .font(.caption2)
-                }
+    @ViewBuilder
+    private func profileJoinDate(_ profile: UserProfile) -> some View {
+        if let joinDate = profile.joinDate {
+            Label(joinDate, systemImage: "calendar")
+                .font(.caption2)
                 .foregroundColor(.gray)
-            }
         }
     }
 

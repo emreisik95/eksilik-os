@@ -12,10 +12,10 @@ grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' 
     || fail "widget bundle identifier must be nested under the existing App Store listing"
 grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
-[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.2"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget marketing versions must be 2.0.2"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "13"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 13"
+[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.3"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget marketing versions must be 2.0.3"
+[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "15"$' project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be 15"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 # shellcheck disable=SC2016
@@ -49,6 +49,10 @@ done
 [[ -f .github/workflows/app-store-release.yml ]] || fail "App Store release workflow is missing"
 grep -Fq 'runs-on: macos-26' .github/workflows/app-store-release.yml \
     || fail "App Store releases must use Xcode 26 or later"
+grep -Fq 'default: "2.0.3"' .github/workflows/app-store-release.yml \
+    || fail "release workflow version must match project.yml"
+grep -Fq 'default: "15"' .github/workflows/app-store-release.yml \
+    || fail "release workflow build number must match project.yml"
 
 if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
     xcodegen generate >/dev/null
@@ -94,7 +98,21 @@ grep -q 'Button(L10n.Entry.reportEntry' Views/Entry/EntryRowView.swift \
 grep -q 'func blockUser(authorId:' Services/EntryService.swift \
     || fail "functional author blocking is missing"
 
-for family in AlternateIcon AlternateKlasik; do
+primary_icon="Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+primary_width="$(sips -g pixelWidth "$primary_icon" 2>/dev/null | awk '/pixelWidth/ {print $2}')"
+primary_height="$(sips -g pixelHeight "$primary_icon" 2>/dev/null | awk '/pixelHeight/ {print $2}')"
+primary_alpha="$(sips -g hasAlpha "$primary_icon" 2>/dev/null | awk '/hasAlpha/ {print $2}')"
+[[ "$primary_width" == "1024" && "$primary_height" == "1024" ]] \
+    || fail "$primary_icon must be 1024x1024"
+[[ "$primary_alpha" == "no" ]] || fail "$primary_icon must not contain transparency"
+
+for family in \
+    AlternateIcon \
+    AlternateKlasik \
+    AlternateNoir \
+    AlternateAurora \
+    AlternateDepth \
+    AlternateForest; do
     for scale in 1 2 3; do
         file="Resources/AlternateIcons/${family}@${scale}x.png"
         expected=$((60 * scale))
@@ -121,9 +139,20 @@ for family in AlternateIcon AlternateKlasik; do
     done
 
     /usr/libexec/PlistBuddy \
+        -c "Print :CFBundleIcons:CFBundleAlternateIcons:${family}:CFBundleIconFiles:0" \
+        EksilikApp-Info.plist 2>/dev/null | grep -Fxq "$family" \
+        || fail "CFBundleIcons must reference $family"
+    /usr/libexec/PlistBuddy \
         -c "Print :CFBundleIcons~ipad:CFBundleAlternateIcons:${family}:CFBundleIconFiles:0" \
         EksilikApp-Info.plist 2>/dev/null | grep -Fxq "$family" \
         || fail "CFBundleIcons~ipad must reference $family"
 done
+
+release_metadata="metadata/version/2.0.3/tr.json"
+[[ -f "$release_metadata" ]] || fail "Turkish 2.0.3 release metadata is missing"
+jq -e '.whatsNew | length > 0 and length <= 4000' "$release_metadata" >/dev/null \
+    || fail "2.0.3 What's New must be between 1 and 4000 characters"
+jq -e '.promotionalText | length <= 170' "$release_metadata" >/dev/null \
+    || fail "2.0.3 promotional text must not exceed 170 characters"
 
 echo "PASS: App Store readiness checks"

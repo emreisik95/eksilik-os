@@ -15,8 +15,8 @@ final class ProfileConnectionsViewModel: ObservableObject {
         self.title = title
     }
 
-    func load() async {
-        guard people.isEmpty, !isLoading else { return }
+    func load(force: Bool = false) async {
+        guard force || people.isEmpty, !isLoading else { return }
         isLoading = true
         error = nil
         defer { isLoading = false }

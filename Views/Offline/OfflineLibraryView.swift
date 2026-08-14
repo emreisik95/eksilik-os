@@ -6,18 +6,18 @@ struct OfflineLibraryView: View {
 
     var body: some View {
         Group {
-            if viewModel.isLoading && viewModel.items.isEmpty {
+            if viewModel.isLoading && libraryIsEmpty {
                 LoadingView()
-            } else if let error = viewModel.error, viewModel.items.isEmpty {
+            } else if let error = viewModel.error, libraryIsEmpty {
                 ErrorView(message: error) { Task { await viewModel.load() } }
-            } else if viewModel.items.isEmpty {
+            } else if libraryIsEmpty {
                 VStack(spacing: 14) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 42))
                         .foregroundColor(.gray)
-                    Text("indirilen başlık yok")
+                    Text("çevrimdışı içerik yok")
                         .font(.headline)
-                    Text("bir başlıktaki indirme düğmesinden normal veya şükela entry'leri kaydedebilirsin")
+                    Text("başlıkları ve Şeyler yazılarını indirme düğmesinden kaydedebilirsin")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -26,16 +26,36 @@ struct OfflineLibraryView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    ForEach(viewModel.items) { item in
-                        offlineRow(item)
-                            .listRowBackground(themeManager.current.cellPrimaryColor)
-                            .swipeActions {
-                                Button(role: .destructive) {
-                                    Task { await viewModel.delete(item.topic) }
-                                } label: {
-                                    Label("sil", systemImage: "trash")
-                                }
+                    if !viewModel.items.isEmpty {
+                        Section("başlıklar") {
+                            ForEach(viewModel.items) { item in
+                                offlineRow(item)
+                                    .listRowBackground(themeManager.current.cellPrimaryColor)
+                                    .swipeActions {
+                                        Button(role: .destructive) {
+                                            Task { await viewModel.delete(item.topic) }
+                                        } label: {
+                                            Label("sil", systemImage: "trash")
+                                        }
+                                    }
                             }
+                        }
+                    }
+
+                    if !viewModel.seylerItems.isEmpty {
+                        Section("şeyler") {
+                            ForEach(viewModel.seylerItems) { item in
+                                seylerRow(item)
+                                    .listRowBackground(themeManager.current.cellPrimaryColor)
+                                    .swipeActions {
+                                        Button(role: .destructive) {
+                                            Task { await viewModel.delete(item) }
+                                        } label: {
+                                            Label("sil", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        }
                     }
                 }
                 .listStyle(.plain)
@@ -49,6 +69,13 @@ struct OfflineLibraryView: View {
         .onReceive(NotificationCenter.default.publisher(for: .offlineTopicsDidChange)) { _ in
             Task { await viewModel.load() }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .offlineSeylerDidChange)) { _ in
+            Task { await viewModel.load() }
+        }
+    }
+
+    private var libraryIsEmpty: Bool {
+        viewModel.items.isEmpty && viewModel.seylerItems.isEmpty
     }
 
     @ViewBuilder
@@ -126,6 +153,44 @@ struct OfflineLibraryView: View {
             }
         }
         .padding(.vertical, 5)
+    }
+
+    private func seylerRow(_ item: OfflineSeylerLibraryItem) -> some View {
+        NavigationLink {
+            SeylerReaderView(url: item.saved.article.sourceURL)
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "doc.richtext.fill")
+                    .font(.title3)
+                    .foregroundColor(themeManager.current.accentColor)
+                    .frame(width: 42, height: 42)
+                    .background(
+                        themeManager.current.accentColor.opacity(0.12),
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(item.saved.article.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(themeManager.current.labelColor)
+                        .lineLimit(2)
+
+                    HStack(spacing: 8) {
+                        if let category = item.saved.article.category {
+                            Text(category.lowercased(with: Locale(identifier: "tr_TR")))
+                        }
+                        Text(ByteCountFormatter.string(
+                            fromByteCount: item.storageSize,
+                            countStyle: .file
+                        ))
+                        Text(item.saved.savedAt, style: .relative)
+                    }
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                }
+            }
+            .padding(.vertical, 5)
+        }
     }
 
     private func statusText(_ topic: OfflineTopic) -> String {

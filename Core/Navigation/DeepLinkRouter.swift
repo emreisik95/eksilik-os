@@ -4,6 +4,17 @@ import SwiftUI
 final class DeepLinkRouter: ObservableObject {
     @Published var pendingRoute: Route?
     @Published var selectedMainTab: MainTab = .home
+    @Published private(set) var homeReselectionToken = 0
+
+    func selectMainTab(_ selection: MainTab) {
+        if MainTabReselectionPolicy.shouldResetHome(
+            current: selectedMainTab,
+            selection: selection
+        ) {
+            homeReselectionToken &+= 1
+        }
+        selectedMainTab = selection
+    }
 
     /// Handles eksilik:// deep links from the widget
     /// Format: eksilik://topic?link=/slug--id

@@ -42,6 +42,7 @@ struct ProfileConnectionsView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
         }
+        .refreshable { await viewModel.load(force: true) }
     }
 
     private func connectionRow(_ person: ProfileConnection) -> some View {

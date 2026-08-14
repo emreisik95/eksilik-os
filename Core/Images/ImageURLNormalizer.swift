@@ -62,6 +62,7 @@ struct ImageGalleryPresentation: Identifiable, Equatable {
     let id = UUID()
     let imageURLs: [String]
     let initialIndex: Int
+    let allowsLocalFiles: Bool
 
     init?(imageURLs: [String], initialIndex: Int) {
         let normalizedURLs = ImageURLNormalizer.normalizeStrings(imageURLs)
@@ -69,5 +70,25 @@ struct ImageGalleryPresentation: Identifiable, Equatable {
 
         self.imageURLs = normalizedURLs
         self.initialIndex = min(max(initialIndex, 0), normalizedURLs.count - 1)
+        allowsLocalFiles = false
+    }
+
+    init?(resolvedImageURLs: [URL], initialIndex: Int) {
+        var seen = Set<String>()
+        let resolved = resolvedImageURLs.compactMap { url -> String? in
+            let value: String?
+            if url.isFileURL {
+                value = url.absoluteString
+            } else {
+                value = ImageURLNormalizer.normalize(url.absoluteString)?.absoluteString
+            }
+            guard let value, seen.insert(value).inserted else { return nil }
+            return value
+        }
+        guard !resolved.isEmpty else { return nil }
+
+        imageURLs = resolved
+        self.initialIndex = min(max(initialIndex, 0), resolved.count - 1)
+        allowsLocalFiles = true
     }
 }

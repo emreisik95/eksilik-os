@@ -33,3 +33,9 @@ enum MainTab: String, CaseIterable, Identifiable, Sendable {
         }
     }
 }
+
+enum MainTabReselectionPolicy {
+    static func shouldResetHome(current: MainTab, selection: MainTab) -> Bool {
+        current == .home && selection == .home
+    }
+}

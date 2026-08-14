@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SeylerReaderView: View {
     @StateObject private var viewModel: SeylerArticleViewModel
@@ -30,6 +31,29 @@ struct SeylerReaderView: View {
         .toolbar {
             if let article = viewModel.article {
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task {
+                            if viewModel.isSaved {
+                                await viewModel.removeOfflineCopy()
+                            } else {
+                                await viewModel.saveForOffline()
+                            }
+                        }
+                    } label: {
+                        if viewModel.isSaving {
+                            ProgressView()
+                        } else {
+                            Image(systemName: viewModel.isSaved
+                                ? "arrow.down.circle.fill"
+                                : "arrow.down.circle")
+                        }
+                    }
+                    .disabled(viewModel.isSaving)
+                    .accessibilityLabel(viewModel.isSaved
+                        ? "çevrimdışı kopyayı sil"
+                        : "çevrimdışı kaydet")
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
                     ShareLink(item: article.sourceURL) {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -45,7 +69,16 @@ struct SeylerReaderView: View {
         }
         .task(id: viewModel.article?.sourceURL) {
             guard let article = viewModel.article else { return }
-            await ImagePipeline.shared.prefetch(article.imageURLs.map(\.absoluteString))
+            await ImagePipeline.shared.prefetch(
+                viewModel.galleryURLs(for: article)
+                    .filter { !$0.isFileURL }
+                    .map(\.absoluteString)
+            )
+        }
+        .alert("çevrimdışı okuma", isPresented: errorBinding) {
+            Button("tamam", role: .cancel) { viewModel.error = nil }
+        } message: {
+            Text(viewModel.error ?? "")
         }
     }
 
@@ -167,13 +200,13 @@ struct SeylerReaderView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Button {
-                let urls = article.imageURLs.map(\.absoluteString)
+                let urls = viewModel.galleryURLs(for: article)
                 galleryPresentation = ImageGalleryPresentation(
-                    imageURLs: urls,
+                    resolvedImageURLs: urls,
                     initialIndex: article.imageURLs.firstIndex(of: url) ?? 0
                 )
             } label: {
-                CachedRemoteImage(url: url.absoluteString, contentMode: .fit)
+                articleImageContent(viewModel.displayURL(for: url))
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 190, maxHeight: 460)
                     .background(themeManager.current.cellSecondaryColor)
@@ -188,5 +221,31 @@ struct SeylerReaderView: View {
                     .foregroundColor(themeManager.current.dateColor)
             }
         }
+    }
+
+    @ViewBuilder
+    private func articleImageContent(_ url: URL) -> some View {
+        if url.isFileURL {
+            if let image = UIImage(contentsOfFile: url.path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                ZStack {
+                    themeManager.current.cellSecondaryColor
+                    Image(systemName: "photo")
+                        .foregroundColor(themeManager.current.dateColor)
+                }
+            }
+        } else {
+            CachedRemoteImage(url: url.absoluteString, contentMode: .fit)
+        }
+    }
+
+    private var errorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.article != nil && viewModel.error != nil },
+            set: { if !$0 { viewModel.error = nil } }
+        )
     }
 }

@@ -15,6 +15,8 @@ final class MessageComposeViewModelTests: XCTestCase {
         await viewModel.send(csrfToken: "token-123")
 
         XCTAssertTrue(viewModel.didSend)
+        XCTAssertEqual(viewModel.sendGeneration, 1)
+        XCTAssertTrue(viewModel.messageText.isEmpty)
         XCTAssertFalse(viewModel.isSending)
         XCTAssertNil(viewModel.error)
         XCTAssertEqual(sender.calls.count, 1)
@@ -33,6 +35,7 @@ final class MessageComposeViewModelTests: XCTestCase {
         await viewModel.send(csrfToken: nil)
 
         XCTAssertFalse(viewModel.didSend)
+        XCTAssertEqual(viewModel.sendGeneration, 0)
         XCTAssertFalse(viewModel.isSending)
         XCTAssertEqual(viewModel.messageText, "silinmemesi gereken taslak")
         XCTAssertNotNil(viewModel.error)

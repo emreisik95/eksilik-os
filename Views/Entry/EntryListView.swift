@@ -69,7 +69,11 @@ struct EntryListView: View {
                     }
                 }
                 .listStyle(.plain)
-                .id(preferences.entryLayoutStyle.id)
+                .id(EntryListContentIdentity(
+                    layout: preferences.entryLayoutStyle,
+                    page: viewModel.pagination.currentPage,
+                    filter: viewModel.activeFilter
+                ))
                 .animation(.easeInOut(duration: 0.2), value: preferences.entryLayoutStyle)
             }
 
@@ -168,6 +172,9 @@ struct EntryListView: View {
         .refreshable { await viewModel.loadEntries() }
     }
 
+}
+
+private extension EntryListView {
     // MARK: - Filter Bar
 
     private var filterBar: some View {

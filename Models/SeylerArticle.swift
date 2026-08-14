@@ -1,6 +1,6 @@
 import Foundation
 
-enum SeylerArticleBlock: Hashable, Sendable {
+enum SeylerArticleBlock: Codable, Hashable, Sendable {
     case paragraph(String)
     case heading(String)
     case image(url: URL, caption: String?)
@@ -8,7 +8,7 @@ enum SeylerArticleBlock: Hashable, Sendable {
     case list([String])
 }
 
-struct SeylerArticle: Hashable, Sendable {
+struct SeylerArticle: Codable, Hashable, Sendable {
     let sourceURL: URL
     let title: String
     let summary: String?

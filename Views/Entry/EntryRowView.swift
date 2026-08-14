@@ -1,9 +1,13 @@
+// This production renderer intentionally keeps all eight entry families together
+// so previews and live rows cannot drift into separate implementations.
+// swiftlint:disable file_length
 import SwiftUI
 import UIKit
 
 struct EntryRowView: View { // swiftlint:disable:this type_body_length
     let entry: Entry
     let isEven: Bool
+    let styleOverride: EntryLayoutStyle?
     let onFavorite: () -> Void
     let onUpvote: () -> Void
     let onDownvote: () -> Void
@@ -13,12 +17,54 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     @EnvironmentObject var session: SessionManager
     @EnvironmentObject var nav: NavigationCoordinator
     @EnvironmentObject var preferences: UserPreferences
+    @ScaledMetric(relativeTo: .body) private var systemSpacingScale: CGFloat = 1
     @State private var showActions = false
     @State private var pendingRoute: Route?
     @State private var moderationMessage: String?
 
-    private var style: EntryLayoutStyle { preferences.entryLayoutStyle }
+    init(
+        entry: Entry,
+        isEven: Bool,
+        styleOverride: EntryLayoutStyle? = nil,
+        onFavorite: @escaping () -> Void,
+        onUpvote: @escaping () -> Void,
+        onDownvote: @escaping () -> Void,
+        onOpenImages: @escaping ([String], Int) -> Void
+    ) {
+        self.entry = entry
+        self.isEven = isEven
+        self.styleOverride = styleOverride
+        self.onFavorite = onFavorite
+        self.onUpvote = onUpvote
+        self.onDownvote = onDownvote
+        self.onOpenImages = onOpenImages
+    }
+
+    private var style: EntryLayoutStyle {
+        EntryRowRenderingPolicy.style(
+            preferred: preferences.entryLayoutStyle,
+            override: styleOverride
+        )
+    }
     private var presentation: EntryLayoutPresentation { style.presentation }
+    private var metrics: EntryLayoutMetrics {
+        EntryLayoutMetrics(
+            fontSize: preferences.selectedFontSize,
+            presentation: presentation
+        )
+    }
+
+    private var adaptiveScale: CGFloat {
+        min(1.55, max(0.9, CGFloat(metrics.scale) * systemSpacingScale))
+    }
+
+    private var minimumActionTarget: CGFloat {
+        max(44, 44 * min(1.25, max(1, adaptiveScale)))
+    }
+
+    private func scaled(_ value: CGFloat) -> CGFloat {
+        value * adaptiveScale
+    }
 
     private var secondaryTextColor: Color {
         themeManager.current.dateColor.opacity(0.65)
@@ -93,18 +139,18 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             rowContents
                 .background(themeManager.current.cellPrimaryColor)
                 .clipShape(RoundedRectangle(
-                    cornerRadius: CGFloat(presentation.cornerRadius),
+                    cornerRadius: CGFloat(metrics.cornerRadius),
                     style: .continuous
                 ))
                 .overlay {
                     RoundedRectangle(
-                        cornerRadius: CGFloat(presentation.cornerRadius),
+                        cornerRadius: CGFloat(metrics.cornerRadius),
                         style: .continuous
                     )
                     .stroke(themeManager.current.separatorColor.opacity(0.18), lineWidth: 1)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, scaled(12))
+                .padding(.vertical, scaled(6))
                 .background(themeManager.current.backgroundColor)
         } else {
             rowContents
@@ -136,11 +182,11 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
     private var classicLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: scaled(14)) {
                 entryContent
                 standardMetadataRow
             }
-            .padding(16)
+            .padding(scaled(16))
             actionDivider
             actionBar
             layoutSeparator(height: 6)
@@ -149,11 +195,11 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
     private var xLayout: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 12) {
-                avatarOnlyButton(size: 42)
+            HStack(alignment: .top, spacing: scaled(12)) {
+                avatarOnlyButton(size: scaledAvatar(42))
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 5) {
+                VStack(alignment: .leading, spacing: scaled(10)) {
+                    HStack(spacing: scaled(5)) {
                         authorNameButton(font: .subheadline.weight(.bold))
                         Image(systemName: "checkmark.seal.fill")
                             .font(.caption2)
@@ -162,25 +208,25 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                             .font(.caption)
                             .foregroundColor(secondaryTextColor)
                             .lineLimit(1)
-                        Spacer(minLength: 4)
+                        Spacer(minLength: scaled(4))
                         moreButton
                     }
 
                     entryContent
                     actionBar
-                        .padding(.horizontal, -10)
+                        .padding(.horizontal, -scaled(10))
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
+            .padding(.horizontal, scaled(14))
+            .padding(.vertical, scaled(14))
             layoutSeparator(height: 2)
         }
     }
 
     private var instagramLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                avatarOnlyButton(size: 36)
+            HStack(spacing: scaled(10)) {
+                avatarOnlyButton(size: scaledAvatar(36))
                     .overlay(Circle().stroke(themeManager.current.accentColor, lineWidth: 2))
                 authorNameButton(font: .subheadline.weight(.bold))
                 Spacer()
@@ -189,30 +235,30 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                     .foregroundColor(secondaryTextColor)
                 moreButton
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 14)
-            .padding(.bottom, 12)
+            .padding(.horizontal, scaled(14))
+            .padding(.top, scaled(14))
+            .padding(.bottom, scaled(12))
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: scaled(12)) {
                 entryContent
                 actionBar
-                    .padding(.horizontal, -10)
+                    .padding(.horizontal, -scaled(10))
                 Text(entry.date)
                     .font(.caption2)
                     .foregroundColor(secondaryTextColor)
             }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 14)
+            .padding(.horizontal, scaled(14))
+            .padding(.bottom, scaled(14))
             layoutSeparator(height: 6)
         }
     }
 
     private var linkedInLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top, spacing: 10) {
-                    avatarOnlyButton(size: 44)
-                    VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: scaled(14)) {
+                HStack(alignment: .top, spacing: scaled(10)) {
+                    avatarOnlyButton(size: scaledAvatar(44))
+                    VStack(alignment: .leading, spacing: scaled(2)) {
                         authorNameButton(font: .subheadline.weight(.bold))
                         Text("sözlük yazarı · \(entry.date)")
                         Text("#\(entry.id)")
@@ -224,7 +270,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 }
                 entryContent
             }
-            .padding(16)
+            .padding(scaled(16))
             actionDivider
             linkedInActionBar
         }
@@ -232,32 +278,32 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
     private var redditLayout: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: scaled(10)) {
                 redditVoteRail
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: scaled(10)) {
+                    HStack(spacing: scaled(4)) {
                         Text("r/ekşisözlük")
                             .fontWeight(.semibold)
                             .foregroundColor(themeManager.current.accentColor)
                         Text("· \(entry.author.nick) · \(entry.date)")
                             .foregroundColor(secondaryTextColor)
                             .lineLimit(1)
-                        Spacer(minLength: 4)
+                        Spacer(minLength: scaled(4))
                     }
                     .font(.caption2)
                     entryContent
                     redditActionBar
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 14)
+            .padding(.horizontal, scaled(12))
+            .padding(.vertical, scaled(14))
             layoutSeparator(height: 4)
         }
     }
 
     private var readerLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: scaled(20)) {
                 HStack {
                     Text("ENTRY \(entry.id)")
                         .font(.caption2.weight(.semibold))
@@ -268,26 +314,26 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                         .foregroundColor(secondaryTextColor)
                 }
                 entryContent
-                HStack(spacing: 10) {
+                HStack(spacing: scaled(10)) {
                     Rectangle()
                         .fill(themeManager.current.accentColor)
-                        .frame(width: 28, height: 2)
+                        .frame(width: scaled(28), height: max(2, scaled(2)))
                     authorNameButton(font: .caption.weight(.semibold))
                     Text("· \(entry.date)")
                         .font(.caption)
                         .foregroundColor(secondaryTextColor)
                 }
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 24)
+            .padding(.horizontal, scaled(22))
+            .padding(.vertical, scaled(24))
             actionBar
             layoutSeparator(height: 8)
         }
     }
 
     private var terminalLayout: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: scaled(12)) {
+            HStack(spacing: scaled(8)) {
                 Text(">")
                     .foregroundColor(themeManager.current.accentColor)
                 Text("\(entry.author.nick)@eksi")
@@ -301,8 +347,8 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             entryContent
             terminalActionBar
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 14)
+        .padding(.horizontal, scaled(14))
+        .padding(.vertical, scaled(14))
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(themeManager.current.accentColor)
@@ -315,9 +361,9 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
     private var minimalLayout: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 15) {
+            VStack(alignment: .leading, spacing: scaled(15)) {
                 entryContent
-                HStack(spacing: 6) {
+                HStack(spacing: scaled(6)) {
                     authorNameButton(font: .caption.weight(.semibold))
                     Text("· \(entry.date)")
                         .font(.caption2)
@@ -325,8 +371,8 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                         .lineLimit(1)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 18)
+            .padding(.horizontal, scaled(16))
+            .padding(.top, scaled(18))
             actionBar
             layoutSeparator(height: 1)
         }
@@ -335,7 +381,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     private func layoutSeparator(height: CGFloat) -> some View {
         Rectangle()
             .fill(themeManager.current.separatorColor.opacity(0.25))
-            .frame(height: height)
+            .frame(height: max(1, scaled(height)))
     }
 
     private var redditVoteRail: some View {
@@ -348,7 +394,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                             : actionButtonColor)
                 }
                 .buttonStyle(.plain)
-                .frame(width: 44, height: 44)
+                .frame(width: minimumActionTarget, height: minimumActionTarget)
             }
             Button(action: onFavorite) {
                 Text("\(entry.favoriteCount)")
@@ -356,14 +402,14 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                     .foregroundColor(entry.isFavorited ? .yellow : secondaryTextColor)
             }
             .buttonStyle(.plain)
-            .frame(width: 44, height: 32)
+            .frame(width: minimumActionTarget, height: max(scaled(32), 32))
             if session.isLoggedIn && entry.author.nick != session.username {
                 Button(action: onDownvote) {
                     Image(systemName: entry.voteState == .downvoted ? "arrow.down.circle.fill" : "arrow.down")
                         .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
                 }
                 .buttonStyle(.plain)
-                .frame(width: 44, height: 44)
+                .frame(width: minimumActionTarget, height: minimumActionTarget)
             }
         }
     }
@@ -376,7 +422,10 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var entryContent: some View {
-        VStack(alignment: .leading, spacing: max(8, CGFloat(presentation.contentSpacing) - 4)) {
+        VStack(
+            alignment: .leading,
+            spacing: max(scaled(8), CGFloat(metrics.contentSpacing) - scaled(4))
+        ) {
             EntryTextView(
                 attributedText: entry.parsedContent,
                 onInternalLink: { link in
@@ -393,11 +442,11 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
             if !entry.imageURLs.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: scaled(8)) {
                         ForEach(Array(entry.imageURLs.enumerated()), id: \.element) { index, urlStr in
                             CachedRemoteImage(url: urlStr)
                                 .frame(width: imageSize.width, height: imageSize.height)
-                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: scaled(8), style: .continuous))
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     onOpenImages(entry.imageURLs, index)
@@ -410,12 +459,15 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var imageSize: CGSize {
+        let base: CGSize
         switch style.family {
-        case .xFeed, .minimal, .terminal: return CGSize(width: 140, height: 100)
-        case .instagram, .reader: return CGSize(width: 196, height: 146)
-        case .linkedIn: return CGSize(width: 184, height: 132)
-        default: return CGSize(width: 160, height: 120)
+        case .xFeed, .minimal, .terminal: base = CGSize(width: 140, height: 100)
+        case .instagram, .reader: base = CGSize(width: 196, height: 146)
+        case .linkedIn: base = CGSize(width: 184, height: 132)
+        default: base = CGSize(width: 160, height: 120)
         }
+        let scale = min(1.35, max(0.95, adaptiveScale))
+        return CGSize(width: base.width * scale, height: base.height * scale)
     }
 
     @ViewBuilder
@@ -447,17 +499,17 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var standardMetadataRow: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: scaled(10)) {
             authorButton
-            Spacer(minLength: 12)
+            Spacer(minLength: scaled(12))
             dateBlock
         }
     }
 
     private var inlineMetadataRow: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: scaled(8)) {
             authorButton
-            Spacer(minLength: 8)
+            Spacer(minLength: scaled(8))
             Text("\(entry.date) · #\(entry.id)")
                 .font(.caption2)
                 .foregroundColor(secondaryTextColor)
@@ -466,7 +518,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var dateHeader: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: scaled(6)) {
             Image(systemName: "clock")
                 .font(.caption2)
             Text(entry.date)
@@ -478,7 +530,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var dateBlock: some View {
-        VStack(alignment: .trailing, spacing: 2) {
+        VStack(alignment: .trailing, spacing: scaled(2)) {
             Text(entry.date)
                 .font(.caption)
             Text("#\(entry.id)")
@@ -492,7 +544,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
         Button {
             nav.push(Route.profile(username: entry.author.nick))
         } label: {
-            HStack(spacing: presentation.showsAvatar ? 8 : 0) {
+            HStack(spacing: presentation.showsAvatar ? scaled(8) : 0) {
                 if presentation.showsAvatar, let avatarURL = entry.author.avatarURL {
                     CachedRemoteImage(url: avatarURL)
                         .frame(width: avatarSize, height: avatarSize)
@@ -504,11 +556,11 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             }
         }
         .buttonStyle(.plain)
-        .frame(minHeight: 32)
+        .frame(minHeight: max(32, scaled(32)))
     }
 
     private var avatarSize: CGFloat {
-        style.family == .instagram || style.family == .linkedIn ? 30 : 24
+        scaledAvatar(style.family == .instagram || style.family == .linkedIn ? 30 : 24)
     }
 
     private var authorFont: Font {
@@ -527,7 +579,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 .lineLimit(1)
         }
         .buttonStyle(.plain)
-        .frame(minHeight: 32)
+        .frame(minHeight: max(32, scaled(32)))
     }
 
     private func avatarOnlyButton(size: CGFloat) -> some View {
@@ -537,7 +589,14 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             entryAvatar(size: size)
         }
         .buttonStyle(.plain)
-        .frame(width: max(size, 44), height: max(size, 44))
+        .frame(
+            width: max(size, minimumActionTarget),
+            height: max(size, minimumActionTarget)
+        )
+    }
+
+    private func scaledAvatar(_ size: CGFloat) -> CGFloat {
+        size * min(1.35, max(0.95, adaptiveScale))
     }
 
     @ViewBuilder
@@ -560,7 +619,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
 
     private var favoriteIconButton: some View {
         Button(action: onFavorite) {
-            HStack(spacing: 4) {
+            HStack(spacing: scaled(4)) {
                 Image(systemName: entry.isFavorited ? "star.fill" : "star")
                 Text("\(entry.favoriteCount)")
             }
@@ -568,7 +627,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
         }
         .buttonStyle(.plain)
-        .frame(minWidth: 44, minHeight: 44)
+        .frame(minWidth: minimumActionTarget, minHeight: minimumActionTarget)
         .accessibilityLabel(entry.isFavorited ? "favoriden çıkar" : "favoriye ekle")
     }
 
@@ -580,7 +639,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 .foregroundColor(actionButtonColor)
         }
         .buttonStyle(.plain)
-        .frame(width: 44, height: 44)
+        .frame(width: minimumActionTarget, height: minimumActionTarget)
         .accessibilityLabel(L10n.Entry.shareLink)
     }
 
@@ -592,7 +651,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 .foregroundColor(actionButtonColor)
         }
         .buttonStyle(.plain)
-        .frame(width: 44, height: 44)
+        .frame(width: minimumActionTarget, height: minimumActionTarget)
         .accessibilityLabel("daha fazla")
     }
 
@@ -606,7 +665,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
         Rectangle()
             .fill(themeManager.current.separatorColor.opacity(0.15))
             .frame(height: 1)
-            .padding(.horizontal, CGFloat(presentation.horizontalPadding))
+            .padding(.horizontal, CGFloat(metrics.horizontalPadding) * systemSpacingScale)
     }
 
     private var linkedInActionBar: some View {
@@ -614,7 +673,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             Button(action: onFavorite) {
                 Label("favori", systemImage: entry.isFavorited ? "star.fill" : "star")
                     .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
-                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .frame(maxWidth: .infinity, minHeight: max(minimumActionTarget, scaled(48)))
             }
             .buttonStyle(.plain)
 
@@ -624,14 +683,14 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                         .foregroundColor(entry.voteState == .upvoted
                             ? themeManager.current.accentColor
                             : actionButtonColor)
-                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .frame(maxWidth: .infinity, minHeight: max(minimumActionTarget, scaled(48)))
                 }
                 .buttonStyle(.plain)
 
                 Button(action: onDownvote) {
                     Label("eksi", systemImage: entry.voteState == .downvoted ? "hand.thumbsdown.fill" : "hand.thumbsdown")
                         .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
-                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .frame(maxWidth: .infinity, minHeight: max(minimumActionTarget, scaled(48)))
                 }
                 .buttonStyle(.plain)
             }
@@ -641,22 +700,22 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
             } label: {
                 Label("paylaş", systemImage: "square.and.arrow.up")
                     .foregroundColor(actionButtonColor)
-                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .frame(maxWidth: .infinity, minHeight: max(minimumActionTarget, scaled(48)))
             }
             .buttonStyle(.plain)
         }
         .font(.caption.weight(.semibold))
-        .padding(.horizontal, 6)
+        .padding(.horizontal, scaled(6))
     }
 
     private var redditActionBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: scaled(12)) {
             Button(action: onFavorite) {
                 Label("\(entry.favoriteCount)", systemImage: entry.isFavorited ? "star.fill" : "star")
                     .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 44)
+            .frame(minHeight: minimumActionTarget)
 
             Button {
                 shareItems([entry.shareURL])
@@ -665,7 +724,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                     .foregroundColor(actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 44)
+            .frame(minHeight: minimumActionTarget)
 
             Spacer()
             moreButton
@@ -674,23 +733,23 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var terminalActionBar: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: scaled(6)) {
             Button(action: onFavorite) {
                 Text("[★ \(entry.favoriteCount)]")
                     .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 44)
+            .frame(minHeight: minimumActionTarget)
 
             if session.isLoggedIn && entry.author.nick != session.username {
                 Button("[↑]", action: onUpvote)
                     .foregroundColor(entry.voteState == .upvoted
                         ? themeManager.current.accentColor
                         : actionButtonColor)
-                    .frame(minWidth: 44, minHeight: 44)
+                    .frame(minWidth: minimumActionTarget, minHeight: minimumActionTarget)
                 Button("[↓]", action: onDownvote)
                     .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
-                    .frame(minWidth: 44, minHeight: 44)
+                    .frame(minWidth: minimumActionTarget, minHeight: minimumActionTarget)
             }
 
             Spacer()
@@ -698,7 +757,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 shareItems([entry.shareURL])
             }
             .foregroundColor(actionButtonColor)
-            .frame(minHeight: 44)
+            .frame(minHeight: minimumActionTarget)
             moreButton
         }
         .buttonStyle(.plain)
@@ -706,9 +765,9 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 
     private var actionBar: some View {
-        HStack(spacing: presentation.actionStyle == .standard ? 0 : 4) {
+        HStack(spacing: presentation.actionStyle == .standard ? 0 : scaled(4)) {
             Button(action: onFavorite) {
-                HStack(spacing: 5) {
+                HStack(spacing: scaled(5)) {
                     Image(systemName: entry.isFavorited ? "star.fill" : "star")
                         .font(.system(size: actionIconSize))
                     Text("\(entry.favoriteCount)")
@@ -717,7 +776,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                 .foregroundColor(entry.isFavorited ? .yellow : actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minWidth: 52, minHeight: actionHeight)
+            .frame(minWidth: max(52, minimumActionTarget), minHeight: actionHeight)
 
             if session.isLoggedIn && entry.author.nick != session.username {
                 Button(action: onUpvote) {
@@ -730,7 +789,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                             : actionButtonColor)
                 }
                 .buttonStyle(.plain)
-                .frame(minWidth: 48, minHeight: actionHeight)
+                .frame(minWidth: max(48, minimumActionTarget), minHeight: actionHeight)
 
                 Button(action: onDownvote) {
                     Image(systemName: entry.voteState == .downvoted
@@ -740,7 +799,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                         .foregroundColor(entry.voteState == .downvoted ? .red : actionButtonColor)
                 }
                 .buttonStyle(.plain)
-                .frame(minWidth: 48, minHeight: actionHeight)
+                .frame(minWidth: max(48, minimumActionTarget), minHeight: actionHeight)
             }
 
             Spacer()
@@ -753,7 +812,7 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                     .foregroundColor(actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minWidth: 48, minHeight: actionHeight)
+            .frame(minWidth: max(48, minimumActionTarget), minHeight: actionHeight)
 
             Button {
                 showActions = true
@@ -763,27 +822,27 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
                     .foregroundColor(actionButtonColor)
             }
             .buttonStyle(.plain)
-            .frame(minWidth: 48, minHeight: actionHeight)
+            .frame(minWidth: max(48, minimumActionTarget), minHeight: actionHeight)
         }
         .padding(.horizontal, presentation.actionStyle == .quiet
-            ? CGFloat(presentation.horizontalPadding)
-            : 10)
+            ? CGFloat(metrics.horizontalPadding) * systemSpacingScale
+            : scaled(10))
         .background(
             presentation.actionStyle == .quiet
                 ? themeManager.current.cellSecondaryColor.opacity(0.72)
                 : Color.clear
         )
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .padding(.horizontal, presentation.actionStyle == .quiet ? 12 : 0)
-        .padding(.bottom, presentation.actionStyle == .quiet ? 12 : 0)
+        .clipShape(RoundedRectangle(cornerRadius: scaled(14), style: .continuous))
+        .padding(.horizontal, presentation.actionStyle == .quiet ? scaled(12) : 0)
+        .padding(.bottom, presentation.actionStyle == .quiet ? scaled(12) : 0)
     }
 
     private var actionHeight: CGFloat {
-        presentation.actionStyle == .quiet ? 50 : 46
+        max(minimumActionTarget, scaled(presentation.actionStyle == .quiet ? 50 : 46))
     }
 
     private var actionIconSize: CGFloat {
-        presentation.actionStyle == .compact ? 16 : 17
+        scaled(presentation.actionStyle == .compact ? 16 : 17)
     }
 
     private func resolveInternalLink(_ link: String) -> Route? {

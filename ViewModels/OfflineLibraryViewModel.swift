@@ -7,13 +7,21 @@ struct OfflineLibraryItem: Identifiable {
     var id: String { topic.id }
 }
 
+struct OfflineSeylerLibraryItem: Identifiable {
+    let saved: OfflineSeylerArticle
+    let storageSize: Int64
+    var id: String { saved.id }
+}
+
 @MainActor
 final class OfflineLibraryViewModel: ObservableObject {
     @Published var items: [OfflineLibraryItem] = []
+    @Published var seylerItems: [OfflineSeylerLibraryItem] = []
     @Published var isLoading = false
     @Published var error: String?
 
     private let store = OfflineTopicStore.shared
+    private let seylerStore = OfflineSeylerStore.shared
     private let manager = OfflineDownloadManager.shared
 
     func load() async {
@@ -29,6 +37,16 @@ final class OfflineLibraryViewModel: ObservableObject {
                 ))
             }
             items = loaded
+
+            let articles = try await seylerStore.listArticles()
+            var loadedArticles: [OfflineSeylerLibraryItem] = []
+            for article in articles {
+                loadedArticles.append(OfflineSeylerLibraryItem(
+                    saved: article,
+                    storageSize: await seylerStore.storageSize(articleID: article.id)
+                ))
+            }
+            seylerItems = loadedArticles
         } catch {
             self.error = error.localizedDescription
         }
@@ -52,6 +70,16 @@ final class OfflineLibraryViewModel: ObservableObject {
     func delete(_ topic: OfflineTopic) async {
         do {
             try await manager.delete(topicID: topic.id)
+            await load()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func delete(_ item: OfflineSeylerLibraryItem) async {
+        do {
+            try await seylerStore.deleteArticle(id: item.id)
+            NotificationCenter.default.post(name: .offlineSeylerDidChange, object: nil)
             await load()
         } catch {
             self.error = error.localizedDescription
