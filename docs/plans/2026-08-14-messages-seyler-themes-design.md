@@ -24,7 +24,8 @@ The compact first/previous/current/next/last chrome remains. Tapping the current
 - a large lead card followed by compact image-led story cards;
 - category and read-count metadata where the source exposes them;
 - pull-to-refresh, retry, empty state, image placeholders, and deduplication;
-- an in-app reader for the selected `eksiseyler.com` article.
+- a WebKit-free native reader that renders the selected article's metadata, text, headings,
+  quotes, lists, and preloaded full-screen images with the app's own theme.
 
 The parser accepts only HTTP(S) links on `eksiseyler.com`, normalizes relative image URLs, extracts lazy-loaded and CSS-background images, and rejects navigation/category/footer links. Categories use the site's documented visible URLs rather than generated search guesses.
 
@@ -32,16 +33,19 @@ The parser accepts only HTTP(S) links on `eksiseyler.com`, normalizes relative i
 
 The five existing stored raw values remain untouched. Ten new values are appended so existing users never migrate to a different theme accidentally. A palette token centralizes surface, raised surface, recessed surface, accent, primary text, secondary text, separator, and scheme colors. The new themes are deliberately different in mood and contrast:
 
-1. defter — warm paper, ink, olive;
-2. boğaz — deep navy, turquoise;
-3. bordo — wine, rose;
+1. notebook — warm paper, ink, olive;
+2. bosphorus — deep navy, turquoise;
+3. burgundy — wine, rose;
 4. terminal — phosphor green on near-black;
-5. leylak — muted violet night;
-6. solar gece — solarized dark;
-7. solar gündüz — solarized light;
-8. buz — nordic blue-gray;
-9. kahve — espresso, cream, copper;
-10. yüksek kontrast — black, white, yellow.
+5. lilac — muted violet night;
+6. solar dark — solarized dark;
+7. solar light — solarized light;
+8. ice — nordic blue-gray;
+9. coffee — espresso, cream, copper;
+10. high contrast — black, white, yellow.
+
+All theme and icon-style display names remain English (`dark`, `light`, `oldschool`, and so on)
+while their explanatory copy follows the app's Turkish interface language.
 
 The picker uses a three-swatch palette preview rather than a single accent dot, making themes recognizable before selection. Theme names, stable raw values, palette completeness, and readable foreground/background contrast are covered by tests.
 

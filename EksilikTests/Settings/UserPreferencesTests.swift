@@ -130,4 +130,22 @@ final class UserPreferencesTests: XCTestCase {
 
         XCTAssertEqual(preferences.visibleHomeTabs, legacyTabs + ["eksiSeyler"])
     }
+
+    func testUntouchedFormerDefaultOrderMigratesToSeylerFirst() throws {
+        let suiteName = "UserPreferencesTests.seylerOrderMigration"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let formerDefault = [
+            "popular", "today", "debe", "eksiSeyler", "todayInHistory",
+            "latest", "following", "kenar", "caylaklar", "cop",
+        ]
+        defaults.set(try JSONEncoder().encode(formerDefault), forKey: "homeTabOrder")
+
+        let preferences = UserPreferences(defaults: defaults)
+
+        XCTAssertEqual(Array(preferences.homeTabOrder.prefix(2)), ["eksiSeyler", "popular"])
+        XCTAssertEqual(HomeTabCatalog.initialID, "popular")
+    }
 }

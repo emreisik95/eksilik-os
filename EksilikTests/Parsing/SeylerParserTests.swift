@@ -67,4 +67,67 @@ final class SeylerParserTests: XCTestCase {
         XCTAssertEqual(SeylerCategory.science.path, "/kategori/bilim")
         XCTAssertEqual(SeylerCategory.entertainment.path, "/kategori/eglence")
     }
+
+    func testParsesNativeArticleMetadataAndOrderedContentBlocks() {
+        let html = """
+        <div class="content-detail" id="content-body-area">
+          <div class="content-heading">
+            <div class="content-meta">
+              <div class="meta-category"><a>EKONOMİ</a><span class="meta-date">13 Ağustos 2026</span></div>
+              <div class="meta-stats"><b>1,8b</b> OKUNMA <b>13</b> PAYLAŞIM</div>
+            </div>
+            <h1 class="content-title">Panda Neden Bugün Yok?</h1>
+            <div class="content-spot">Panda'nın kısa hikayesi.</div>
+            <div class="cover-img"><img src="/placeholder.jpg" data-src="https://seyler.ekstat.com/cover.jpg"></div>
+          </div>
+          <div class="mashup-components">
+            <div class="content-block"><div class="content-body">
+              <p>ilk &amp; ikinci paragraf</p>
+              <h3>bir ara başlık</h3>
+              <figure><img src="https://seyler.ekstat.com/inside.jpg" alt="arşiv görseli"></figure>
+              <blockquote>önemli bir alıntı</blockquote>
+            </div></div>
+            <div class="content-seperator"><a class="content-author">hibravez</a></div>
+            <div class="content-block"><div class="content-body">
+              <div class="medium-insert-embeds"><a href="/baska-yazi">önerilen içerik</a></div>
+            </div></div>
+          </div>
+        </div>
+        """
+
+        let article = SeylerArticleParser.parse(
+            html: html,
+            sourceURL: URL(string: "https://eksiseyler.com/panda")!
+        )
+
+        XCTAssertEqual(article?.title, "Panda Neden Bugün Yok?")
+        XCTAssertEqual(article?.summary, "Panda'nın kısa hikayesi.")
+        XCTAssertEqual(article?.category, "EKONOMİ")
+        XCTAssertEqual(article?.date, "13 Ağustos 2026")
+        XCTAssertEqual(article?.readCount, "1,8b")
+        XCTAssertEqual(article?.shareCount, "13")
+        XCTAssertEqual(article?.authors, ["hibravez"])
+        XCTAssertEqual(article?.heroImageURL?.absoluteString, "https://seyler.ekstat.com/cover.jpg")
+        XCTAssertEqual(
+            article?.blocks,
+            [
+                .paragraph("ilk & ikinci paragraf"),
+                .heading("bir ara başlık"),
+                .image(
+                    url: URL(string: "https://seyler.ekstat.com/inside.jpg")!,
+                    caption: "arşiv görseli"
+                ),
+                .quote("önemli bir alıntı"),
+            ]
+        )
+    }
+
+    func testNativeArticleParserRejectsDocumentsWithoutArticleContent() {
+        XCTAssertNil(
+            SeylerArticleParser.parse(
+                html: "<nav>menü</nav>",
+                sourceURL: URL(string: "https://eksiseyler.com/menu")!
+            )
+        )
+    }
 }

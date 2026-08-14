@@ -134,11 +134,9 @@ func destinationView(for route: Route) -> some View {
             FavoriteUsersView(entryId: entryId)
         case .messageThread(let link, let title):
             MessageThreadView(link: link, title: title)
-        case .seylerArticle(let urlString, let title):
+        case .seylerArticle(let urlString, _):
             if let url = URL(string: urlString) {
                 SeylerReaderView(url: url)
-                    .navigationTitle(title)
-                    .navigationBarTitleDisplayMode(.inline)
             } else {
                 ErrorView(message: "içerik adresi geçersiz", showRetry: false)
             }

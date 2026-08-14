@@ -97,7 +97,9 @@ final class MessageParserTests: XCTestCase {
         XCTAssertEqual(messages.map(\.id), ["501", "502"])
         XCTAssertEqual(messages.map(\.sender), ["altere ses", "sherlockun besinci sezonu"])
         XCTAssertTrue(messages[0].contentHTML.contains("<strong>mesaj</strong>"))
+        XCTAssertEqual(messages[0].contentText, "ilk mesaj")
         XCTAssertEqual(messages[1].contentHTML, "yanıt")
+        XCTAssertEqual(messages[1].contentText, "yanıt")
         XCTAssertEqual(messages.map(\.date), ["10:15", "10:16"])
     }
 
@@ -129,5 +131,23 @@ final class MessageParserTests: XCTestCase {
         XCTAssertEqual(messages.map(\.sender), ["ayatasagun", "sherlockun besinci sezonu"])
         XCTAssertEqual(messages[0].id, "1995151134")
         XCTAssertEqual(messages[1].id, "message-1")
+        XCTAssertEqual(
+            messages[1].contentText,
+            "sherlockun besinci sezonu -> ayatasagun: yanıt"
+        )
+    }
+
+    func testConversationPlainTextIsDecodedBeforeSwiftUIRendering() {
+        let html = """
+        <div id="message-thread">
+          <article class="incoming">
+            <p>ilk &amp; ikinci<br>yeni satır &lt;3</p>
+          </article>
+        </div>
+        """
+
+        let message = MessageContentParser.parse(html: html).first
+
+        XCTAssertEqual(message?.contentText, "ilk & ikinci\nyeni satır <3")
     }
 }

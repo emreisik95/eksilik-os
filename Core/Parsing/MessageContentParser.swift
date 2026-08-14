@@ -53,6 +53,7 @@ struct MessageContentParser {
         return Message(
             id: normalized(serverID).nilIfEmpty ?? "message-\(index)",
             contentHTML: content,
+            contentText: HTMLPlainText.render(content),
             sender: sender,
             date: normalized(article.at_css("time")?.text),
             direction: direction

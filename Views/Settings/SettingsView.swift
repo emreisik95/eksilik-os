@@ -402,9 +402,9 @@ struct SettingsView: View {
 
     private var currentIconTitle: String {
         switch currentIconName {
-        case "AlternateIcon": return "açık"
-        case "AlternateKlasik": return "klasik"
-        default: return "varsayılan"
+        case "AlternateIcon": return "light"
+        case "AlternateKlasik": return "oldschool"
+        default: return "default"
         }
     }
 

@@ -42,7 +42,7 @@ enum SeylerParser {
 
     private static func parseHero(_ element: Kanna.XMLElement) -> SeylerStory? {
         guard let href = element["href"],
-              let url = articleURL(from: href) else { return nil }
+              let url = SeylerEndpoint.articleURL(from: href) else { return nil }
 
         let image = element.at_css("img")
         let title = normalizedText(
@@ -67,7 +67,7 @@ enum SeylerParser {
         let image = element.at_css(family.imageSelector)
         let imageLink = image?.parent
         guard let href = titleLink?["href"] ?? imageLink?["href"],
-              let url = articleURL(from: href) else { return nil }
+              let url = SeylerEndpoint.articleURL(from: href) else { return nil }
 
         let title = normalizedText(
             titleLink?.text
@@ -93,31 +93,6 @@ enum SeylerParser {
     ) {
         guard let story, seenURLs.insert(story.id).inserted else { return }
         stories.append(story)
-    }
-
-    private static func articleURL(from value: String) -> URL? {
-        guard let url = URL(string: value, relativeTo: SeylerEndpoint.baseURL)?.absoluteURL,
-              let scheme = url.scheme?.lowercased(),
-              scheme == "https" || scheme == "http",
-              let host = url.host?.lowercased(),
-              host == "eksiseyler.com" || host == "www.eksiseyler.com" else {
-            return nil
-        }
-
-        let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard !path.isEmpty,
-              !path.hasPrefix("kategori/"),
-              !path.hasPrefix("kanal/"),
-              !path.hasPrefix("public/") else {
-            return nil
-        }
-
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        components?.scheme = "https"
-        components?.host = "eksiseyler.com"
-        components?.query = nil
-        components?.fragment = nil
-        return components?.url
     }
 
     private static func imageURL(

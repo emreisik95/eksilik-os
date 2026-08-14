@@ -329,8 +329,12 @@ private struct Harness {
         let defaultIDs = HomeTabCatalog.defaultOrder
         expect(defaultIDs.count == 10, "the home tab catalog should include every supported content destination")
         expect(
-            defaultIDs.contains("eksiSeyler"),
-            "the real Ekşi Şeyler feed should be a reorderable home destination"
+            Array(defaultIDs.prefix(2)) == ["eksiSeyler", "popular"],
+            "Ekşi Şeyler should appear before Gündem in the default order"
+        )
+        expect(
+            HomeTabCatalog.initialID == "popular",
+            "Gündem should remain the initial home selection"
         )
         expect(Set(defaultIDs).count == defaultIDs.count, "home tab identifiers should be unique")
 
@@ -344,6 +348,19 @@ private struct Harness {
             HomeTabCatalog.migratedVisibility(legacyVisible) == legacyVisible + ["eksiSeyler"],
             "users who showed every former tab should see the newly added Ekşi Şeyler destination"
         )
+
+        let previousDefaultOrder = [
+            "popular", "today", "debe", "eksiSeyler", "todayInHistory",
+            "latest", "following", "kenar", "caylaklar", "cop",
+        ]
+        expect(
+            HomeTabCatalog.migratedOrder(previousDefaultOrder) == defaultIDs,
+            "the former untouched default order should migrate to the new Şeyler-first order"
+        )
+        expect(
+            HomeTabCatalog.migratedOrder(["today", "popular"]).prefix(2) == ["today", "popular"],
+            "a deliberately customized order should remain customized"
+        )
         expect(
             HomeTabCatalog.migratedVisibility(["popular", "today"]) == ["popular", "today"],
             "a deliberately reduced visible-tab selection should stay reduced"
@@ -355,7 +372,7 @@ private struct Harness {
             toOffset: 3
         )
         expect(
-            Array(moved.prefix(3)) == ["today", "debe", "popular"],
+            Array(moved.prefix(3)) == ["popular", "today", "eksiSeyler"],
             "dragging the first tab after the third should preserve SwiftUI move semantics"
         )
 
@@ -919,6 +936,19 @@ private struct Harness {
             "message content should retain inline HTML"
         )
         expect(
+            message?.contentText == "ilk mesaj",
+            "message content should be converted to plain text before SwiftUI renders it"
+        )
+
+        let encodedConversationHTML = """
+        <div id="message-thread"><article><p>ilk &amp; ikinci<br>yeni satır &lt;3</p></article></div>
+        """
+        expect(
+            MessageContentParser.parse(html: encodedConversationHTML).first?.contentText
+                == "ilk & ikinci\nyeni satır <3",
+            "message plain text should decode entities and preserve explicit line breaks"
+        )
+        expect(
             MessageComposePolicy.payload(recipient: " altere ses ", subject: " #501 ", body: " merhaba ")
                 == ["To": "altere ses", "Message": "(#501) merhaba"],
             "message sending should normalize the server form payload"
@@ -991,6 +1021,50 @@ private struct Harness {
         expect(SeylerCategory.allCases.count == 7, "the native feed should expose all visible editorial categories")
         expect(SeylerCategory.entertainment.path == "/kategori/eglence", "category paths should match the live site")
     }
+
+    mutating func runSeylerArticleChecks() {
+        let articleHTML = """
+        <div class="content-detail" id="content-body-area">
+          <div class="content-heading">
+            <div class="content-meta">
+              <div class="meta-category"><a>EKONOMİ</a><span class="meta-date">13 Ağustos 2026</span></div>
+              <div class="meta-stats"><b>1,8b</b> OKUNMA <b>13</b> PAYLAŞIM</div>
+            </div>
+            <h1 class="content-title">Panda Neden Bugün Yok?</h1>
+            <div class="content-spot">Panda'nın kısa hikayesi.</div>
+            <div class="cover-img"><img data-src="https://seyler.ekstat.com/cover.jpg"></div>
+          </div>
+          <div class="mashup-components">
+            <div class="content-block"><div class="content-body">
+              <p>ilk &amp; ikinci paragraf</p>
+              <h3>bir ara başlık</h3>
+              <figure><img src="https://seyler.ekstat.com/inside.jpg" alt="arşiv görseli"></figure>
+              <blockquote>önemli bir alıntı</blockquote>
+            </div></div>
+            <div class="content-seperator"><a class="content-author">hibravez</a></div>
+          </div>
+        </div>
+        """
+        let article = SeylerArticleParser.parse(
+            html: articleHTML,
+            sourceURL: URL(string: "https://eksiseyler.com/panda")!
+        )
+        expect(article?.title == "Panda Neden Bugün Yok?", "the native reader should parse its title")
+        expect(article?.readCount == "1,8b", "the native reader should retain read metadata")
+        expect(article?.authors == ["hibravez"], "the native reader should retain authors")
+        expect(
+            article?.blocks == [
+                .paragraph("ilk & ikinci paragraf"),
+                .heading("bir ara başlık"),
+                .image(
+                    url: URL(string: "https://seyler.ekstat.com/inside.jpg")!,
+                    caption: "arşiv görseli"
+                ),
+                .quote("önemli bir alıntı"),
+            ],
+            "the native reader should preserve supported article blocks in source order"
+        )
+    }
 }
 
 private var harness = Harness()
@@ -1011,6 +1085,7 @@ harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
 harness.runMessageParsingChecks()
 harness.runSeylerChecks()
+harness.runSeylerArticleChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

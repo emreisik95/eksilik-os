@@ -4,7 +4,7 @@
 
 **Architecture:** Pure request/pagination/parser/theme policies live in Core and receive focused tests. Services own network boundaries, view models own screen state, and SwiftUI views render observable state. Existing storage raw values and routes remain backward compatible.
 
-**Tech stack:** Swift 5.9, SwiftUI, WebKit, Kanna, XCTest, XcodeGen, GitHub Actions, Xcode Cloud, App Store Connect CLI.
+**Tech stack:** Swift 5.9, SwiftUI, Kanna, XCTest, XcodeGen, GitHub Actions, Xcode Cloud, App Store Connect CLI.
 
 ### Task 1: Repair message document requests
 
@@ -65,6 +65,10 @@
 2. Implement endpoint and parser policies, then the URLSession service and view model.
 3. Add the reorderable Home destination, category rail, editorial card layout, reader route, loading/error/empty states, and refresh.
 4. Verify live output against current home and category pages without retaining user content.
+
+The article destination must use native SwiftUI blocks, not a `WKWebView`. Message HTML must be
+converted to plain text before it reaches SwiftUI rendering so HTML decoding cannot re-enter
+AttributeGraph through WebKit on newer iOS versions.
 
 ### Task 5: Add ten themes with palette previews
 

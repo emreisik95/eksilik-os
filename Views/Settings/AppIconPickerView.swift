@@ -10,9 +10,9 @@ struct AppIconPickerView: View {
     ]
 
     private let choices = [
-        AppIconChoice(title: "varsayılan", iconName: nil, imageName: "AppIcon"),
-        AppIconChoice(title: "açık", iconName: "AlternateIcon", imageName: "AlternateIcon@2x"),
-        AppIconChoice(title: "klasik", iconName: "AlternateKlasik", imageName: "AlternateKlasik@2x"),
+        AppIconChoice(title: "default", iconName: nil, imageName: "AppIcon"),
+        AppIconChoice(title: "light", iconName: "AlternateIcon", imageName: "AlternateIcon@2x"),
+        AppIconChoice(title: "oldschool", iconName: "AlternateKlasik", imageName: "AlternateKlasik@2x"),
     ]
 
     var body: some View {

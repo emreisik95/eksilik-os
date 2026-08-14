@@ -34,10 +34,11 @@ final class AppThemeTests: XCTestCase {
 
     func testNewThemesAreAppendedAfterExistingValues() {
         XCTAssertEqual(
-            AppTheme.allCases.dropFirst(5).map(\.name),
+            AppTheme.allCases.map(\.name),
             [
-                "defter", "boğaz", "bordo", "terminal", "leylak",
-                "solar gece", "solar gündüz", "buz", "kahve", "yüksek kontrast",
+                "dark", "light", "oldschool", "x", "oled",
+                "notebook", "bosphorus", "burgundy", "terminal", "lilac",
+                "solar dark", "solar light", "ice", "coffee", "high contrast",
             ]
         )
     }

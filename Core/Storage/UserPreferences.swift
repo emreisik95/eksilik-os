@@ -94,7 +94,7 @@ final class UserPreferences: ObservableObject {
         visibleHomeTabs = HomeTabCatalog.migratedVisibility(
             Self.decode(defaults.data(forKey: Self.visibleHomeTabsKey))
         )
-        homeTabOrder = HomeTabCatalog.normalizedOrder(
+        homeTabOrder = HomeTabCatalog.migratedOrder(
             Self.decode(defaults.data(forKey: Self.homeTabOrderKey))
         )
 

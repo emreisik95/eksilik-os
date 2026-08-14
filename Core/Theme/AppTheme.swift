@@ -79,21 +79,21 @@ enum AppTheme: Int, CaseIterable, Identifiable {
 
     var name: String {
         switch self {
-        case .dark: return "gece"
-        case .light: return "gündüz"
-        case .classic: return "klasik"
+        case .dark: return "dark"
+        case .light: return "light"
+        case .classic: return "oldschool"
         case .twitter: return "x"
         case .oled: return "oled"
-        case .notebook: return "defter"
-        case .bosphorus: return "boğaz"
-        case .burgundy: return "bordo"
+        case .notebook: return "notebook"
+        case .bosphorus: return "bosphorus"
+        case .burgundy: return "burgundy"
         case .terminal: return "terminal"
-        case .lilac: return "leylak"
-        case .solarDark: return "solar gece"
-        case .solarLight: return "solar gündüz"
-        case .ice: return "buz"
-        case .coffee: return "kahve"
-        case .highContrast: return "yüksek kontrast"
+        case .lilac: return "lilac"
+        case .solarDark: return "solar dark"
+        case .solarLight: return "solar light"
+        case .ice: return "ice"
+        case .coffee: return "coffee"
+        case .highContrast: return "high contrast"
         }
     }
 
@@ -101,7 +101,7 @@ enum AppTheme: Int, CaseIterable, Identifiable {
         switch self {
         case .dark: return "ekşi yeşili, dengeli koyu yüzey"
         case .light: return "temiz beyaz, güçlü okunabilirlik"
-        case .classic: return "eski okul gri ve sözlük mavisi"
+        case .classic: return "gri yüzey ve sözlük mavisi"
         case .twitter: return "serin lacivert sosyal akış"
         case .oled: return "tam siyah, sıcak turuncu"
         case .notebook: return "kağıt, mürekkep ve zeytin"

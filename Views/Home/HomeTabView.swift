@@ -6,7 +6,7 @@ struct HomeTabView: View {
     @EnvironmentObject private var preferences: UserPreferences
     @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
     @StateObject private var nav = NavigationCoordinator()
-    @State private var selectedTab: TopicListViewModel.ListType = .popular
+    @State private var selectedTab = TopicListViewModel.ListType(rawValue: HomeTabCatalog.initialID) ?? .popular
     @State private var selectedYear: Int?
     @State private var isSidebarOpen = false
 

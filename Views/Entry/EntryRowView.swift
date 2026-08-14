@@ -845,6 +845,23 @@ struct EntryRowView: View { // swiftlint:disable:this type_body_length
     }
 }
 
+// MARK: - HTML Stripping
+
+extension String {
+    /// Converts server-provided entry markup to plain text without invoking WebKit.
+    ///
+    /// Message rows precompute the same representation during parsing. Entry copy
+    /// and snapshot actions use this convenience accessor outside SwiftUI's body
+    /// evaluation, while sharing the safe Kanna-backed implementation.
+    /// The implementation deliberately avoids Foundation's HTML importer because
+    /// it may initialize WebKit and spin the main run loop. Keeping this accessor
+    /// as a small compatibility layer lets older entry actions share the parser
+    /// without exposing rendering details to their callers.
+    var strippingHTML: String {
+        HTMLPlainText.render(self)
+    }
+}
+
 // MARK: - Screenshot Renderer
 
 private struct EntryScreenshotRenderer {
@@ -885,22 +902,5 @@ private struct EntryScreenshotRenderer {
         return renderer.image { _ in
             controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
         }
-    }
-}
-
-// MARK: - HTML Stripping
-
-extension String {
-    var strippingHTML: String {
-        guard let data = data(using: .utf8),
-              let attributed = try? NSAttributedString(
-                data: data,
-                options: [.documentType: NSAttributedString.DocumentType.html,
-                          .characterEncoding: String.Encoding.utf8.rawValue],
-                documentAttributes: nil
-              ) else {
-            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-        }
-        return attributed.string
     }
 }

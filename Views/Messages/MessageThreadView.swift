@@ -31,7 +31,7 @@ struct MessageThreadView: View {
                                 .foregroundColor(.gray)
                         }
 
-                        Text(message.contentHTML.strippingHTML)
+                        Text(message.contentText)
                             .font(.subheadline)
                             .foregroundColor(themeManager.current.entryTextColor)
                     }

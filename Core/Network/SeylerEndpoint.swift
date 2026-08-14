@@ -54,4 +54,29 @@ enum SeylerEndpoint {
     static func url(for category: SeylerCategory) -> URL {
         URL(string: category.path, relativeTo: baseURL)!.absoluteURL
     }
+
+    static func articleURL(from value: String) -> URL? {
+        guard let url = URL(string: value, relativeTo: baseURL)?.absoluteURL,
+              let scheme = url.scheme?.lowercased(),
+              scheme == "https" || scheme == "http",
+              let host = url.host?.lowercased(),
+              host == "eksiseyler.com" || host == "www.eksiseyler.com" else {
+            return nil
+        }
+
+        let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !path.isEmpty,
+              !path.hasPrefix("kategori/"),
+              !path.hasPrefix("kanal/"),
+              !path.hasPrefix("public/") else {
+            return nil
+        }
+
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.scheme = "https"
+        components?.host = "eksiseyler.com"
+        components?.query = nil
+        components?.fragment = nil
+        return components?.url
+    }
 }
