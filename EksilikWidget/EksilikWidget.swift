@@ -37,9 +37,9 @@ enum WidgetTheme: String, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Tema"
     static var caseDisplayRepresentations: [WidgetTheme: DisplayRepresentation] = [
-        .dark: "gece",
-        .light: "gündüz",
-        .classic: "klasik",
+        .dark: "dark",
+        .light: "light",
+        .classic: "oldschool",
         .twitter: "x",
         .oled: "oled",
     ]

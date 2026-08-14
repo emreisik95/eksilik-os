@@ -12,7 +12,7 @@ on:
         description: CFBundleShortVersionString for the archive
         required: true
         type: string
-        default: "2.0.1"
+        default: "2.0.2"
       build_number:
         description: CFBundleVersion for the archive
         required: true

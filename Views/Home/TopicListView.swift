@@ -97,6 +97,7 @@ struct TopicListContentView: View {
 }
 
 @ViewBuilder
+// swiftlint:disable:next cyclomatic_complexity function_body_length
 func destinationView(for route: Route) -> some View {
     Group {
         switch route {
@@ -125,14 +126,22 @@ func destinationView(for route: Route) -> some View {
             }
         case .profile(let username):
             ProfileView(username: username)
+        case .messageList:
+            MessageListView()
         case .composeEntry(let link):
             EntryComposeView(topicLink: link)
         case .favoriteUsers(let entryId):
             FavoriteUsersView(entryId: entryId)
         case .messageThread(let link, let title):
             MessageThreadView(link: link, title: title)
-        case .composeMessage(let to, let subject):
-            MessageComposeView(recipient: to, subject: subject)
+        case .seylerArticle(let urlString, _):
+            if let url = URL(string: urlString) {
+                SeylerReaderView(url: url)
+            } else {
+                ErrorView(message: "içerik adresi geçersiz", showRetry: false)
+            }
+        case .composeMessage(let recipient, let subject, let threadID):
+            MessageComposeView(recipient: recipient, subject: subject, threadID: threadID)
         case .login:
             LoginView()
         case .settings:

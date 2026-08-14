@@ -9,7 +9,7 @@ options:
 packages:
   Kanna:
     url: https://github.com/tid-kijyun/Kanna.git
-    exactVersion: "5.3.0"
+    exactVersion: "6.1.0"
   KeychainAccess:
     url: https://github.com/kishikawakatsumi/KeychainAccess.git
     exactVersion: "4.2.2"
@@ -60,11 +60,21 @@ targets:
             AlternateKlasik:
               CFBundleIconFiles:
                 - AlternateKlasik
+        "CFBundleIcons~ipad":
+          CFBundlePrimaryIcon:
+            CFBundleIconFiles: []
+          CFBundleAlternateIcons:
+            AlternateIcon:
+              CFBundleIconFiles:
+                - AlternateIcon
+            AlternateKlasik:
+              CFBundleIconFiles:
+                - AlternateKlasik
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik
-        MARKETING_VERSION: "2.0.1"
-        CURRENT_PROJECT_VERSION: "10"
+        MARKETING_VERSION: "2.0.2"
+        CURRENT_PROJECT_VERSION: "13"
         CODE_SIGN_ENTITLEMENTS: EksilikApp.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"
@@ -101,8 +111,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik.widget
-        MARKETING_VERSION: "2.0.1"
-        CURRENT_PROJECT_VERSION: "10"
+        MARKETING_VERSION: "2.0.2"
+        CURRENT_PROJECT_VERSION: "13"
         CODE_SIGN_ENTITLEMENTS: EksilikWidget.entitlements
         SWIFT_VERSION: "5.9"
         TARGETED_DEVICE_FAMILY: "1,2"

@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-struct EntryRowView: View {
+struct EntryRowView: View { // swiftlint:disable:this type_body_length
     let entry: Entry
     let isEven: Bool
     let onFavorite: () -> Void
@@ -45,7 +45,11 @@ struct EntryRowView: View {
                 // Actions requiring login
                 if session.isLoggedIn {
                     Button(L10n.Entry.sendMessage) {
-                        pendingRoute = .composeMessage(to: entry.author.nick, subject: "#\(entry.id)")
+                        pendingRoute = .composeMessage(
+                            recipient: entry.author.nick,
+                            subject: "#\(entry.id)",
+                            threadID: nil
+                        )
                     }
                     Button(L10n.Entry.blockAuthor, role: .destructive) {
                         Task { await blockAuthor() }
@@ -375,8 +379,12 @@ struct EntryRowView: View {
         VStack(alignment: .leading, spacing: max(8, CGFloat(presentation.contentSpacing) - 4)) {
             EntryTextView(
                 attributedText: entry.parsedContent,
-                onInternalLink: { path in
-                    nav.push(resolveInternalLink(path))
+                onInternalLink: { link in
+                    guard let route = resolveInternalLink(link) else { return }
+                    Task { @MainActor in
+                        await Task.yield()
+                        nav.push(route)
+                    }
                 },
                 onImageLink: { imageURL in
                     onOpenImages([imageURL], 0)
@@ -778,28 +786,20 @@ struct EntryRowView: View {
         presentation.actionStyle == .compact ? 16 : 17
     }
 
-    private func resolveInternalLink(_ path: String) -> Route {
-        // ?q=baslik+adi → bkz link to a topic
-        if path.hasPrefix("?q=") {
-            let query = String(path.dropFirst(3))
-                .replacingOccurrences(of: "+", with: " ")
-                .removingPercentEncoding ?? String(path.dropFirst(3))
-            // Use percent-encoded topic name as path (eksisozluk format)
-            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? query
-            return .entryList(link: encoded, title: query)
-        }
-        // biri/username → profile
-        if path.hasPrefix("biri/") {
-            let username = String(path.dropFirst(5)).removingPercentEncoding ?? String(path.dropFirst(5))
+    private func resolveInternalLink(_ link: String) -> Route? {
+        switch InternalLinkPolicy.destination(for: link) {
+        case .topicLookup(let query):
+            guard let lookupLink = InternalLinkPolicy.topicLookupLink(for: query) else { return nil }
+            return .entryList(link: lookupLink, title: query)
+        case .topic(let link):
+            return .entryList(link: link, title: "")
+        case .profile(let username):
             return .profile(username: username)
-        }
-        // entry/12345 → entry by ID
-        if path.hasPrefix("entry/") {
-            let id = String(path.dropFirst(6))
+        case .entry(let id):
             return .entryById(id: id)
+        case nil:
+            return nil
         }
-        // baslik-adi--12345 → topic
-        return .entryList(link: path, title: "")
     }
 
     private var entryURL: String {
@@ -845,6 +845,23 @@ struct EntryRowView: View {
     }
 }
 
+// MARK: - HTML Stripping
+
+extension String {
+    /// Converts server-provided entry markup to plain text without invoking WebKit.
+    ///
+    /// Message rows precompute the same representation during parsing. Entry copy
+    /// and snapshot actions use this convenience accessor outside SwiftUI's body
+    /// evaluation, while sharing the safe Kanna-backed implementation.
+    /// The implementation deliberately avoids Foundation's HTML importer because
+    /// it may initialize WebKit and spin the main run loop. Keeping this accessor
+    /// as a small compatibility layer lets older entry actions share the parser
+    /// without exposing rendering details to their callers.
+    var strippingHTML: String {
+        HTMLPlainText.render(self)
+    }
+}
+
 // MARK: - Screenshot Renderer
 
 private struct EntryScreenshotRenderer {
@@ -885,22 +902,5 @@ private struct EntryScreenshotRenderer {
         return renderer.image { _ in
             controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
         }
-    }
-}
-
-// MARK: - HTML Stripping
-
-extension String {
-    var strippingHTML: String {
-        guard let data = data(using: .utf8),
-              let attributed = try? NSAttributedString(
-                data: data,
-                options: [.documentType: NSAttributedString.DocumentType.html,
-                          .characterEncoding: String.Encoding.utf8.rawValue],
-                documentAttributes: nil
-              ) else {
-            return replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-        }
-        return attributed.string
     }
 }

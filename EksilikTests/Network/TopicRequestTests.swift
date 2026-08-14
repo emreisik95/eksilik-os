@@ -61,4 +61,30 @@ final class TopicRequestTests: XCTestCase {
 
         XCTAssertEqual(request.pathAndQuery, "yeni-baslik--42?day=2026-07-16")
     }
+
+    func testEntryFilterIsDerivedFromIncomingEkşiŞeylerRequest() {
+        let request = TopicRequest(link: "/ornek--42?a=eksiseyler&p=3")
+
+        XCTAssertEqual(request.entryFilter, .eksiseyler)
+        XCTAssertEqual(
+            request.replacingTopic(slug: "yeni-ornek", id: "42").settingPage(8).pathAndQuery,
+            "yeni-ornek--42?a=eksiseyler&p=8"
+        )
+    }
+
+    func testFilterTransitionClearsContentOnlyWhenTheScopeChanges() {
+        XCTAssertTrue(EntryFilterTransitionPolicy.shouldResetContent(from: .none, to: .eksiseyler))
+        XCTAssertFalse(EntryFilterTransitionPolicy.shouldResetContent(from: .eksiseyler, to: .eksiseyler))
+    }
+
+    func testEksiSeylerHasASpecificEmptyState() {
+        XCTAssertEqual(
+            EntryFilterPresentation.emptyMessage(for: .eksiseyler),
+            "bu başlık ekşi şeyler'de yer almıyor"
+        )
+        XCTAssertEqual(
+            EntryFilterPresentation.emptyMessage(for: .nice),
+            "bu filtrede entry bulunamadı"
+        )
+    }
 }

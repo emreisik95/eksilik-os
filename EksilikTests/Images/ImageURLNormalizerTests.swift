@@ -60,4 +60,12 @@ final class ImageURLNormalizerTests: XCTestCase {
             initialIndex: 0
         ))
     }
+
+    func testImageRefererMatchesTheOwningEditorialSite() throws {
+        let seylerImage = try XCTUnwrap(URL(string: "https://seyler.ekstat.com/img/story.jpg"))
+        let sozlukImage = try XCTUnwrap(URL(string: "https://img.ekstat.com/profiles/avatar.jpg"))
+
+        XCTAssertEqual(ImageRequestPolicy.referer(for: seylerImage), "https://eksiseyler.com/")
+        XCTAssertEqual(ImageRequestPolicy.referer(for: sozlukImage), "https://eksisozluk.com/")
+    }
 }

@@ -26,7 +26,9 @@ struct ProfileView: View {
             content
         }
     }
+}
 
+private extension ProfileView {
     private var content: some View {
         ZStack {
             themeManager.current.backgroundColor.ignoresSafeArea()
@@ -43,6 +45,7 @@ struct ProfileView: View {
         }
         .navigationTitle(viewModel.profile?.nick ?? viewModel.username)
         .navigationBarTitleDisplayMode(.inline)
+        .modifier(ProfileMessageToolbarModifier(isRoot: isRoot))
         .task { await viewModel.loadProfile() }
         .fullScreenCover(item: $galleryPresentation) { presentation in
             ImageLightboxView(presentation: presentation)
@@ -391,10 +394,6 @@ struct ProfileView: View {
     }
 
     private func openLightbox(images: [String], index: Int) {
-        galleryPresentation = ImageGalleryPresentation(
-            imageURLs: images,
-            initialIndex: index
-        )
+        galleryPresentation = ImageGalleryPresentation(imageURLs: images, initialIndex: index)
     }
-
 }

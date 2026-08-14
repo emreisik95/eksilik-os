@@ -64,12 +64,12 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(session.isLoggedIn ? (session.username ?? "ekşi sözlük hesabı") : "misafir modundasın")
-                    .font(.headline)
+                    .settingsFont(baseSize: 17, weight: .semibold)
                     .foregroundColor(themeManager.current.labelColor)
                     .lineLimit(1)
 
                 Text(accountSubtitle)
-                    .font(.subheadline)
+                    .settingsFont(baseSize: 15)
                     .foregroundColor(themeManager.current.dateColor)
                     .lineLimit(2)
             }
@@ -110,7 +110,7 @@ struct SettingsView: View {
     private func settingsSection(_ section: SettingsSectionDescriptor) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Label(section.kind.title, systemImage: section.kind.systemImage)
-                .font(.subheadline.weight(.bold))
+                .settingsFont(baseSize: 15, weight: .bold)
                 .foregroundColor(themeManager.current.labelColor)
                 .padding(.horizontal, 4)
 
@@ -170,10 +170,10 @@ struct SettingsView: View {
                 SettingsRowIcon(systemImage: "line.3.horizontal.decrease.circle")
                 VStack(alignment: .leading, spacing: 3) {
                     Text("filtre görünümü")
-                        .font(.body)
+                        .settingsFont(baseSize: 17)
                         .foregroundColor(themeManager.current.labelColor)
                     Text("metin yerine sade ikonlar kullan")
-                        .font(.caption)
+                        .settingsFont(baseSize: 12)
                         .foregroundColor(themeManager.current.dateColor)
                 }
                 Spacer(minLength: 8)
@@ -299,7 +299,7 @@ struct SettingsView: View {
                 HStack(spacing: 12) {
                     SettingsRowIcon(systemImage: "rectangle.portrait.and.arrow.right", tint: .red)
                     Text("çıkış yap")
-                        .font(.body.weight(.medium))
+                        .settingsFont(baseSize: 17, weight: .medium)
                         .foregroundColor(.red)
                     Spacer()
                 }
@@ -349,10 +349,10 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("yazı boyutu")
-                    .font(.body)
+                    .settingsFont(baseSize: 17)
                     .foregroundColor(themeManager.current.labelColor)
                 Text("başlık ve entry metinleri")
-                    .font(.caption)
+                    .settingsFont(baseSize: 12)
                     .foregroundColor(themeManager.current.dateColor)
             }
 
@@ -362,7 +362,7 @@ struct SettingsView: View {
                 fontButton(systemImage: "minus", delta: -1)
 
                 Text("\(preferences.selectedFontSize)")
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .settingsFont(baseSize: 15, weight: .semibold, design: .monospaced)
                     .foregroundColor(themeManager.current.labelColor)
                     .frame(minWidth: 28)
                     .accessibilityLabel("\(preferences.selectedFontSize) punto")
@@ -402,20 +402,20 @@ struct SettingsView: View {
 
     private var currentIconTitle: String {
         switch currentIconName {
-        case "AlternateIcon": return "açık"
-        case "AlternateKlasik": return "klasik"
-        default: return "varsayılan"
+        case "AlternateIcon": return "light"
+        case "AlternateKlasik": return "oldschool"
+        default: return "default"
         }
     }
 
     private var versionFooter: some View {
         VStack(spacing: 5) {
             Text("ek$ilik")
-                .font(.footnote.weight(.semibold))
+                .settingsFont(baseSize: 13, weight: .semibold)
             Text("sürüm \(appVersion)")
-                .font(.caption2)
+                .settingsFont(baseSize: 11)
             Text("ekşi sözlük ile resmi bağlantısı yoktur")
-                .font(.caption2)
+                .settingsFont(baseSize: 11)
         }
         .foregroundColor(themeManager.current.dateColor)
         .frame(maxWidth: .infinity)
@@ -452,13 +452,13 @@ private struct SettingsNavigationRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.body.weight(isAccented ? .semibold : .regular))
+                    .settingsFont(baseSize: 17, weight: isAccented ? .semibold : .regular)
                     .foregroundColor(isAccented
                         ? themeManager.current.accentColor
                         : themeManager.current.labelColor)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.caption)
+                        .settingsFont(baseSize: 12)
                         .foregroundColor(themeManager.current.dateColor)
                         .lineLimit(1)
                 }
@@ -468,7 +468,7 @@ private struct SettingsNavigationRow: View {
 
             if let detail {
                 Text(detail)
-                    .font(.subheadline)
+                    .settingsFont(baseSize: 15)
                     .foregroundColor(themeManager.current.dateColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

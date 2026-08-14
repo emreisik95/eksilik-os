@@ -34,10 +34,13 @@ final class SearchPresentationTests: XCTestCase {
 
     func testResolveSupportsEntryAuthorAndTopicQueries() {
         XCTAssertEqual(SearchPresentation.resolve(query: " #123 "), .entry(id: "123"))
-        XCTAssertEqual(SearchPresentation.resolve(query: "@sherlockun besinci sezonu"), .profile(username: "sherlockun besinci sezonu"))
+        XCTAssertEqual(
+            SearchPresentation.resolve(query: "@sherlockun besinci sezonu"),
+            .profile(username: "sherlockun besinci sezonu")
+        )
         XCTAssertEqual(
             SearchPresentation.resolve(query: "swift & ios"),
-            .topic(link: "swift%20&%20ios", title: "swift & ios")
+            .topic(link: "?q=swift%20%26%20ios", title: "swift & ios")
         )
     }
 

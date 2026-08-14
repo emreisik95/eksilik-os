@@ -34,6 +34,10 @@ struct TopicRequest: Codable, Hashable, Sendable {
         return "\(path)?\(query)"
     }
 
+    var entryFilter: EntryFilter {
+        EntryFilter.inferred(from: queryItems)
+    }
+
     func settingPage(_ page: Int?) -> TopicRequest {
         var copy = self
         copy.queryItems.removeAll { $0.name.caseInsensitiveCompare("p") == .orderedSame }

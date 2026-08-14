@@ -1,5 +1,6 @@
-import Foundation
+import Foundation // swiftlint:disable file_length
 
+// swiftlint:disable:next type_body_length
 private struct Harness {
     private(set) var failures: [String] = []
     private(set) var checks = 0
@@ -104,6 +105,7 @@ private struct Harness {
         expect(entryPage.isTracked, "topic tracking state should be parsed")
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runTopicRequestChecks() {
         let today = TopicRequest(link: "/ornek-baslik--42?day=2026-07-16")
         expect(
@@ -159,6 +161,29 @@ private struct Harness {
             canonicalPage.pathAndQuery == "yeni-baslik--42?a=popular&p=105",
             "canonical topic replacement should preserve the topic ID, filter, and requested page"
         )
+        let eksiSeyler = TopicRequest(link: "/ornek--42?a=eksiseyler&p=3")
+        expect(
+            eksiSeyler.entryFilter == .eksiseyler,
+            "incoming Ekşi Şeyler links should activate the matching filter"
+        )
+        expect(
+            eksiSeyler.replacingTopic(slug: "yeni-ornek", id: "42").settingPage(8).pathAndQuery
+                == "yeni-ornek--42?a=eksiseyler&p=8",
+            "Ekşi Şeyler scope should survive canonical replacement and direct page jumps"
+        )
+        expect(
+            EntryFilterTransitionPolicy.shouldResetContent(from: .none, to: .eksiseyler),
+            "changing to Ekşi Şeyler should clear entries from the previous scope"
+        )
+        expect(
+            !EntryFilterTransitionPolicy.shouldResetContent(from: .eksiseyler, to: .eksiseyler),
+            "reloading the same filter should not discard visible content"
+        )
+        expect(
+            EntryFilterPresentation.emptyMessage(for: .eksiseyler)
+                == "bu başlık ekşi şeyler'de yer almıyor",
+            "Ekşi Şeyler should explain a scoped empty result"
+        )
     }
 
     mutating func runMainTabChecks() {
@@ -200,6 +225,14 @@ private struct Harness {
                 minimumRows: 5
             ) == 5,
             "short viewports should keep the intended minimum placeholder count"
+        )
+        expect(
+            abs(SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: false) - 0.48) < 0.001,
+            "skeletons should pulse through opacity without a layout animation"
+        )
+        expect(
+            SkeletonMotionPolicy.opacity(elapsed: 0.85, reduceMotion: true) == 1,
+            "skeleton motion should stop when Reduce Motion is enabled"
         )
 
         let existing = [
@@ -266,6 +299,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runHomeNavigationChecks() {
         expect(
             HomeNavigationStyle.allCases.count == 5,
@@ -293,7 +327,15 @@ private struct Harness {
         )
 
         let defaultIDs = HomeTabCatalog.defaultOrder
-        expect(defaultIDs.count == 9, "the home tab catalog should include every supported topic list")
+        expect(defaultIDs.count == 10, "the home tab catalog should include every supported content destination")
+        expect(
+            Array(defaultIDs.prefix(2)) == ["eksiSeyler", "popular"],
+            "Ekşi Şeyler should appear before Gündem in the default order"
+        )
+        expect(
+            HomeTabCatalog.initialID == "popular",
+            "Gündem should remain the initial home selection"
+        )
         expect(Set(defaultIDs).count == defaultIDs.count, "home tab identifiers should be unique")
 
         let normalized = HomeTabCatalog.normalizedOrder(["today", "future", "today"])
@@ -301,13 +343,36 @@ private struct Harness {
         expect(!normalized.contains("future"), "unknown stored tabs should be removed")
         expect(Set(normalized) == Set(defaultIDs), "missing known tabs should be appended during migration")
 
+        let legacyVisible = defaultIDs.filter { $0 != "eksiSeyler" }
+        expect(
+            HomeTabCatalog.migratedVisibility(legacyVisible) == legacyVisible + ["eksiSeyler"],
+            "users who showed every former tab should see the newly added Ekşi Şeyler destination"
+        )
+
+        let previousDefaultOrder = [
+            "popular", "today", "debe", "eksiSeyler", "todayInHistory",
+            "latest", "following", "kenar", "caylaklar", "cop",
+        ]
+        expect(
+            HomeTabCatalog.migratedOrder(previousDefaultOrder) == defaultIDs,
+            "the former untouched default order should migrate to the new Şeyler-first order"
+        )
+        expect(
+            HomeTabCatalog.migratedOrder(["today", "popular"]).prefix(2) == ["today", "popular"],
+            "a deliberately customized order should remain customized"
+        )
+        expect(
+            HomeTabCatalog.migratedVisibility(["popular", "today"]) == ["popular", "today"],
+            "a deliberately reduced visible-tab selection should stay reduced"
+        )
+
         let moved = HomeTabCatalog.moving(
             defaultIDs,
             fromOffsets: IndexSet(integer: 0),
             toOffset: 3
         )
         expect(
-            Array(moved.prefix(3)) == ["today", "debe", "popular"],
+            Array(moved.prefix(3)) == ["popular", "today", "eksiSeyler"],
             "dragging the first tab after the third should preserve SwiftUI move semantics"
         )
 
@@ -352,6 +417,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runSearchPresentationChecks() {
         expect(
             SearchPresentation.state(
@@ -415,13 +481,63 @@ private struct Harness {
         )
         expect(SearchPresentation.resolve(query: " #123 ") == .entry(id: "123"), "entry queries should route by ID")
         expect(
-            SearchPresentation.resolve(query: "@sherlockun besinci sezonu") == .profile(username: "sherlockun besinci sezonu"),
+            SearchPresentation.resolve(query: "@sherlockun besinci sezonu")
+                == .profile(username: "sherlockun besinci sezonu"),
             "author queries should preserve the displayed nickname"
+        )
+        expect(
+            SearchPresentation.resolve(query: "swift & ios")
+                == .topic(link: "?q=swift%20%26%20ios", title: "swift & ios"),
+            "topic searches should use the server's canonical query resolver"
         )
         expect(SearchPresentation.resolve(query: "#abc") == nil, "malformed entry queries should not route as topics")
     }
 
+    mutating func runInternalLinkChecks() {
+        expect(
+            InternalLinkPolicy.topicLookupLink(for: "valla mı lan") == "?q=valla%20m%C4%B1%20lan",
+            "topic lookup links should safely encode Turkish and whitespace"
+        )
+        expect(
+            InternalLinkPolicy.destination(
+                for: "applewebdata://5E9E913A-50CE-4B18-8504-A9F1669BE324/?q=valla%20mi%20lan"
+            ) == .topicLookup(query: "valla mi lan"),
+            "applewebdata bkz links should resolve through the canonical topic lookup"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/?q=swift+ios") == .topicLookup(query: "swift ios"),
+            "plus-separated bkz queries should decode as spaces"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/entry/12345") == .entry(id: "12345"),
+            "entry paths should resolve by numeric ID"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "https://eksisozluk.com/biri/sherlockun%20besinci%20sezonu")
+                == .profile(username: "sherlockun besinci sezonu"),
+            "same-site absolute profile links should remain native"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "https://example.com/entry/123") == nil,
+            "external hosts should never be interpreted as native links"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "//example.com/entry/123") == nil,
+            "external network-path references should never be interpreted as native links"
+        )
+        expect(
+            InternalLinkPolicy.destination(for: "/entry/not-a-number") == nil,
+            "malformed entry links should be ignored instead of reaching navigation"
+        )
+    }
+
     mutating func runImageURLChecks() {
+        expect(
+            ImageRequestPolicy.referer(
+                for: URL(string: "https://seyler.ekstat.com/img/story.jpg")!
+            ) == "https://eksiseyler.com/",
+            "Ekşi Şeyler images should use the matching editorial referer"
+        )
         expect(
             ImageURLNormalizer.normalize("//cdn.example.com/photo.jpg")?.absoluteString == "https://cdn.example.com/photo.jpg",
             "protocol-relative image URLs should use HTTPS"
@@ -503,6 +619,7 @@ private struct Harness {
         )
     }
 
+    // swiftlint:disable:next function_body_length
     mutating func runEntryListChromeChecks() {
         expect(
             EntryListChromePolicy.paginationTouchTargetSize >= 44,
@@ -550,6 +667,32 @@ private struct Harness {
         expect(
             !EntryListChromePolicy.shouldPresentFilterSwipeOnboarding(hasSeen: true),
             "filter swipe onboarding should stay dismissed after completion"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: " 7 ", totalPages: 20) == 7,
+            "manual page input should trim whitespace"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: "0", totalPages: 20) == 1
+                && PaginationSelectionPolicy.page(from: "999", totalPages: 20) == 20,
+            "manual page input should stay inside the available range"
+        )
+        expect(
+            PaginationSelectionPolicy.page(from: "2.5", totalPages: 20) == nil,
+            "manual page input should reject non-integer values"
+        )
+        expect(
+            PaginationSelectionPolicy.quickPages(currentPage: 10, totalPages: 20)
+                == [1, 8, 9, 10, 11, 12, 20],
+            "quick page choices should combine boundaries with nearby pages"
+        )
+        expect(
+            PaginationSelectionPolicy.clampedPage(999, totalPages: 20) == 20,
+            "wheel selection should clamp to the final available page"
+        )
+        expect(
+            PaginationSelectionPolicy.anchorPages(currentPage: 10, totalPages: 20) == [1, 10, 20],
+            "wheel shortcuts should expose first, current, and last without duplicates"
         )
     }
 
@@ -728,6 +871,200 @@ private struct Harness {
             "profile connection requests should keep the server-provided relative path"
         )
     }
+
+    // swiftlint:disable:next function_body_length
+    mutating func runMessageParsingChecks() {
+        expect(
+            EksiEndpoint.messages(page: nil).omitsAjaxHeader,
+            "message inbox should use a document GET because the live server rejects AJAX"
+        )
+        expect(
+            EksiEndpoint.messageThread(id: "2541826").omitsAjaxHeader,
+            "message conversations should use a document GET because the live server rejects AJAX"
+        )
+        expect(
+            !EksiEndpoint.sendMessage.omitsAjaxHeader && EksiEndpoint.sendMessage.method == .post,
+            "message sending should keep its POST contract"
+        )
+        expect(
+            FormURLEncoder.encode(["Message": "a&b = c+d", "To": "altere ses"])
+                == "Message=a%26b%20%3D%20c%2Bd&To=altere%20ses",
+            "message form fields should safely encode reserved characters"
+        )
+        let threadHTML = """
+        <ul id="threads">
+          <li class="unread">
+            <article>
+              <a href="/mesaj/42">
+                <h2>altere ses <small>3</small></h2>
+                <p>son mesaj</p>
+              </a>
+              <footer><time>şimdi</time></footer>
+            </article>
+          </li>
+        </ul>
+        """
+        let thread = MessageParser.parseThreadList(html: threadHTML).first
+        expect(thread?.id == "42", "message thread links should normalize to one server identifier")
+        expect(thread?.username == "altere ses", "message parsing should remove the count from the username")
+        expect(thread?.messageCount == "3", "message parsing should retain the conversation count")
+        expect(thread?.isUnread == true, "message parsing should retain unread state")
+        expect(
+            MessageParser.threadIdentifier(from: "https://example.com/mesaj/42") == nil,
+            "external message-looking links should be rejected"
+        )
+        expect(
+            MessageParser.threadIdentifier(from: "//example.com/mesaj/42") == nil,
+            "external network-path message links should be rejected"
+        )
+
+        let conversationHTML = """
+        <ul id="message-thread">
+          <li>
+            <article data-message-id="501">
+              <h3><a>altere ses</a></h3>
+              <p>ilk <strong>mesaj</strong></p>
+              <time>10:15</time>
+            </article>
+          </li>
+        </ul>
+        """
+        let message = MessageContentParser.parse(html: conversationHTML).first
+        expect(message?.id == "501", "conversation messages should retain stable server IDs")
+        expect(
+            message?.contentHTML.contains("<strong>mesaj</strong>") == true,
+            "message content should retain inline HTML"
+        )
+        expect(
+            message?.contentText == "ilk mesaj",
+            "message content should be converted to plain text before SwiftUI renders it"
+        )
+
+        let encodedConversationHTML = """
+        <div id="message-thread"><article><p>ilk &amp; ikinci<br>yeni satır &lt;3</p></article></div>
+        """
+        expect(
+            MessageContentParser.parse(html: encodedConversationHTML).first?.contentText
+                == "ilk & ikinci\nyeni satır <3",
+            "message plain text should decode entities and preserve explicit line breaks"
+        )
+        expect(
+            MessageComposePolicy.payload(recipient: " altere ses ", subject: " #501 ", body: " merhaba ")
+                == ["To": "altere ses", "Message": "(#501) merhaba"],
+            "message sending should normalize the server form payload"
+        )
+        expect(
+            MessageComposePolicy.payload(
+                recipient: "ayatasagun",
+                subject: "",
+                body: "yanıt",
+                threadID: "2541826"
+            ) == ["To": "ayatasagun", "Message": "yanıt", "ThreadId": "2541826", "IsReply": "True"],
+            "message replies should preserve the live ThreadId and IsReply server fields"
+        )
+        expect(
+            !MessageComposePolicy.canSend(recipient: "altere ses", body: "merhaba", isSending: true),
+            "message sending should prevent duplicate submissions"
+        )
+
+        let currentConversationHTML = """
+        <div id="message-thread">
+          <article class="incoming">
+            <p>gelen</p><time>10:15</time>
+            <a class="message-report-link" data-id="1995151134">bildir</a>
+          </article>
+          <article class="outgoing"><p>yanıt</p><time>10:16</time></article>
+        </div>
+        """
+        let currentMessages = MessageContentParser.parse(
+            html: currentConversationHTML,
+            currentUsername: "sherlockun besinci sezonu",
+            participant: "ayatasagun"
+        )
+        expect(
+            currentMessages.map(\.direction) == [.incoming, .outgoing],
+            "live message classes should retain direction"
+        )
+        expect(
+            currentMessages.map(\.sender) == ["ayatasagun", "sherlockun besinci sezonu"],
+            "live message direction should derive the visible sender"
+        )
+    }
+
+    mutating func runSeylerChecks() {
+        let html = """
+        <a class="hero-item" href="https://eksiseyler.com/ilk-hikaye">
+          <img src="/public/images/layout/empty.png" style="background-image:url('https://seyler.ekstat.com/hero.jpg')">
+          <span class="hero-headline">İlk Hikaye</span>
+        </a>
+        <div class="content-box">
+          <div class="content-img"><a href="/ikinci-hikaye"><img data-src="//seyler.ekstat.com/second.jpg"></a></div>
+          <div class="content-meta"><span class="meta-category">BİLİM</span><span class="meta-stats">1,2b</span></div>
+          <div class="content-title"><a href="/ikinci-hikaye">İkinci Hikaye</a></div>
+        </div>
+        <div class="mashup-box"><div class="mashup-title"><a href="/ikinci-hikaye">Tekrar</a></div></div>
+        <div class="content-box">
+          <div class="content-title"><a href="https://example.com/disarisi">Dışarı</a></div>
+        </div>
+        """
+        let stories = SeylerParser.parse(html: html)
+        expect(
+            stories.map(\.title) == ["İlk Hikaye", "İkinci Hikaye"],
+            "Ekşi Şeyler cards should preserve order and remove duplicates"
+        )
+        expect(stories.first?.isFeatured == true, "the hero card should remain featured")
+        expect(stories.last?.category == "BİLİM", "editorial card metadata should be retained")
+        expect(
+            stories.last?.imageURL?.absoluteString == "https://seyler.ekstat.com/second.jpg",
+            "lazy image URLs should normalize"
+        )
+        expect(SeylerCategory.allCases.count == 7, "the native feed should expose all visible editorial categories")
+        expect(SeylerCategory.entertainment.path == "/kategori/eglence", "category paths should match the live site")
+    }
+
+    mutating func runSeylerArticleChecks() {
+        let articleHTML = """
+        <div class="content-detail" id="content-body-area">
+          <div class="content-heading">
+            <div class="content-meta">
+              <div class="meta-category"><a>EKONOMİ</a><span class="meta-date">13 Ağustos 2026</span></div>
+              <div class="meta-stats"><b>1,8b</b> OKUNMA <b>13</b> PAYLAŞIM</div>
+            </div>
+            <h1 class="content-title">Panda Neden Bugün Yok?</h1>
+            <div class="content-spot">Panda'nın kısa hikayesi.</div>
+            <div class="cover-img"><img data-src="https://seyler.ekstat.com/cover.jpg"></div>
+          </div>
+          <div class="mashup-components">
+            <div class="content-block"><div class="content-body">
+              <p>ilk &amp; ikinci paragraf</p>
+              <h3>bir ara başlık</h3>
+              <figure><img src="https://seyler.ekstat.com/inside.jpg" alt="arşiv görseli"></figure>
+              <blockquote>önemli bir alıntı</blockquote>
+            </div></div>
+            <div class="content-seperator"><a class="content-author">hibravez</a></div>
+          </div>
+        </div>
+        """
+        let article = SeylerArticleParser.parse(
+            html: articleHTML,
+            sourceURL: URL(string: "https://eksiseyler.com/panda")!
+        )
+        expect(article?.title == "Panda Neden Bugün Yok?", "the native reader should parse its title")
+        expect(article?.readCount == "1,8b", "the native reader should retain read metadata")
+        expect(article?.authors == ["hibravez"], "the native reader should retain authors")
+        expect(
+            article?.blocks == [
+                .paragraph("ilk & ikinci paragraf"),
+                .heading("bir ara başlık"),
+                .image(
+                    url: URL(string: "https://seyler.ekstat.com/inside.jpg")!,
+                    caption: "arşiv görseli"
+                ),
+                .quote("önemli bir alıntı"),
+            ],
+            "the native reader should preserve supported article blocks in source order"
+        )
+    }
 }
 
 private var harness = Harness()
@@ -738,6 +1075,7 @@ harness.runStableLoadingChecks()
 harness.runEntryLayoutStyleChecks()
 harness.runHomeNavigationChecks()
 harness.runSearchPresentationChecks()
+harness.runInternalLinkChecks()
 harness.runImageURLChecks()
 harness.runExternalLinkChecks()
 harness.runEntryListChromeChecks()
@@ -745,6 +1083,9 @@ harness.runSettingsPresentationChecks()
 await harness.runOfflinePlanningChecks()
 harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
+harness.runMessageParsingChecks()
+harness.runSeylerChecks()
+harness.runSeylerArticleChecks()
 
 if harness.failures.isEmpty {
     print("PASS: \(harness.checks) core checks")

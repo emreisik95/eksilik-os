@@ -59,6 +59,7 @@ struct HomeTabDefinition: Identifiable, Hashable, Sendable {
     let requiresLogin: Bool
 
     static let all: [HomeTabDefinition] = [
+        HomeTabDefinition(id: "eksiSeyler", name: "şeyler", systemImage: "sparkles", requiresLogin: false),
         HomeTabDefinition(id: "popular", name: "gündem", systemImage: "flame", requiresLogin: false),
         HomeTabDefinition(id: "today", name: "bugün", systemImage: "sun.max", requiresLogin: false),
         HomeTabDefinition(id: "debe", name: "debe", systemImage: "crown", requiresLogin: false),
@@ -73,6 +74,21 @@ struct HomeTabDefinition: Identifiable, Hashable, Sendable {
 
 enum HomeTabCatalog {
     static let defaultOrder = HomeTabDefinition.all.map(\.id)
+    static let initialID = "popular"
+
+    private static let previousDefaultOrder = [
+        "popular", "today", "debe", "eksiSeyler", "todayInHistory",
+        "latest", "following", "kenar", "caylaklar", "cop",
+    ]
+
+    static func migratedVisibility(_ storedVisible: [String]) -> [String] {
+        guard !storedVisible.isEmpty else { return [] }
+        let legacyVisible = defaultOrder.filter { $0 != "eksiSeyler" }
+        if Set(storedVisible) == Set(legacyVisible) {
+            return storedVisible + ["eksiSeyler"]
+        }
+        return storedVisible.filter(Set(defaultOrder).contains)
+    }
 
     static func normalizedOrder(_ storedOrder: [String]) -> [String] {
         let known = Set(defaultOrder)
@@ -83,6 +99,16 @@ enum HomeTabCatalog {
             result.append(id)
         }
         return result
+    }
+
+    static func migratedOrder(_ storedOrder: [String]) -> [String] {
+        let olderDefaultOrder = previousDefaultOrder.filter { $0 != "eksiSeyler" }
+        if storedOrder.isEmpty
+            || storedOrder == previousDefaultOrder
+            || storedOrder == olderDefaultOrder {
+            return defaultOrder
+        }
+        return normalizedOrder(storedOrder)
     }
 
     static func moving(

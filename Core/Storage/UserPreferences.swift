@@ -1,6 +1,12 @@
 import SwiftUI
 
 final class UserPreferences: ObservableObject {
+    private static let selectedFontKey = "selectedFont"
+    private static let selectedFontSizeKey = "selectedFontSize"
+    private static let openLinksInSafariKey = "openLinksInSafari"
+    private static let hideEntriesEnabledKey = "hideEntriesEnabled"
+    private static let baseURLKey = "baseURL"
+    private static let useIconFiltersKey = "useIconFilters"
     private static let entryLayoutStyleKey = "entryLayoutStyle"
     private static let homeNavigationStyleKey = "homeNavigationStyle"
     private static let legacyHomeTabBarPositionKey = "homeTabBarPosition"
@@ -9,12 +15,29 @@ final class UserPreferences: ObservableObject {
 
     private let defaults: UserDefaults
 
-    @AppStorage("selectedFont") var selectedFont: String = "Helvetica"
-    @AppStorage("selectedFontSize") var selectedFontSize: Int = 15
-    @AppStorage("openLinksInSafari") var openLinksInSafari: Bool = true
-    @AppStorage("hideEntriesEnabled") var hideEntriesEnabled: Bool = false
-    @AppStorage("baseURL") var baseURL: String = "https://eksisozluk.com"
-    @AppStorage("useIconFilters") var useIconFilters: Bool = false
+    @Published var selectedFont: String {
+        didSet { defaults.set(selectedFont, forKey: Self.selectedFontKey) }
+    }
+
+    @Published var selectedFontSize: Int {
+        didSet { defaults.set(selectedFontSize, forKey: Self.selectedFontSizeKey) }
+    }
+
+    @Published var openLinksInSafari: Bool {
+        didSet { defaults.set(openLinksInSafari, forKey: Self.openLinksInSafariKey) }
+    }
+
+    @Published var hideEntriesEnabled: Bool {
+        didSet { defaults.set(hideEntriesEnabled, forKey: Self.hideEntriesEnabledKey) }
+    }
+
+    @Published var baseURL: String {
+        didSet { defaults.set(baseURL, forKey: Self.baseURLKey) }
+    }
+
+    @Published var useIconFilters: Bool {
+        didSet { defaults.set(useIconFilters, forKey: Self.useIconFiltersKey) }
+    }
 
     @Published var entryLayoutStyle: EntryLayoutStyle {
         didSet {
@@ -45,6 +68,22 @@ final class UserPreferences: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        selectedFont = defaults.string(forKey: Self.selectedFontKey) ?? "Helvetica"
+        if defaults.object(forKey: Self.selectedFontSizeKey) == nil {
+            selectedFontSize = 15
+        } else {
+            selectedFontSize = min(
+                SettingsPresentationPolicy.fontSizeRange.upperBound,
+                max(
+                    SettingsPresentationPolicy.fontSizeRange.lowerBound,
+                    defaults.integer(forKey: Self.selectedFontSizeKey)
+                )
+            )
+        }
+        openLinksInSafari = defaults.object(forKey: Self.openLinksInSafariKey) as? Bool ?? true
+        hideEntriesEnabled = defaults.object(forKey: Self.hideEntriesEnabledKey) as? Bool ?? false
+        baseURL = defaults.string(forKey: Self.baseURLKey) ?? "https://eksisozluk.com"
+        useIconFilters = defaults.object(forKey: Self.useIconFiltersKey) as? Bool ?? false
         entryLayoutStyle = EntryLayoutStyle.resolve(
             storedValue: defaults.string(forKey: Self.entryLayoutStyleKey)
         )
@@ -52,14 +91,17 @@ final class UserPreferences: ObservableObject {
             storedValue: defaults.string(forKey: Self.homeNavigationStyleKey),
             legacyPosition: defaults.string(forKey: Self.legacyHomeTabBarPositionKey)
         )
-        visibleHomeTabs = Self.decode(defaults.data(forKey: Self.visibleHomeTabsKey))
-        homeTabOrder = HomeTabCatalog.normalizedOrder(
+        visibleHomeTabs = HomeTabCatalog.migratedVisibility(
+            Self.decode(defaults.data(forKey: Self.visibleHomeTabsKey))
+        )
+        homeTabOrder = HomeTabCatalog.migratedOrder(
             Self.decode(defaults.data(forKey: Self.homeTabOrderKey))
         )
 
         if defaults.string(forKey: Self.homeNavigationStyleKey) == nil {
             defaults.set(homeNavigationStyle.rawValue, forKey: Self.homeNavigationStyleKey)
         }
+        defaults.set(Self.encode(visibleHomeTabs), forKey: Self.visibleHomeTabsKey)
         defaults.set(Self.encode(homeTabOrder), forKey: Self.homeTabOrderKey)
     }
 

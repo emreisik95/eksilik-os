@@ -15,7 +15,9 @@ final class TopicListViewModel: ObservableObject {
     private var loadGeneration = UUID()
 
     enum ListType: String {
-        case popular, today, todayInHistory, events, following, followingFavorites, latest, debe, kenar, caylaklar, cop
+        case popular, today, todayInHistory, events
+        case following, followingFavorites, latest, debe
+        case eksiSeyler, kenar, caylaklar, cop
     }
 
     let listType: ListType
@@ -88,6 +90,8 @@ final class TopicListViewModel: ObservableObject {
         topics.removeAll { $0.title == title }
     }
 
+    // The enum switch intentionally keeps every supported home source explicit.
+    // swiftlint:disable:next cyclomatic_complexity
     private func fetchPage(
         _ page: Int,
         isBlocked: @escaping (String) -> Bool
@@ -121,6 +125,8 @@ final class TopicListViewModel: ObservableObject {
         case .debe:
             let topics = try await topicService.fetchFromEndpoint(.debe, isBlocked: isBlocked)
             return (topics, .empty)
+        case .eksiSeyler:
+            return ([], .empty)
         case .kenar:
             let topics = try await topicService.fetchFromEndpoint(.kenar, isBlocked: isBlocked)
             return (topics, .empty)

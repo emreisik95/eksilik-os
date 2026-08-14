@@ -23,4 +23,8 @@ final class MessageListViewModel: ObservableObject {
 
         isLoading = false
     }
+
+    func goToPage(_ page: Int) async {
+        await loadMessages(page: page)
+    }
 }

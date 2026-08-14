@@ -12,6 +12,10 @@ struct MessageThreadView: View {
         Group {
             if viewModel.isLoading && viewModel.messages.isEmpty {
                 LoadingView()
+            } else if let error = viewModel.error, viewModel.messages.isEmpty {
+                ErrorView(message: error) {
+                    Task { await viewModel.loadMessages() }
+                }
             } else if viewModel.messages.isEmpty {
                 EmptyStateView(message: L10n.Message.noMessages)
             } else {
@@ -27,7 +31,7 @@ struct MessageThreadView: View {
                                 .foregroundColor(.gray)
                         }
 
-                        Text(message.contentHTML.strippingHTML)
+                        Text(message.contentText)
                             .font(.subheadline)
                             .foregroundColor(themeManager.current.entryTextColor)
                     }
@@ -41,13 +45,20 @@ struct MessageThreadView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink(value: Route.composeMessage(to: viewModel.threadTitle, subject: "")) {
+                NavigationLink(value: Route.composeMessage(
+                    recipient: viewModel.threadTitle,
+                    subject: "",
+                    threadID: viewModel.threadLink
+                )) {
                     Image(systemName: "arrowshape.turn.up.left")
                 }
             }
         }
         .background(themeManager.current.backgroundColor)
-        .task { await viewModel.loadMessages() }
+        .task {
+            guard viewModel.messages.isEmpty else { return }
+            await viewModel.loadMessages()
+        }
         .refreshable { await viewModel.loadMessages() }
     }
 }

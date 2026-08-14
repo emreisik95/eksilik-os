@@ -88,8 +88,12 @@ enum L10n {
         static let title = "mesajlar"
         static let noMessages = "mesaj bulunamadı"
         static let newMessage = "yeni mesaj"
-        static let to = "kime:"
+        static let recipientLabel = "kime:"
         static let send = "gönder"
+        static let placeholder = "mesajını yaz..."
+        static let recipientPlaceholder = "yazar adı"
+        static let sendFailed = "mesaj gönderilemedi"
+        static let openConversation = "konuşmayı aç"
     }
 
     // MARK: - Settings

@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import EksilikApp
 
@@ -75,5 +76,76 @@ final class UserPreferencesTests: XCTestCase {
         let restored = UserPreferences(defaults: defaults)
         XCTAssertEqual(Array(restored.homeTabOrder.prefix(3)), ["today", "popular", "debe"])
         XCTAssertEqual(restored.visibleHomeTabs, ["today", "popular"])
+    }
+
+    func testFontSizePublishesImmediatelyAndPersists() throws {
+        let suiteName = "UserPreferencesTests.fontSize"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let preferences = UserPreferences(defaults: defaults)
+        var changeCount = 0
+        let observation = preferences.objectWillChange.sink { changeCount += 1 }
+
+        preferences.selectedFontSize = 19
+
+        XCTAssertEqual(changeCount, 1)
+        XCTAssertEqual(defaults.integer(forKey: "selectedFontSize"), 19)
+        XCTAssertEqual(UserPreferences(defaults: defaults).selectedFontSize, 19)
+        withExtendedLifetime(observation) {}
+    }
+
+    func testFormerAppStoragePreferencesUseInjectedDefaults() throws {
+        let suiteName = "UserPreferencesTests.observableStorage"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let preferences = UserPreferences(defaults: defaults)
+        preferences.selectedFont = "Avenir Next"
+        preferences.openLinksInSafari = false
+        preferences.hideEntriesEnabled = true
+        preferences.baseURL = "https://eksisozluk.com"
+        preferences.useIconFilters = true
+
+        let restored = UserPreferences(defaults: defaults)
+        XCTAssertEqual(restored.selectedFont, "Avenir Next")
+        XCTAssertFalse(restored.openLinksInSafari)
+        XCTAssertTrue(restored.hideEntriesEnabled)
+        XCTAssertEqual(restored.baseURL, "https://eksisozluk.com")
+        XCTAssertTrue(restored.useIconFilters)
+    }
+
+    func testAllVisibleLegacyTabsMigrateToIncludeEksiSeyler() throws {
+        let suiteName = "UserPreferencesTests.seylerVisibilityMigration"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let legacyTabs = HomeTabCatalog.defaultOrder.filter { $0 != "eksiSeyler" }
+        defaults.set(try JSONEncoder().encode(legacyTabs), forKey: "visibleHomeTabs")
+
+        let preferences = UserPreferences(defaults: defaults)
+
+        XCTAssertEqual(preferences.visibleHomeTabs, legacyTabs + ["eksiSeyler"])
+    }
+
+    func testUntouchedFormerDefaultOrderMigratesToSeylerFirst() throws {
+        let suiteName = "UserPreferencesTests.seylerOrderMigration"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let formerDefault = [
+            "popular", "today", "debe", "eksiSeyler", "todayInHistory",
+            "latest", "following", "kenar", "caylaklar", "cop",
+        ]
+        defaults.set(try JSONEncoder().encode(formerDefault), forKey: "homeTabOrder")
+
+        let preferences = UserPreferences(defaults: defaults)
+
+        XCTAssertEqual(Array(preferences.homeTabOrder.prefix(2)), ["eksiSeyler", "popular"])
+        XCTAssertEqual(HomeTabCatalog.initialID, "popular")
     }
 }

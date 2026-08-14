@@ -2,11 +2,18 @@ import SwiftUI
 
 struct StableSkeletonBlock: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var cornerRadius: CGFloat = 4
 
     var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius)
-            .fill(themeManager.current.labelColor.opacity(0.14))
+        TimelineView(.animation(minimumInterval: 1 / 24, paused: reduceMotion)) { timeline in
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(themeManager.current.labelColor.opacity(0.14))
+                .opacity(SkeletonMotionPolicy.opacity(
+                    elapsed: timeline.date.timeIntervalSinceReferenceDate,
+                    reduceMotion: reduceMotion
+                ))
+        }
     }
 }
 
@@ -20,23 +27,6 @@ struct FractionalSkeletonBar: View {
                 .frame(width: proxy.size.width * min(max(fraction, 0), 1), height: height)
         }
         .frame(height: height)
-    }
-}
-
-private struct StableSkeletonPulse: ViewModifier {
-    @State private var isDimmed = false
-
-    func body(content: Content) -> some View {
-        content
-            .opacity(isDimmed ? 0.48 : 1)
-            .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: isDimmed)
-            .onAppear { isDimmed = true }
-    }
-}
-
-extension View {
-    fileprivate func stableSkeletonPulse() -> some View {
-        modifier(StableSkeletonPulse())
     }
 }
 
@@ -73,7 +63,6 @@ struct TopicListSkeletonView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
-        .stableSkeletonPulse()
     }
 }
 
@@ -114,7 +103,6 @@ struct EntryListSkeletonView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
-        .stableSkeletonPulse()
     }
 }
 
@@ -180,7 +168,6 @@ struct ProfileSkeletonView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
-        .stableSkeletonPulse()
     }
 }
 
@@ -224,6 +211,5 @@ struct SearchResultsSkeletonView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(themeManager.current.backgroundColor)
         .accessibilityHidden(true)
-        .stableSkeletonPulse()
     }
 }

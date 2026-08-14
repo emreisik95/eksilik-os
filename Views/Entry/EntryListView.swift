@@ -35,7 +35,7 @@ struct EntryListView: View {
                     Image(systemName: "tray")
                         .font(.title)
                         .foregroundColor(.gray)
-                    Text("bu filtrede entry bulunamadı")
+                    Text(EntryFilterPresentation.emptyMessage(for: viewModel.activeFilter))
                         .foregroundColor(.gray)
                         .font(.subheadline)
                     Button("tümüne dön") {

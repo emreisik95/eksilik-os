@@ -6,7 +6,7 @@ struct HomeTabView: View {
     @EnvironmentObject private var preferences: UserPreferences
     @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
     @StateObject private var nav = NavigationCoordinator()
-    @State private var selectedTab: TopicListViewModel.ListType = .popular
+    @State private var selectedTab = TopicListViewModel.ListType(rawValue: HomeTabCatalog.initialID) ?? .popular
     @State private var selectedYear: Int?
     @State private var isSidebarOpen = false
 
@@ -133,11 +133,11 @@ struct HomeTabView: View {
     @ViewBuilder
     private var tabContent: some View {
         if selectedTab == .debe {
-            DebeView()
-                .id(selectedTab)
+            DebeView().id(selectedTab)
+        } else if selectedTab == .eksiSeyler {
+            SeylerFeedView().id(selectedTab)
         } else if selectedTab == .following {
-            FollowingFeedView()
-                .id(selectedTab)
+            FollowingFeedView().id(selectedTab)
         } else if selectedTab == .todayInHistory {
             TopicListView(listType: selectedTab, year: selectedYear)
                 .id("todayInHistory-\(selectedYear ?? 0)")

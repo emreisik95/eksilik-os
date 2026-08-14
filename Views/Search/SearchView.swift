@@ -25,7 +25,9 @@ struct SearchView: View {
             .onChange(of: viewModel.query) { _ in viewModel.search() }
         }
     }
+}
 
+private extension SearchView {
     private var searchHeader: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
@@ -75,7 +77,6 @@ struct SearchView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(themeManager.current.accentColor)
                     .frame(minHeight: 44)
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
             }
 
@@ -86,7 +87,6 @@ struct SearchView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 14)
-        .animation(.easeInOut(duration: 0.18), value: isSearchFocused)
     }
 
     @ViewBuilder
@@ -131,7 +131,7 @@ struct SearchView: View {
                 discoveryCard
 
                 if !viewModel.channels.isEmpty {
-                    sectionHeader(title: "kanalları keşfet", count: viewModel.channels.count)
+                    SearchSectionHeader(title: "kanalları keşfet", count: viewModel.channels.count)
 
                     ForEach(viewModel.channels) { channel in
                         channelRow(channel)
@@ -191,7 +191,7 @@ struct SearchView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 if !viewModel.titles.isEmpty {
-                    sectionHeader(title: L10n.Search.topics, count: viewModel.titles.count)
+                    SearchSectionHeader(title: L10n.Search.topics, count: viewModel.titles.count)
 
                     ForEach(viewModel.titles, id: \.self) { title in
                         NavigationLink(value: Route.entryList(
@@ -205,7 +205,7 @@ struct SearchView: View {
                 }
 
                 if !viewModel.nicks.isEmpty {
-                    sectionHeader(title: L10n.Search.authors, count: viewModel.nicks.count)
+                    SearchSectionHeader(title: L10n.Search.authors, count: viewModel.nicks.count)
                         .padding(.top, viewModel.titles.isEmpty ? 0 : 12)
 
                     ForEach(viewModel.nicks, id: \.self) { nick in
@@ -310,22 +310,6 @@ struct SearchView: View {
         .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
         .background(themeManager.current.cellPrimaryColor)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-    }
-
-    private func sectionHeader(title: String, count: Int) -> some View {
-        HStack {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(themeManager.current.labelColor)
-            Spacer()
-            Text("\(count)")
-                .font(.caption.weight(.bold))
-                .foregroundColor(themeManager.current.accentColor)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 4)
-                .background(themeManager.current.accentColor.opacity(0.12))
-                .clipShape(Capsule())
-        }
     }
 
     private var compactRetryCard: some View {

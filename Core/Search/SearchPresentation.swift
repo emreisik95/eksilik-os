@@ -48,8 +48,8 @@ enum SearchPresentation {
             return .profile(username: username)
         }
 
-        let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? text
-        return .topic(link: encoded, title: text)
+        guard let lookupLink = InternalLinkPolicy.topicLookupLink(for: text) else { return nil }
+        return .topic(link: lookupLink, title: text)
     }
 
     private static func normalizedQuery(_ query: String) -> String {
