@@ -28,6 +28,7 @@
 		132DCBBD5F6578889A428C86 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF42E0ECFF8425D56A2BD1FA /* SearchResult.swift */; };
 		135A942CC5C635895EF0ED93 /* InternalLinkPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD38EA97C87292FA7643D7B2 /* InternalLinkPolicy.swift */; };
 		14E1AE0E7D4E32BC71C0984B /* EntryListChromePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59C838BF55600216DF24175 /* EntryListChromePolicy.swift */; };
+		160037D9F1338F033AC8BA02 /* HTTPClientBrowserTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD301B3D7DCF2044FFB6CDF6 /* HTTPClientBrowserTransportTests.swift */; };
 		17C748BC5F9D7D72DD9C6E08 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A7493216765ABBA803C32C /* SearchService.swift */; };
 		18294553D418EBE3FAFA200C /* TopicRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215354175256DFC7F83B653A /* TopicRequest.swift */; };
 		18309C4D3472BEB083189C8A /* SeylerArticleParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37ED7EF0964D5DBEFF5CC91F /* SeylerArticleParser.swift */; };
@@ -115,6 +116,7 @@
 		6C14CA74BF2659F6A85BDCEA /* Topic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F579B487760236171D3107C /* Topic.swift */; };
 		7143D5722E5AA27C3850B8AD /* EntryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 876BD923898CB99926E8B194 /* EntryListView.swift */; };
 		724DEDF29E4B667DE5E25971 /* SettingsTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44791E621AD8373570E1C9E9 /* SettingsTypography.swift */; };
+		75BAF972CF3B2B202EA4E0D6 /* BrowserFetchTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF4AEE7BC121657B74F1A7C /* BrowserFetchTransportTests.swift */; };
 		769C6ADB6B29FA7F9DF85E2A /* SeylerStory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92991C85A50E4FBF48D81E66 /* SeylerStory.swift */; };
 		77039D9403F2FE0F593147C3 /* AlternateKlasik@2x~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 84A38778D09BE3A41554A3AC /* AlternateKlasik@2x~ipad.png */; };
 		781E853D17F2F12D3D529968 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E44E63E7FE48150494E98CA9 /* UserProfile.swift */; };
@@ -139,6 +141,7 @@
 		8825D89A0A691586C315A814 /* EntryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45BB0107AE72F838FE70982 /* EntryRowView.swift */; };
 		88B79E261CC795672A340DEF /* WidgetFeedParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB972975C946477DBC78305A /* WidgetFeedParser.swift */; };
 		890EA463470D30752F7CDFED /* MessageComposeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DAE162A8D2DFF9C5D7F474 /* MessageComposeViewModelTests.swift */; };
+		8BD5EA1DA41D44A972F127DB /* WebBootstrapPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B30E03F60089CFC23A52CE /* WebBootstrapPolicyTests.swift */; };
 		8F7C9CE527E5EDDFDA3151BA /* ExternalLinkPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A125C9F6BEE94D2B8553FA /* ExternalLinkPolicy.swift */; };
 		90CC34920E5568D9EB7E34C3 /* ErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 199BE94FA2B69354DA574EF5 /* ErrorView.swift */; };
 		92D785D00AAA57B49E081165 /* ProfileConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C7EAB3B44A747941E95D54 /* ProfileConnection.swift */; };
@@ -152,6 +155,7 @@
 		980F4B0BF5E93F85E0BFC278 /* HomeTabView+NavigationShells.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC01DACB706B3518F6B1D7B1 /* HomeTabView+NavigationShells.swift */; };
 		9EAE7FC05C2E29981AA1342B /* WidgetSnapshotStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C282EB7B085DA423578E76FD /* WidgetSnapshotStoreTests.swift */; };
 		9FA33EAAD6A026CE28F77453 /* MessageComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B581F0230903AE2676662F /* MessageComposeView.swift */; };
+		A031E772ED1EB8EA7A3562C2 /* BrowserFetchTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DB9E75C911FF0236489788 /* BrowserFetchTransport.swift */; };
 		A03EFBAB37D0D499BB81DBBC /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC6FF077674B94B060E2B38 /* LoginView.swift */; };
 		A057E226890D2416CEA79A5F /* EksilikQuickAccessWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124277C9A54FA80D0295BC84 /* EksilikQuickAccessWidget.swift */; };
 		A0B487540C900C1BF61FF3D0 /* SeylerFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42582D55978D00A00CBF71E9 /* SeylerFeedViewModel.swift */; };
@@ -211,6 +215,7 @@
 		DFBDB5632D2C9A24A9A34A2C /* AlternateDepth@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 76830AF04FFE905C84E542E1 /* AlternateDepth@1x.png */; };
 		E0A87F633AC2F1F3E6611C1C /* MessageComposePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39BB12F6FF07DF2A74E1626 /* MessageComposePolicyTests.swift */; };
 		E0F8D471B7C9354E66BB85CB /* DebeParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AF64B36E250AB422A8E47 /* DebeParser.swift */; };
+		E1EF8444B887F35C03D8EEEE /* WebBootstrapPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A5D824F0359584A303393D /* WebBootstrapPolicy.swift */; };
 		E25B46AB183AEB0D55152182 /* DebeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3773B51ED99127F6AD05400 /* DebeViewModel.swift */; };
 		E2E88076E66972ADFEC064DD /* HomeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEDB0D7C9DB1B95373E58917 /* HomeTabView.swift */; };
 		E39459AED444A35ED1710C78 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5017FEE9123F2BF748C063C /* Entry.swift */; };
@@ -359,6 +364,7 @@
 		6562FFB2F8B51FB9DC6D7B9D /* BlockedTopicStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockedTopicStore.swift; sourceTree = "<group>"; };
 		66DAE162A8D2DFF9C5D7F474 /* MessageComposeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageComposeViewModelTests.swift; sourceTree = "<group>"; };
 		671D10EB60773910969E6CEC /* AlternateAurora@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateAurora@3x.png"; sourceTree = "<group>"; };
+		68B30E03F60089CFC23A52CE /* WebBootstrapPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebBootstrapPolicyTests.swift; sourceTree = "<group>"; };
 		6B471E45E636A79F546637B3 /* FollowingFeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowingFeedTests.swift; sourceTree = "<group>"; };
 		6F76B717CDE4FDA7EEE1D218 /* ProfileConnectionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileConnectionParser.swift; sourceTree = "<group>"; };
 		701E7E82B26851BF3391B5BA /* EksiRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EksiRouter.swift; sourceTree = "<group>"; };
@@ -439,10 +445,12 @@
 		C5341E4BD1BA7DC0085066CD /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		C5E12EAF53D51C7DA58D8535 /* MessageListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListViewModel.swift; sourceTree = "<group>"; };
 		C89CF539D454CB6F5B33D9F3 /* CookiePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CookiePersistenceTests.swift; sourceTree = "<group>"; };
+		C8DB9E75C911FF0236489788 /* BrowserFetchTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserFetchTransport.swift; sourceTree = "<group>"; };
 		C9BF87C3CCFFDB0CABE4F3F4 /* UserProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewModel.swift; sourceTree = "<group>"; };
 		CAC4AAAC8379C97D2D672FBF /* Pagination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pagination.swift; sourceTree = "<group>"; };
 		CBAE2F86F3DD03A0A7FF3641 /* ExternalLinkPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkPolicyTests.swift; sourceTree = "<group>"; };
 		CC87DA2E82255881557FB4CA /* WidgetFeedParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFeedParserTests.swift; sourceTree = "<group>"; };
+		CD301B3D7DCF2044FFB6CDF6 /* HTTPClientBrowserTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClientBrowserTransportTests.swift; sourceTree = "<group>"; };
 		CD85E4AEE251D32E7EFCE40F /* TopicRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicRequestTests.swift; sourceTree = "<group>"; };
 		D0510CF3D38F6C7958B916E8 /* EntryFilterPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryFilterPresentation.swift; sourceTree = "<group>"; };
 		D0D44CCC5E21634E7C2B55EA /* SeylerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeylerService.swift; sourceTree = "<group>"; };
@@ -465,6 +473,7 @@
 		DE0DA8877064A477DCDCF634 /* SeylerArticleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeylerArticleViewModel.swift; sourceTree = "<group>"; };
 		DE3B8F2F916078390A7E7669 /* ProfilePaginationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePaginationTests.swift; sourceTree = "<group>"; };
 		DEDB0D7C9DB1B95373E58917 /* HomeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTabView.swift; sourceTree = "<group>"; };
+		E1A5D824F0359584A303393D /* WebBootstrapPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebBootstrapPolicy.swift; sourceTree = "<group>"; };
 		E34355F237FF346D01AE5F44 /* SkeletonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonViews.swift; sourceTree = "<group>"; };
 		E3773B51ED99127F6AD05400 /* DebeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebeViewModel.swift; sourceTree = "<group>"; };
 		E39BB12F6FF07DF2A74E1626 /* MessageComposePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageComposePolicyTests.swift; sourceTree = "<group>"; };
@@ -481,6 +490,7 @@
 		EB24F2034D2B79E1421B6E48 /* AlternateNoir@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateNoir@2x.png"; sourceTree = "<group>"; };
 		EBBCCB8B320E594A562D980C /* EntryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryService.swift; sourceTree = "<group>"; };
 		EC3382ECD18135D49628445E /* OfflineSeylerArticle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineSeylerArticle.swift; sourceTree = "<group>"; };
+		EFF4AEE7BC121657B74F1A7C /* BrowserFetchTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserFetchTransportTests.swift; sourceTree = "<group>"; };
 		F103697C3781C1B76995CD38 /* MessageParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageParserTests.swift; sourceTree = "<group>"; };
 		F2F71A99142DB7763949B041 /* AlternateNoir~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateNoir~ipad.png"; sourceTree = "<group>"; };
 		F33233A72A45AF72545D3538 /* AlternateIcon~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateIcon~ipad.png"; sourceTree = "<group>"; };
@@ -631,9 +641,12 @@
 		3193D855AB6B285A448B1A54 /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				EFF4AEE7BC121657B74F1A7C /* BrowserFetchTransportTests.swift */,
 				14FE6C55454F941EEC05935B /* FormURLEncoderTests.swift */,
+				CD301B3D7DCF2044FFB6CDF6 /* HTTPClientBrowserTransportTests.swift */,
 				124B1E9CD3BB77B90F521CB5 /* MessageRequestTests.swift */,
 				CD85E4AEE251D32E7EFCE40F /* TopicRequestTests.swift */,
+				68B30E03F60089CFC23A52CE /* WebBootstrapPolicyTests.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -1111,6 +1124,7 @@
 		F2BAF2393AAB679F0391E2E6 /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				C8DB9E75C911FF0236489788 /* BrowserFetchTransport.swift */,
 				5C6DFF9BD240E093BF166EB8 /* EksiEndpoint.swift */,
 				701E7E82B26851BF3391B5BA /* EksiRouter.swift */,
 				38B7A1F6112CD109193D0F5C /* FormURLEncoder.swift */,
@@ -1118,6 +1132,7 @@
 				DCC0EFA9E753461602EF3D36 /* NetworkError.swift */,
 				23D1DF4D5634FA2A6C45C3C0 /* SeylerEndpoint.swift */,
 				215354175256DFC7F83B653A /* TopicRequest.swift */,
+				E1A5D824F0359584A303393D /* WebBootstrapPolicy.swift */,
 				15128D2899C09A2F5CD8A34D /* WebViewFetcher.swift */,
 			);
 			path = Network;
@@ -1300,6 +1315,7 @@
 				06AA9A9D31A9E9C1DBF2D45D /* Author.swift in Sources */,
 				D5CECFDA3EF53320AC35537A /* BlockedTopicStore.swift in Sources */,
 				32D8697D23532FAFF4152A1D /* BlockedTopicsView.swift in Sources */,
+				A031E772ED1EB8EA7A3562C2 /* BrowserFetchTransport.swift in Sources */,
 				1A202E9ECA247E86B36AA6DB /* CachedRemoteImage.swift in Sources */,
 				F627750F39BCEFF78E80D992 /* Channel.swift in Sources */,
 				B0B7C6CC78D2D640A6187B77 /* ChannelParser.swift in Sources */,
@@ -1434,6 +1450,7 @@
 				D2353BEDA687B0026C1060B0 /* UserProfileParser.swift in Sources */,
 				F0DFDD99D8E29184683770C8 /* UserProfileViewModel.swift in Sources */,
 				D93B921058D174B743E5D0A7 /* UserService.swift in Sources */,
+				E1EF8444B887F35C03D8EEEE /* WebBootstrapPolicy.swift in Sources */,
 				7FC3A86B26F7AA5FFC1D90D9 /* WebViewFetcher.swift in Sources */,
 				8465BBCBE3141E0592694771 /* WidgetFeed.swift in Sources */,
 				88B79E261CC795672A340DEF /* WidgetFeedParser.swift in Sources */,
@@ -1463,6 +1480,7 @@
 				875ACA91A5C3C14B192E0732 /* AppIconPresentationPolicyTests.swift in Sources */,
 				09EBECAB3F452249DCFD3F57 /* AppThemeTests.swift in Sources */,
 				68DE0D38E16928E0678A0627 /* AuthParserTests.swift in Sources */,
+				75BAF972CF3B2B202EA4E0D6 /* BrowserFetchTransportTests.swift in Sources */,
 				E68FC6355CC3A174FA865453 /* CookiePersistenceTests.swift in Sources */,
 				783237C3FF9F2012D900B8E8 /* EntryDraftStoreTests.swift in Sources */,
 				CAFD1873B6C91FD24832FE55 /* EntryFormattingTests.swift in Sources */,
@@ -1472,6 +1490,7 @@
 				4E4768B395030B561A22D233 /* ExternalLinkPolicyTests.swift in Sources */,
 				FC4787C8E33711C9D3EFF5AA /* FollowingFeedTests.swift in Sources */,
 				31A631B180DD207CF291681D /* FormURLEncoderTests.swift in Sources */,
+				160037D9F1338F033AC8BA02 /* HTTPClientBrowserTransportTests.swift in Sources */,
 				112F058E5F26EBAD13507E87 /* ImageURLNormalizerTests.swift in Sources */,
 				492F406141787136BB289A94 /* InternalLinkPolicyTests.swift in Sources */,
 				A4AE070D904C245EE953772D /* MainTabTests.swift in Sources */,
@@ -1495,6 +1514,7 @@
 				AE19391CF8BA9C8BEF87BB35 /* TopicListParserTests.swift in Sources */,
 				BFC705855E28FC41DAFE4218 /* TopicRequestTests.swift in Sources */,
 				039D14112E49A488E5BA7FA9 /* UserPreferencesTests.swift in Sources */,
+				8BD5EA1DA41D44A972F127DB /* WebBootstrapPolicyTests.swift in Sources */,
 				11F64C7E1B88A567FE8040EC /* WidgetDeepLinkTests.swift in Sources */,
 				0FE2B40D2B9A3BBE5BC5FA2C /* WidgetFeedParserTests.swift in Sources */,
 				9EAE7FC05C2E29981AA1342B /* WidgetSnapshotStoreTests.swift in Sources */,
@@ -1523,14 +1543,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				SDKROOT = iphoneos;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1565,7 +1585,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -1573,7 +1593,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik App Store AppGroups 2026";
 				SDKROOT = iphoneos;
@@ -1588,7 +1608,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1596,7 +1616,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
@@ -1747,7 +1767,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1756,7 +1776,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.3;
+				MARKETING_VERSION = 2.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik Widget App Store AppGroups 2026";
 				SDKROOT = iphoneos;
