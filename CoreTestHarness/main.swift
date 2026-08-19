@@ -105,6 +105,93 @@ private struct Harness {
         expect(entryPage.isTracked, "topic tracking state should be parsed")
     }
 
+    mutating func runWebBootstrapChecks() {
+        expect(
+            !WebBootstrapPolicy.shouldComplete(
+                statusCode: 403,
+                headers: ["cf-mitigated": "challenge"],
+                title: "ekşi sözlük - lütfen bekleyiniz",
+                html: #"<html><script src="/cdn-cgi/challenge-platform/h/g/orchestrate/chl_page/v1"></script></html>"#
+            ),
+            "the localized Cloudflare page should keep the browser challenge running"
+        )
+        expect(
+            !WebBootstrapPolicy.shouldComplete(
+                statusCode: 200,
+                headers: ["CF-Mitigated": "Challenge"],
+                title: "ekşi sözlük",
+                html: "<html><body>challenge</body></html>"
+            ),
+            "Cloudflare response headers should be matched case-insensitively"
+        )
+        expect(
+            !WebBootstrapPolicy.shouldComplete(
+                statusCode: 200,
+                headers: [:],
+                title: "ekşi sözlük",
+                html: "<html><script>window._cf_chl_opt = { cType: 'non-interactive' };</script></html>"
+            ),
+            "challenge DOM markers should prevent a false bootstrap success"
+        )
+        expect(
+            WebBootstrapPolicy.shouldComplete(
+                statusCode: 200,
+                headers: ["content-type": "text/html; charset=utf-8"],
+                title: "ekşi sözlük - kutsal bilgi kaynağı",
+                html: "<html><body><ul class='topic-list'><li>gündem</li></ul></body></html>"
+            ),
+            "a successful site document should complete bootstrap"
+        )
+    }
+
+    mutating func runBrowserFetchTransportChecks() {
+        var request = URLRequest(url: URL(string: "https://eksisozluk.com/entry/ekle")!)
+        request.httpMethod = "POST"
+        request.httpBody = Data("content=merhaba".utf8)
+        request.setValue("XMLHttpRequest", forHTTPHeaderField: "X-Requested-With")
+        request.setValue(
+            "application/x-www-form-urlencoded; charset=utf-8",
+            forHTTPHeaderField: "Content-Type"
+        )
+        request.setValue("fake-browser", forHTTPHeaderField: "User-Agent")
+        request.setValue("gzip, br", forHTTPHeaderField: "Accept-Encoding")
+        guard let payload = try? BrowserFetchRequest(request: request) else {
+            expect(false, "browser fetch should accept a valid form request")
+            return
+        }
+        expect(payload.method == "POST", "browser fetch should preserve the HTTP method")
+        expect(payload.body == "content=merhaba", "browser fetch should preserve the request body")
+        expect(
+            payload.headers["X-Requested-With"] == "XMLHttpRequest",
+            "browser fetch should preserve application-owned headers"
+        )
+        expect(payload.headers["User-Agent"] == nil, "WebKit should own its User-Agent header")
+        expect(payload.headers["Accept-Encoding"] == nil, "WebKit should own content encoding negotiation")
+
+        guard let response = try? BrowserFetchResponse.decode([
+            "status": NSNumber(value: 403),
+            "headers": ["CF-Mitigated": "Challenge"],
+            "body": "<html><script>window._cf_chl_opt = {};</script></html>",
+        ]) else {
+            expect(false, "browser fetch should decode a valid WebKit response")
+            return
+        }
+        expect(response.statusCode == 403, "browser fetch should decode WebKit status values")
+        expect(response.isCloudflareChallenge, "browser fetch should identify challenged responses")
+        expect(
+            BrowserFetchRequest.javaScript.contains("credentials: 'include'"),
+            "browser fetch should use cookies from the verified WebKit session"
+        )
+        expect(
+            BrowserFetchRequest.javaScript.contains("response.headers.forEach"),
+            "browser fetch should return response headers for challenge detection"
+        )
+        expect(
+            !BrowserFetchRequest.javaScript.contains("const request ="),
+            "browser fetch should not redeclare WebKit's injected request argument"
+        )
+    }
+
     // swiftlint:disable:next function_body_length
     mutating func runTopicRequestChecks() {
         let today = TopicRequest(link: "/ornek-baslik--42?day=2026-07-16")
@@ -1243,6 +1330,8 @@ private struct Harness {
 
 private var harness = Harness()
 harness.runBaselineParserChecks()
+harness.runWebBootstrapChecks()
+harness.runBrowserFetchTransportChecks()
 harness.runTopicRequestChecks()
 harness.runMainTabChecks()
 harness.runStableLoadingChecks()

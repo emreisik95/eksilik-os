@@ -6,16 +6,30 @@ fail() {
     exit 1
 }
 
+app_marketing_version="$(ruby -ryaml -e 'puts YAML.load_file("project.yml").dig("targets", "EksilikApp", "settings", "base", "MARKETING_VERSION")')"
+widget_marketing_version="$(ruby -ryaml -e 'puts YAML.load_file("project.yml").dig("targets", "EksilikWidget", "settings", "base", "MARKETING_VERSION")')"
+app_build_number="$(ruby -ryaml -e 'puts YAML.load_file("project.yml").dig("targets", "EksilikApp", "settings", "base", "CURRENT_PROJECT_VERSION")')"
+widget_build_number="$(ruby -ryaml -e 'puts YAML.load_file("project.yml").dig("targets", "EksilikWidget", "settings", "base", "CURRENT_PROJECT_VERSION")')"
+
+[[ -n "$app_marketing_version" && "$app_marketing_version" == "$widget_marketing_version" ]] \
+    || fail "app and widget marketing versions must match"
+[[ -n "$app_build_number" && "$app_build_number" == "$widget_build_number" ]] \
+    || fail "app and widget build numbers must match"
+[[ -z "${RELEASE_VERSION:-}" || "$RELEASE_VERSION" == "$app_marketing_version" ]] \
+    || fail "release input version must match project.yml"
+[[ -z "${RELEASE_BUILD_NUMBER:-}" || "$RELEASE_BUILD_NUMBER" == "$app_build_number" ]] \
+    || fail "release input build number must match project.yml"
+
 grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik$' project.yml \
     || fail "app bundle identifier must match the existing App Store listing"
 grep -Eq '^[[:space:]]+PRODUCT_BUNDLE_IDENTIFIER: emre\.isik\.Eksilik\.widget$' project.yml \
     || fail "widget bundle identifier must be nested under the existing App Store listing"
 grep -Fq '= "emre.isik.Eksilik"' .github/workflows/device-build.yml \
     || fail "device artifact verification must use the existing App Store bundle identifier"
-[[ "$(grep -Ec '^[[:space:]]+MARKETING_VERSION: "2\.0\.3"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget marketing versions must be 2.0.3"
-[[ "$(grep -Ec '^[[:space:]]+CURRENT_PROJECT_VERSION: "15"$' project.yml)" -eq 2 ]] \
-    || fail "app and widget build numbers must be 15"
+[[ "$(grep -Ec "^[[:space:]]+MARKETING_VERSION: \"${app_marketing_version//./\\.}\"$" project.yml)" -eq 2 ]] \
+    || fail "app and widget marketing versions must be declared explicitly"
+[[ "$(grep -Ec "^[[:space:]]+CURRENT_PROJECT_VERSION: \"${app_build_number}\"$" project.yml)" -eq 2 ]] \
+    || fail "app and widget build numbers must be declared explicitly"
 [[ "$(grep -Ec '^[[:space:]]+TARGETED_DEVICE_FAMILY: "1,2"$' project.yml)" -eq 2 ]] \
     || fail "app and widget must preserve the existing iPhone and iPad device families"
 # shellcheck disable=SC2016
@@ -49,9 +63,9 @@ done
 [[ -f .github/workflows/app-store-release.yml ]] || fail "App Store release workflow is missing"
 grep -Fq 'runs-on: macos-26' .github/workflows/app-store-release.yml \
     || fail "App Store releases must use Xcode 26 or later"
-grep -Fq 'default: "2.0.3"' .github/workflows/app-store-release.yml \
+grep -Fq "default: \"$app_marketing_version\"" .github/workflows/app-store-release.yml \
     || fail "release workflow version must match project.yml"
-grep -Fq 'default: "15"' .github/workflows/app-store-release.yml \
+grep -Fq "default: \"$app_build_number\"" .github/workflows/app-store-release.yml \
     || fail "release workflow build number must match project.yml"
 
 if [[ ! -f EksilikApp-Info.plist || ! -f EksilikWidget-Info.plist ]]; then
@@ -148,11 +162,11 @@ for family in \
         || fail "CFBundleIcons~ipad must reference $family"
 done
 
-release_metadata="metadata/version/2.0.3/tr.json"
-[[ -f "$release_metadata" ]] || fail "Turkish 2.0.3 release metadata is missing"
+release_metadata="metadata/version/$app_marketing_version/tr.json"
+[[ -f "$release_metadata" ]] || fail "Turkish $app_marketing_version release metadata is missing"
 jq -e '.whatsNew | length > 0 and length <= 4000' "$release_metadata" >/dev/null \
-    || fail "2.0.3 What's New must be between 1 and 4000 characters"
+    || fail "$app_marketing_version What's New must be between 1 and 4000 characters"
 jq -e '.promotionalText | length <= 170' "$release_metadata" >/dev/null \
-    || fail "2.0.3 promotional text must not exceed 170 characters"
+    || fail "$app_marketing_version promotional text must not exceed 170 characters"
 
 echo "PASS: App Store readiness checks"

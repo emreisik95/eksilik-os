@@ -12,12 +12,12 @@ on:
         description: CFBundleShortVersionString for the archive
         required: true
         type: string
-        default: "2.0.3"
+        default: "2.0.4"
       build_number:
         description: CFBundleVersion for the archive
         required: true
         type: string
-        default: "15"
+        default: "16"
 
 permissions:
   contents: read

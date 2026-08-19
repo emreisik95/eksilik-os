@@ -33,4 +33,24 @@ final class WidgetFeedParserTests: XCTestCase {
         XCTAssertTrue(WidgetFeedParser.parseTopics(html: "<html><body>giriş yap</body></html>").isEmpty)
         XCTAssertTrue(WidgetFeedParser.parseDebe(html: "<html></html>").isEmpty)
     }
+
+    func testTopicParserDecodesApostropheEntityVariants() {
+        let html = """
+        <ul class="topic-list">
+          <li><a href="/bir--1">türkiye&apos;nin gündemi</a></li>
+          <li><a href="/iki--2">izmir&#x27;de akşam</a></li>
+          <li><a href="/uc--3">ankara&#8217;da sabah</a></li>
+          <li><a href="/dort--4">ekşi&rsquo;de bugün</a></li>
+        </ul>
+        """
+
+        let titles = WidgetFeedParser.parseTopics(html: html).map(\.title)
+
+        XCTAssertEqual(titles, [
+            "türkiye'nin gündemi",
+            "izmir'de akşam",
+            "ankara’da sabah",
+            "ekşi’de bugün",
+        ])
+    }
 }
