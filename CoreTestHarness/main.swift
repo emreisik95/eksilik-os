@@ -147,7 +147,7 @@ private struct Harness {
     mutating func runBrowserFetchTransportChecks() {
         var request = URLRequest(url: URL(string: "https://eksisozluk.com/entry/ekle")!)
         request.httpMethod = "POST"
-        request.httpBody = "content=merhaba".data(using: .utf8)
+        request.httpBody = Data("content=merhaba".utf8)
         request.setValue("XMLHttpRequest", forHTTPHeaderField: "X-Requested-With")
         request.setValue(
             "application/x-www-form-urlencoded; charset=utf-8",
@@ -155,7 +155,10 @@ private struct Harness {
         )
         request.setValue("fake-browser", forHTTPHeaderField: "User-Agent")
         request.setValue("gzip, br", forHTTPHeaderField: "Accept-Encoding")
-        let payload = try! BrowserFetchRequest(request: request)
+        guard let payload = try? BrowserFetchRequest(request: request) else {
+            expect(false, "browser fetch should accept a valid form request")
+            return
+        }
         expect(payload.method == "POST", "browser fetch should preserve the HTTP method")
         expect(payload.body == "content=merhaba", "browser fetch should preserve the request body")
         expect(
@@ -165,11 +168,14 @@ private struct Harness {
         expect(payload.headers["User-Agent"] == nil, "WebKit should own its User-Agent header")
         expect(payload.headers["Accept-Encoding"] == nil, "WebKit should own content encoding negotiation")
 
-        let response = try! BrowserFetchResponse.decode([
+        guard let response = try? BrowserFetchResponse.decode([
             "status": NSNumber(value: 403),
             "headers": ["CF-Mitigated": "Challenge"],
             "body": "<html><script>window._cf_chl_opt = {};</script></html>",
-        ])
+        ]) else {
+            expect(false, "browser fetch should decode a valid WebKit response")
+            return
+        }
         expect(response.statusCode == 403, "browser fetch should decode WebKit status values")
         expect(response.isCloudflareChallenge, "browser fetch should identify challenged responses")
         expect(

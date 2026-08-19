@@ -5,7 +5,7 @@ final class BrowserFetchTransportTests: XCTestCase {
     func testPayloadPreservesMethodBodyAndApplicationHeaders() throws {
         var request = URLRequest(url: try XCTUnwrap(URL(string: "https://eksisozluk.com/entry/ekle")))
         request.httpMethod = "POST"
-        request.httpBody = "content=merhaba".data(using: .utf8)
+        request.httpBody = Data("content=merhaba".utf8)
         request.setValue("XMLHttpRequest", forHTTPHeaderField: "X-Requested-With")
         request.setValue(
             "application/x-www-form-urlencoded; charset=utf-8",
