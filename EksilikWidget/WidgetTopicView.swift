@@ -44,11 +44,16 @@ struct WidgetTopicView: View {
                 Spacer()
             }
 
-            ForEach(Array(entry.topics.prefix(3).enumerated()), id: \.offset) { _, topic in
+            ForEach(
+                Array(entry.topics.prefix(WidgetPresentationPolicy.topicLimit(for: .small)))
+            ) { topic in
                 Link(destination: deepLink(for: topic)) {
                     Text(topic.title)
                         .font(.caption)
-                        .lineLimit(1)
+                        .lineLimit(WidgetPresentationPolicy.titleLineLimit(for: .small))
+                        .minimumScaleFactor(0.72)
+                        .allowsTightening(true)
+                        .fixedSize(horizontal: false, vertical: true)
                         .foregroundColor(theme.textColor)
                 }
             }
@@ -71,12 +76,14 @@ struct WidgetTopicView: View {
                     .foregroundColor(.secondary)
             }
 
-            ForEach(Array(entry.topics.prefix(4).enumerated()), id: \.offset) { _, topic in
+            ForEach(
+                Array(entry.topics.prefix(WidgetPresentationPolicy.topicLimit(for: .medium)))
+            ) { topic in
                 Link(destination: deepLink(for: topic)) {
                     HStack {
                         Text(topic.title)
                             .font(.caption)
-                            .lineLimit(2)
+                            .lineLimit(WidgetPresentationPolicy.titleLineLimit(for: .medium))
                             .foregroundColor(theme.textColor)
                         Spacer()
                         if let metadata = topic.metadata, !metadata.isEmpty {
@@ -108,12 +115,14 @@ struct WidgetTopicView: View {
             }
             .padding(.bottom, 4)
 
-            ForEach(Array(entry.topics.prefix(10).enumerated()), id: \.offset) { _, topic in
+            ForEach(
+                Array(entry.topics.prefix(WidgetPresentationPolicy.topicLimit(for: .large)))
+            ) { topic in
                 Link(destination: deepLink(for: topic)) {
                     HStack {
                         Text(topic.title)
                             .font(.caption)
-                            .lineLimit(2)
+                            .lineLimit(WidgetPresentationPolicy.titleLineLimit(for: .large))
                             .foregroundColor(theme.textColor)
                         Spacer()
                         if let metadata = topic.metadata, !metadata.isEmpty {

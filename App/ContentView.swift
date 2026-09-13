@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var session: SessionManager
     @EnvironmentObject private var deepLinkRouter: DeepLinkRouter
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         TabView(selection: mainTabSelection) {
@@ -13,9 +14,18 @@ struct ContentView: View {
                         Label(tabTitle(for: tab), systemImage: tab.systemImage)
                     }
                     .tag(tab)
+                    .badge(
+                        MessageNotificationPolicy.badgeValue(
+                            for: tab,
+                            hasUnreadMessages: session.hasUnreadMessages
+                        ) ?? 0
+                    )
             }
         }
         .tint(themeManager.current.accentColor)
+        .task(id: scenePhase) {
+            await refreshUnreadMessageBadgeIfNeeded()
+        }
     }
 
     private var mainTabSelection: Binding<MainTab> {
@@ -46,6 +56,11 @@ struct ContentView: View {
             return L10n.Auth.login
         }
         return tab.title
+    }
+
+    private func refreshUnreadMessageBadgeIfNeeded() async {
+        guard scenePhase == .active, session.isLoggedIn else { return }
+        _ = try? await MessageService().fetchMessages()
     }
 
     private var eventsTab: some View {

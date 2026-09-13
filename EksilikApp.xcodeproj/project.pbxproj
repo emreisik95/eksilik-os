@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		006BCB1AE65C9B9FE9A18ABE /* EksilikWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97BE24A7AB8B4826CDDBFE7 /* EksilikWidgetBundle.swift */; };
+		008E02E7D1A5F3CCF8628DC7 /* MessageNotificationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 063D7C4B7A218C7877186EAE /* MessageNotificationPolicyTests.swift */; };
 		039D14112E49A488E5BA7FA9 /* UserPreferencesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF520AF3D5AC04F7D3BE869 /* UserPreferencesTests.swift */; };
 		03ECCCC73AD9E30E1ECC0E69 /* AlternateForest~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = 0C23172736EAE3D4610C66AB /* AlternateForest~ipad.png */; };
 		041C13E6FF278719AE14A0C3 /* EntryLayoutRenderingPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288CA83A2023E04D7C04C99D /* EntryLayoutRenderingPolicyTests.swift */; };
@@ -36,6 +37,7 @@
 		1A202E9ECA247E86B36AA6DB /* CachedRemoteImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EE4D90695201FE418B4ADA0 /* CachedRemoteImage.swift */; };
 		1A75A792C545E6641ACAA919 /* SeylerArticleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0DA8877064A477DCDCF634 /* SeylerArticleViewModel.swift */; };
 		1B81432EBF63BF236D3C5A56 /* AuthParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ADDBC08AD5273E6D80D8AB0 /* AuthParser.swift */; };
+		1BABA2C201F6E0C7F2AA1187 /* WidgetPresentationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4D9D2537D1BE9A1E850FC8 /* WidgetPresentationPolicy.swift */; };
 		1CAD5159C1145B46080DFB6E /* MessageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8275DE61E66CF2CBE95ED84 /* MessageService.swift */; };
 		1CE0D59AB2506C355CD95026 /* OfflineTopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E31859BDE18365BDC0105F /* OfflineTopicView.swift */; };
 		1D0A45D346BBCD71621280F7 /* OfflineLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD88385FA224CB5697D440A /* OfflineLibraryView.swift */; };
@@ -79,6 +81,7 @@
 		42103389F4AFC30834CBAE61 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02334B987FA680A8B532195B /* Route.swift */; };
 		42A6CCADDE07B00B7E7A165E /* HomeNavigationStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73C8E289FF3BB4A0A8308BC8 /* HomeNavigationStyle.swift */; };
 		436B1F051B9B6228FFF1F94F /* ImageLightboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471180B6C392F9E8DD25C15E /* ImageLightboxView.swift */; };
+		44D4532D2C420139661B0D30 /* WidgetPresentationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4D9D2537D1BE9A1E850FC8 /* WidgetPresentationPolicy.swift */; };
 		45C47FE3C77E64E66D1AEB9D /* EksiRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 701E7E82B26851BF3391B5BA /* EksiRouter.swift */; };
 		46F8076843EAB7B2404BC835 /* TopicListParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E42B3E3B4DE59AC35548A0 /* TopicListParser.swift */; };
 		48636F2FFC5E45779799B61A /* AlternateAurora~ipad.png in Resources */ = {isa = PBXBuildFile; fileRef = AD1078FE194C83B5A4A8C764 /* AlternateAurora~ipad.png */; };
@@ -153,6 +156,7 @@
 		9768B05932667E8B9D89F54E /* MessageBubblePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14777742FD7C7736667B5272 /* MessageBubblePresentation.swift */; };
 		97E184A0553763CF4C6975FE /* PopularTopicsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1284526350BE5A89495BA592 /* PopularTopicsProvider.swift */; };
 		980F4B0BF5E93F85E0BFC278 /* HomeTabView+NavigationShells.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC01DACB706B3518F6B1D7B1 /* HomeTabView+NavigationShells.swift */; };
+		9BC9C2DF6356AF7D4483EADD /* MessageNotificationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C3DBFD23AF84A75FA5CC98 /* MessageNotificationPolicy.swift */; };
 		9EAE7FC05C2E29981AA1342B /* WidgetSnapshotStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C282EB7B085DA423578E76FD /* WidgetSnapshotStoreTests.swift */; };
 		9FA33EAAD6A026CE28F77453 /* MessageComposeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47B581F0230903AE2676662F /* MessageComposeView.swift */; };
 		A031E772ED1EB8EA7A3562C2 /* BrowserFetchTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DB9E75C911FF0236489788 /* BrowserFetchTransport.swift */; };
@@ -181,6 +185,7 @@
 		B5597D49114D5ECE7E2EEB50 /* WidgetFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40874911EDAF697BA93B72D3 /* WidgetFeed.swift */; };
 		BA95AF4763F987422A13E13A /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3822D7FD94BCE54754158D /* LoadingView.swift */; };
 		BDFCDA846BD24911471497A1 /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384113762C05431FE243F97F /* UserPreferences.swift */; };
+		BE069A05688A771DA00FCC28 /* WidgetPresentationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494E6CD780686003B5C84E0B /* WidgetPresentationPolicyTests.swift */; };
 		BE19D69A4A7D040A2B5B411D /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FF2740329081173EBD4483 /* Message.swift */; };
 		BE5FA93DBC33963E2DBD26D2 /* SeylerEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D1DF4D5634FA2A6C45C3C0 /* SeylerEndpoint.swift */; };
 		BEB621CBC813391D23215F17 /* PaginationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0560182334BBB8AB6D384F37 /* PaginationParser.swift */; };
@@ -281,6 +286,7 @@
 		02334B987FA680A8B532195B /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		047A7BD9709F835FF4441CD3 /* OfflineSeylerStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineSeylerStoreTests.swift; sourceTree = "<group>"; };
 		0560182334BBB8AB6D384F37 /* PaginationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginationParser.swift; sourceTree = "<group>"; };
+		063D7C4B7A218C7877186EAE /* MessageNotificationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageNotificationPolicyTests.swift; sourceTree = "<group>"; };
 		07AE5B0D3204D8B0A8EAC9AA /* OfflineDownloadPlannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineDownloadPlannerTests.swift; sourceTree = "<group>"; };
 		0865AE2EEFACE80D50438471 /* SessionPrivacyCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPrivacyCleanupTests.swift; sourceTree = "<group>"; };
 		096203A7BA87F12A9BA6BF8A /* OfflineTopicStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineTopicStore.swift; sourceTree = "<group>"; };
@@ -345,6 +351,7 @@
 		471180B6C392F9E8DD25C15E /* ImageLightboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLightboxView.swift; sourceTree = "<group>"; };
 		47B581F0230903AE2676662F /* MessageComposeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageComposeView.swift; sourceTree = "<group>"; };
 		48F90FA1ED99452C4AC6B4DE /* TopicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicService.swift; sourceTree = "<group>"; };
+		494E6CD780686003B5C84E0B /* WidgetPresentationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPresentationPolicyTests.swift; sourceTree = "<group>"; };
 		4EE4D90695201FE418B4ADA0 /* CachedRemoteImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedRemoteImage.swift; sourceTree = "<group>"; };
 		505179474ECE1D9A19FCA532 /* TabCustomizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabCustomizationView.swift; sourceTree = "<group>"; };
 		52B33D725032F53CD27D9F21 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
@@ -378,6 +385,7 @@
 		7B4F11A2D0B50D1CBE8CC48F /* EntryFormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryFormattingTests.swift; sourceTree = "<group>"; };
 		7BE8AADA52C874F0582C14EB /* UserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
 		7C7F481E690443255C63DE94 /* HTMLContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLContentRenderer.swift; sourceTree = "<group>"; };
+		7D4D9D2537D1BE9A1E850FC8 /* WidgetPresentationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPresentationPolicy.swift; sourceTree = "<group>"; };
 		7E833EA8A04D1134953FD0E4 /* AlternateAurora@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateAurora@1x.png"; sourceTree = "<group>"; };
 		7F1631998B13ED479F812D73 /* MessageParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageParser.swift; sourceTree = "<group>"; };
 		80EDFE0AC83802E41386D74A /* AlternateForest@2x~ipad.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AlternateForest@2x~ipad.png"; sourceTree = "<group>"; };
@@ -474,6 +482,7 @@
 		DE3B8F2F916078390A7E7669 /* ProfilePaginationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePaginationTests.swift; sourceTree = "<group>"; };
 		DEDB0D7C9DB1B95373E58917 /* HomeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTabView.swift; sourceTree = "<group>"; };
 		E1A5D824F0359584A303393D /* WebBootstrapPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebBootstrapPolicy.swift; sourceTree = "<group>"; };
+		E2C3DBFD23AF84A75FA5CC98 /* MessageNotificationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageNotificationPolicy.swift; sourceTree = "<group>"; };
 		E34355F237FF346D01AE5F44 /* SkeletonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonViews.swift; sourceTree = "<group>"; };
 		E3773B51ED99127F6AD05400 /* DebeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebeViewModel.swift; sourceTree = "<group>"; };
 		E39BB12F6FF07DF2A74E1626 /* MessageComposePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageComposePolicyTests.swift; sourceTree = "<group>"; };
@@ -588,6 +597,7 @@
 			children = (
 				5D179496F94FED2EBB8A21CE /* WidgetDeepLinkTests.swift */,
 				CC87DA2E82255881557FB4CA /* WidgetFeedParserTests.swift */,
+				494E6CD780686003B5C84E0B /* WidgetPresentationPolicyTests.swift */,
 				C282EB7B085DA423578E76FD /* WidgetSnapshotStoreTests.swift */,
 			);
 			path = Widget;
@@ -683,6 +693,7 @@
 			children = (
 				40874911EDAF697BA93B72D3 /* WidgetFeed.swift */,
 				DB972975C946477DBC78305A /* WidgetFeedParser.swift */,
+				7D4D9D2537D1BE9A1E850FC8 /* WidgetPresentationPolicy.swift */,
 				28712D75E4953F1D4B2EE555 /* WidgetSnapshotStore.swift */,
 			);
 			path = Widget;
@@ -1053,6 +1064,7 @@
 			children = (
 				14777742FD7C7736667B5272 /* MessageBubblePresentation.swift */,
 				880F7DC92D3D4DE26842EFD0 /* MessageComposePolicy.swift */,
+				E2C3DBFD23AF84A75FA5CC98 /* MessageNotificationPolicy.swift */,
 			);
 			path = Messages;
 			sourceTree = "<group>";
@@ -1084,6 +1096,7 @@
 				729F247088056BE2A4E42358 /* MessageBubblePresentationTests.swift */,
 				E39BB12F6FF07DF2A74E1626 /* MessageComposePolicyTests.swift */,
 				66DAE162A8D2DFF9C5D7F474 /* MessageComposeViewModelTests.swift */,
+				063D7C4B7A218C7877186EAE /* MessageNotificationPolicyTests.swift */,
 			);
 			path = Messages;
 			sourceTree = "<group>";
@@ -1379,6 +1392,7 @@
 				C48FDFAE9A2B4C5F9DF4F6FD /* MessageContentParser.swift in Sources */,
 				8267AA13D6561F2B3F657969 /* MessageListView.swift in Sources */,
 				3C2EAC0675E94ACFAB0ACF3D /* MessageListViewModel.swift in Sources */,
+				9BC9C2DF6356AF7D4483EADD /* MessageNotificationPolicy.swift in Sources */,
 				31D05497FC98242E71D370FA /* MessageParser.swift in Sources */,
 				1CAD5159C1145B46080DFB6E /* MessageService.swift in Sources */,
 				229374EFA4F1843CAAB16283 /* MessageThread.swift in Sources */,
@@ -1454,6 +1468,7 @@
 				7FC3A86B26F7AA5FFC1D90D9 /* WebViewFetcher.swift in Sources */,
 				8465BBCBE3141E0592694771 /* WidgetFeed.swift in Sources */,
 				88B79E261CC795672A340DEF /* WidgetFeedParser.swift in Sources */,
+				44D4532D2C420139661B0D30 /* WidgetPresentationPolicy.swift in Sources */,
 				62C43D6257DF95D1BA322C2D /* WidgetSnapshotStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1468,6 +1483,7 @@
 				97E184A0553763CF4C6975FE /* PopularTopicsProvider.swift in Sources */,
 				B5597D49114D5ECE7E2EEB50 /* WidgetFeed.swift in Sources */,
 				A22D9BEE025A32FEF53E01E9 /* WidgetFeedParser.swift in Sources */,
+				1BABA2C201F6E0C7F2AA1187 /* WidgetPresentationPolicy.swift in Sources */,
 				33F35919BB29F9D85F4F75C5 /* WidgetSnapshotStore.swift in Sources */,
 				5377ABBDF37D784FE604F173 /* WidgetTopicView.swift in Sources */,
 			);
@@ -1497,6 +1513,7 @@
 				35032A009193DA4E2FE1EB38 /* MessageBubblePresentationTests.swift in Sources */,
 				E0A87F633AC2F1F3E6611C1C /* MessageComposePolicyTests.swift in Sources */,
 				890EA463470D30752F7CDFED /* MessageComposeViewModelTests.swift in Sources */,
+				008E02E7D1A5F3CCF8628DC7 /* MessageNotificationPolicyTests.swift in Sources */,
 				61FD14182E85F03FA5C4A9BF /* MessageParserTests.swift in Sources */,
 				A199CC3B10B34F1B2E489685 /* MessageRequestTests.swift in Sources */,
 				5291FED0EE50AC83FD7F2F73 /* OfflineDownloadPlannerTests.swift in Sources */,
@@ -1517,6 +1534,7 @@
 				8BD5EA1DA41D44A972F127DB /* WebBootstrapPolicyTests.swift in Sources */,
 				11F64C7E1B88A567FE8040EC /* WidgetDeepLinkTests.swift in Sources */,
 				0FE2B40D2B9A3BBE5BC5FA2C /* WidgetFeedParserTests.swift in Sources */,
+				BE069A05688A771DA00FCC28 /* WidgetPresentationPolicyTests.swift in Sources */,
 				9EAE7FC05C2E29981AA1342B /* WidgetSnapshotStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1543,14 +1561,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.4;
+				MARKETING_VERSION = 2.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				SDKROOT = iphoneos;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1585,7 +1603,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikApp-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -1593,7 +1611,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.4;
+				MARKETING_VERSION = 2.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik App Store AppGroups 2026";
 				SDKROOT = iphoneos;
@@ -1608,7 +1626,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1616,7 +1634,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.4;
+				MARKETING_VERSION = 2.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
@@ -1767,7 +1785,7 @@
 				CODE_SIGN_ENTITLEMENTS = EksilikWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 235UP83FJ4;
 				INFOPLIST_FILE = "EksilikWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -1776,7 +1794,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.0.4;
+				MARKETING_VERSION = 2.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = emre.isik.Eksilik.widget;
 				PROVISIONING_PROFILE_SPECIFIER = "Eksilik Widget App Store AppGroups 2026";
 				SDKROOT = iphoneos;
