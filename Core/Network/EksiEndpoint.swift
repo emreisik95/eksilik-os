@@ -57,6 +57,7 @@ enum EksiEndpoint {
     case messages(page: Int?)
     case messageThread(id: String)
     case sendMessage
+    case replyMessage
 
     // Topic tracking
     case trackTopic(id: String)
@@ -123,7 +124,8 @@ enum EksiEndpoint {
             if let page { return "/mesaj?p=\(page)" }
             return "/mesaj"
         case .messageThread(let id): return "/mesaj/\(id)"
-        case .sendMessage: return "/mesaj/yolla"
+        case .sendMessage: return "/mesaj/sendajax"
+        case .replyMessage: return "/mesaj/yolla"
         case .trackTopic(let id): return "/baslik/takip-et/\(id)"
         case .untrackTopic(let id): return "/baslik/takip-etme/\(id)"
         case .login: return "/giris"
@@ -135,7 +137,7 @@ enum EksiEndpoint {
     var method: HTTPMethod {
         switch self {
         case .createEntry, .deleteEntry, .favoriteEntry, .unfavoriteEntry,
-             .voteEntry, .removeVote, .blockUser, .sendMessage, .commentVote,
+             .voteEntry, .removeVote, .blockUser, .sendMessage, .replyMessage, .commentVote,
              .channelFollow, .channelUnfollow, .trackTopic, .untrackTopic:
             return .post
         default:

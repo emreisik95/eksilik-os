@@ -132,6 +132,21 @@ final class AuthParserTests: XCTestCase {
         XCTAssertEqual(token, "abc123token")
     }
 
+    func testMessageFormCSRFTokenTakesPriorityOverPageToken() {
+        let html = """
+        <li class="buddy mobile-only"><a href="/biri/testuser">testuser</a></li>
+        <input name="__RequestVerificationToken" value="page-token" />
+        <form id="message-send-form-123">
+            <input name="__RequestVerificationToken" value="message-token" />
+        </form>
+        """
+
+        let state = AuthParser.parseAuthState(html: html)
+
+        XCTAssertEqual(state.csrfToken, "message-token")
+        XCTAssertEqual(AuthParser.parseCSRFToken(html: html), "message-token")
+    }
+
     func testUnreadMessages() {
         let html = """
         <li class="messages mobile-only"><a><svg class="green"></svg></a></li>

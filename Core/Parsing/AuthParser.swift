@@ -52,11 +52,7 @@ struct AuthParser {
         }
 
         // CSRF token
-        var csrfToken: String?
-        for el in doc.css("input[name^=__RequestVerificationToken]") {
-            csrfToken = el["value"]
-            break
-        }
+        let csrfToken = parseCSRFToken(html: html)
 
         return AuthState(
             isLoggedIn: isLoggedIn,
@@ -70,7 +66,28 @@ struct AuthParser {
 
     static func parseCSRFToken(html: String) -> String? {
         guard let doc = HTMLParser.parse(html) else { return nil }
-        return doc.at_css("input[name^=__RequestVerificationToken]")?["value"]
+
+        // Message sending has its own form token. Pages can contain another
+        // verification token earlier in the document, so prefer the token
+        // rendered inside the message form and fall back to the page token.
+        for form in doc.css("form") {
+            guard form["id"]?.hasPrefix("message-send-form") == true else { continue }
+            for input in form.css("input") {
+                guard input["name"]?.hasPrefix("__RequestVerificationToken") == true,
+                      let value = input["value"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !value.isEmpty else { continue }
+                return value
+            }
+        }
+
+        for input in doc.css("input") {
+            guard input["name"]?.hasPrefix("__RequestVerificationToken") == true,
+                  let value = input["value"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty else { continue }
+            return value
+        }
+
+        return nil
     }
 
     static func parseLoginUsername(html: String) -> String? {

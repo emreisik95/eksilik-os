@@ -12,4 +12,26 @@ final class MessageRequestTests: XCTestCase {
         XCTAssertEqual(EksiEndpoint.sendMessage.method, .post)
         XCTAssertFalse(EksiEndpoint.sendMessage.omitsAjaxHeader)
     }
+
+    func testNewMessageUsesTheDedicatedAjaxEndpoint() {
+        XCTAssertEqual(EksiEndpoint.sendMessage.path, "/mesaj/sendajax")
+    }
+
+    func testReplyUsesTheConversationEndpoint() {
+        XCTAssertEqual(EksiEndpoint.replyMessage.method, .post)
+        XCTAssertEqual(EksiEndpoint.replyMessage.path, "/mesaj/yolla")
+        XCTAssertFalse(EksiEndpoint.replyMessage.omitsAjaxHeader)
+    }
+
+    func testMessageServiceSelectsEndpointFromConversationState() {
+        XCTAssertEqual(MessageService.endpoint(for: nil).path, "/mesaj/sendajax")
+        XCTAssertEqual(MessageService.endpoint(for: "  ").path, "/mesaj/sendajax")
+        XCTAssertEqual(MessageService.endpoint(for: "2541826").path, "/mesaj/yolla")
+    }
+
+    func testMessageServiceRequiresANonEmptyCSRFToken() {
+        XCTAssertNil(MessageService.usableCSRFToken(nil))
+        XCTAssertNil(MessageService.usableCSRFToken("  \n"))
+        XCTAssertEqual(MessageService.usableCSRFToken("  token-123  "), "token-123")
+    }
 }

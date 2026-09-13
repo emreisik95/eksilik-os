@@ -13,8 +13,6 @@ struct TopicEntry: TimelineEntry {
         date: Date(),
         topics: [
             WidgetFeedItem(title: "yükleniyor...", subtitle: nil, metadata: nil, link: ""),
-            WidgetFeedItem(title: "yükleniyor...", subtitle: nil, metadata: nil, link: ""),
-            WidgetFeedItem(title: "yükleniyor...", subtitle: nil, metadata: nil, link: ""),
         ],
         source: .gundem,
         theme: .dark,

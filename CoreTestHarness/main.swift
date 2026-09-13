@@ -1224,6 +1224,48 @@ private struct Harness {
         )
     }
 
+    mutating func runWidgetAndNotificationChecks() {
+        let messageFormHTML = """
+        <input name="__RequestVerificationToken" value="page-token" />
+        <form id="message-send-form-123">
+            <input name="__RequestVerificationToken" value="message-token" />
+        </form>
+        """
+        expect(
+            AuthParser.parseCSRFToken(html: messageFormHTML) == "message-token",
+            "message forms should prefer their own CSRF token"
+        )
+        expect(
+            WidgetPresentationPolicy.topicLimit(for: .small) == 1,
+            "small widgets should show one topic so long titles can wrap"
+        )
+        expect(
+            WidgetPresentationPolicy.titleLineLimit(for: .small) >= 4,
+            "small widget titles should have enough lines for readable wrapping"
+        )
+        expect(
+            WidgetPresentationPolicy.topicLimit(for: .medium) == 4
+                && WidgetPresentationPolicy.topicLimit(for: .large) == 10,
+            "medium and large widgets should retain their existing feed density"
+        )
+        expect(
+            EksiEndpoint.sendMessage.path == "/mesaj/sendajax",
+            "new messages should use the server's dedicated send endpoint"
+        )
+        expect(
+            EksiEndpoint.replyMessage.path == "/mesaj/yolla",
+            "replies should use the conversation endpoint"
+        )
+        expect(
+            MessageNotificationPolicy.badgeValue(for: .profile, hasUnreadMessages: true) == 1,
+            "unread messages should produce a profile-tab badge"
+        )
+        expect(
+            MessageNotificationPolicy.badgeValue(for: .home, hasUnreadMessages: true) == nil,
+            "message badges should not appear on unrelated tabs"
+        )
+    }
+
     mutating func runSeylerChecks() {
         let html = """
         <a class="hero-item" href="https://eksiseyler.com/ilk-hikaye">
@@ -1352,6 +1394,7 @@ harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
 harness.runProfileConnectionRequestChecks()
 harness.runMessageParsingChecks()
+harness.runWidgetAndNotificationChecks()
 harness.runSeylerChecks()
 harness.runOfflineSeylerChecks()
 harness.runSeylerArticleChecks()
