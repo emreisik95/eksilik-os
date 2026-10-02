@@ -42,7 +42,7 @@ extension HomeTabView {
                     .font(.caption2.weight(isSelected ? .bold : .regular))
                     .lineLimit(1)
             }
-            .foregroundColor(isSelected ? themeManager.current.accentColor : .secondary)
+            .foregroundColor(isSelected ? themeManager.current.tabBarTintColor : .secondary)
             .padding(.horizontal, 12)
             .frame(minWidth: 62, minHeight: 52)
         }
@@ -50,7 +50,7 @@ extension HomeTabView {
         .overlay(alignment: .top) {
             if isSelected {
                 Capsule()
-                    .fill(themeManager.current.accentColor)
+                    .fill(themeManager.current.tabBarTintColor)
                     .frame(width: 28, height: 3)
             }
         }
@@ -79,7 +79,7 @@ extension HomeTabView {
                             .frame(minHeight: 44)
                             .background(
                                 isSelected
-                                    ? themeManager.current.accentColor
+                                    ? themeManager.current.tabBarTintColor
                                     : themeManager.current.cellSecondaryColor,
                                 in: Capsule()
                             )
@@ -125,7 +125,7 @@ extension HomeTabView {
                             .padding(.horizontal, isSelected ? 14 : 12)
                             .frame(minHeight: 48)
                             .background(
-                                isSelected ? themeManager.current.accentColor : Color.clear,
+                                isSelected ? themeManager.current.tabBarTintColor : Color.clear,
                                 in: Capsule()
                             )
                         }
@@ -296,13 +296,13 @@ extension HomeTabView {
                 }
             }
             .foregroundColor(isSelected
-                ? themeManager.current.accentColor
+                ? themeManager.current.tabBarTintColor
                 : themeManager.current.labelColor)
             .padding(.horizontal, 13)
             .frame(minHeight: 52)
             .background(
                 isSelected
-                    ? themeManager.current.accentColor.opacity(0.13)
+                    ? themeManager.current.tabBarTintColor.opacity(0.13)
                     : Color.clear,
                 in: RoundedRectangle(cornerRadius: 14, style: .continuous)
             )

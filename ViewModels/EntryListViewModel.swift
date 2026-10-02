@@ -104,7 +104,7 @@ final class EntryListViewModel: ObservableObject {
 
     /// Pre-parse HTML content to NSAttributedString before displaying
     private func preParseEntries(_ raw: [Entry]) -> [Entry] {
-        let theme = ThemeManager().current
+        let theme = ThemeManager.activePalette()
         let prefs = UserPreferences()
 
         return raw.map { entry in
@@ -112,9 +112,9 @@ final class EntryListViewModel: ObservableObject {
             e.parsedContent = HTMLContentRenderer.render(
                 html: entry.contentHTML,
                 fontSize: prefs.selectedFontSize,
-                fontName: prefs.selectedFont,
-                textColorHex: theme.entryTextColor.hexString,
-                linkColorHex: theme.linkColor.hexString,
+                readingFont: prefs.readingFont,
+                textColorHex: theme.entryText.hexString,
+                linkColorHex: theme.link.hexString,
                 spoilerBgHex: theme.spoilerBackgroundHex
             )
             return e

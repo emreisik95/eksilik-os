@@ -39,7 +39,7 @@ struct SettingsView: View {
             .background(themeManager.current.backgroundColor.ignoresSafeArea())
             .navigationTitle(L10n.Settings.title)
             .navigationBarTitleDisplayMode(.large)
-            .toolbarBackground(themeManager.current.backgroundColor, for: .navigationBar)
+            .toolbarBackground(themeManager.current.navBarColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .tint(themeManager.current.accentColor)
             .confirmationDialog(

@@ -1,7 +1,7 @@
 import SwiftUI
 
 final class UserPreferences: ObservableObject {
-    private static let selectedFontKey = "selectedFont"
+    private static let readingFontKey = "readingFont"
     private static let selectedFontSizeKey = "selectedFontSize"
     private static let openLinksInSafariKey = "openLinksInSafari"
     private static let hideEntriesEnabledKey = "hideEntriesEnabled"
@@ -16,8 +16,8 @@ final class UserPreferences: ObservableObject {
 
     private let defaults: UserDefaults
 
-    @Published var selectedFont: String {
-        didSet { defaults.set(selectedFont, forKey: Self.selectedFontKey) }
+    @Published var readingFont: ReadingFont {
+        didSet { defaults.set(readingFont.rawValue, forKey: Self.readingFontKey) }
     }
 
     @Published var selectedFontSize: Int {
@@ -69,7 +69,7 @@ final class UserPreferences: ObservableObject {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        selectedFont = defaults.string(forKey: Self.selectedFontKey) ?? "Helvetica"
+        readingFont = ReadingFont.resolve(storedValue: defaults.string(forKey: Self.readingFontKey))
         if defaults.object(forKey: Self.selectedFontSizeKey) == nil {
             selectedFontSize = 15
         } else {

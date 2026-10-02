@@ -43,14 +43,14 @@ final class DebeViewModel: ObservableObject {
                     entries[index].date = parsed.date
 
                     // Pre-render HTML
-                    let theme = ThemeManager().current
+                    let theme = ThemeManager.activePalette()
                     let prefs = UserPreferences()
                     entries[index].parsedContent = HTMLContentRenderer.render(
                         html: parsed.content,
                         fontSize: prefs.selectedFontSize,
-                        fontName: prefs.selectedFont,
-                        textColorHex: theme.entryTextColor.hexString,
-                        linkColorHex: theme.linkColor.hexString,
+                        readingFont: prefs.readingFont,
+                        textColorHex: theme.entryText.hexString,
+                        linkColorHex: theme.link.hexString,
                         spoilerBgHex: theme.spoilerBackgroundHex
                     )
                 }

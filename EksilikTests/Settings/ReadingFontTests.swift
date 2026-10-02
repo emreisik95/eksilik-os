@@ -74,7 +74,7 @@ final class ReadingFontTests: XCTestCase {
 
         XCTAssertEqual(font.pointSize, 17)
         XCTAssertTrue(font.fontDescriptor.symbolicTraits.contains(.traitBold))
-        XCTAssertEqual(font.familyName, UIFont.systemFont(ofSize: 17).familyName)
+        XCTAssertEqual(font.fontName, ReadingFont.system.uiFont(size: 17, bold: true).fontName)
     }
 
     func testSystemDesignKeepsBoldAndItalicTraits() {

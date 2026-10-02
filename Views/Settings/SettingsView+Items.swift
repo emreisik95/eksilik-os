@@ -12,7 +12,7 @@ extension SettingsView {
                 destination: ThemePickerView(),
                 icon: "circle.lefthalf.filled",
                 title: "tema",
-                detail: themeManager.current.name
+                detail: themeManager.currentName
             )
         case .entryLayout:
             navigationRow(
@@ -23,6 +23,13 @@ extension SettingsView {
             )
         case .fontSize:
             fontSizeRow
+        case .readingFont:
+            navigationRow(
+                destination: ReadingFontPickerView(),
+                icon: "textformat",
+                title: "okuma yazı tipi",
+                detail: preferences.readingFont.name
+            )
         case .filterStyle:
             filterStyleRow
         case .appIcon:

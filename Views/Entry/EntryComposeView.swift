@@ -25,7 +25,7 @@ struct EntryComposeView: View {
         .navigationBarBackButtonHidden(true)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .toolbarBackground(themeManager.current.backgroundColor, for: .navigationBar)
+        .toolbarBackground(themeManager.current.navBarColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {

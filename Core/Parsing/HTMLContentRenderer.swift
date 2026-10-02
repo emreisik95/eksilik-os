@@ -4,7 +4,7 @@ enum HTMLContentRenderer {
     static func render(
         html: String,
         fontSize: Int,
-        fontName: String,
+        readingFont: ReadingFont,
         textColorHex: String,
         linkColorHex: String,
         spoilerBgHex: String
@@ -19,7 +19,7 @@ enum HTMLContentRenderer {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-size: \(fontSize)px;
-            font-family: '\(fontName)', -apple-system, sans-serif;
+            font-family: -apple-system, sans-serif;
             color: \(textColorHex);
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -34,7 +34,7 @@ enum HTMLContentRenderer {
 
         guard let data = styledHTML.data(using: .utf8) else { return nil }
 
-        return try? NSAttributedString(
+        let imported = try? NSAttributedString(
             data: data,
             options: [
                 .documentType: NSAttributedString.DocumentType.html,
@@ -42,6 +42,25 @@ enum HTMLContentRenderer {
             ],
             documentAttributes: nil
         )
+        return imported.map { applyingReadingFont(readingFont, to: $0) }
+    }
+
+    /// The HTML importer resolves CSS to system fonts. Swap every run for the reading font while
+    /// keeping the run's size (so `.star-ref` stays smaller) and its bold/italic traits.
+    static func applyingReadingFont(_ readingFont: ReadingFont, to text: NSAttributedString) -> NSAttributedString {
+        let result = NSMutableAttributedString(attributedString: text)
+        let fullRange = NSRange(location: 0, length: result.length)
+        result.enumerateAttribute(.font, in: fullRange) { value, range, _ in
+            guard let font = value as? UIFont else { return }
+            let traits = font.fontDescriptor.symbolicTraits
+            let replacement = readingFont.uiFont(
+                size: font.pointSize,
+                bold: traits.contains(.traitBold),
+                italic: traits.contains(.traitItalic)
+            )
+            result.addAttribute(.font, value: replacement, range: range)
+        }
+        return result
     }
 
     /// Expand hidden bkz stars: <sup><a data-query="topic">*</a></sup> → (bkz: topic)

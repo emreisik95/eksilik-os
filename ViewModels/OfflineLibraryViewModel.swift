@@ -122,7 +122,7 @@ final class OfflineTopicReaderViewModel: ObservableObject {
         readState.isRead(entryID)
     }
 
-    func load(topicID: String, theme: AppTheme, preferences: UserPreferences) async {
+    func load(topicID: String, theme: ThemePalette, preferences: UserPreferences) async {
         guard entries.isEmpty else { return }
         isLoading = true
         error = nil
@@ -149,9 +149,9 @@ final class OfflineTopicReaderViewModel: ObservableObject {
                     attributedContent: HTMLContentRenderer.render(
                         html: entry.contentHTML,
                         fontSize: preferences.selectedFontSize,
-                        fontName: preferences.selectedFont,
-                        textColorHex: theme.entryTextColor.hexString,
-                        linkColorHex: theme.linkColor.hexString,
+                        readingFont: preferences.readingFont,
+                        textColorHex: theme.entryText.hexString,
+                        linkColorHex: theme.link.hexString,
                         spoilerBgHex: theme.spoilerBackgroundHex
                     ),
                     localImageURLs: imageURLs,
