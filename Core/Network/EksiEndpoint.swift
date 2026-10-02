@@ -1,6 +1,6 @@
 import Foundation
 
-enum EksiEndpoint {
+enum EksiEndpoint: Equatable {
     // Topic lists
     case popular
     case popularPage(page: Int)
@@ -148,10 +148,14 @@ enum EksiEndpoint {
         }
     }
 
+    /// Requests a browser makes as plain documents. The server fails these
+    /// with HTTP 500 when they carry the AJAX header, so they go out as
+    /// navigations and form submissions would. `/mesaj/sendajax` is the one
+    /// message endpoint the site itself calls over AJAX.
     var omitsAjaxHeader: Bool {
         switch self {
         case .followingPage, .followingFavorites, .profileConnections,
-             .messages, .messageThread:
+             .messages, .messageThread, .replyMessage, .submitMessageForm:
             return true
         default:
             return false

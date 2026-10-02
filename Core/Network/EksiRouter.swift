@@ -39,8 +39,8 @@ struct EksiRouter {
             request.setValue(value, forHTTPHeaderField: key)
         }
 
-        // These mobile follow feeds return HTTP 500 when requested as AJAX,
-        // even though the same authenticated document request succeeds.
+        // Follow feeds and message pages and forms return HTTP 500 when
+        // requested as AJAX, even though the same document request succeeds.
         if endpoint.omitsAjaxHeader {
             request.setValue(nil, forHTTPHeaderField: "X-Requested-With")
         }
