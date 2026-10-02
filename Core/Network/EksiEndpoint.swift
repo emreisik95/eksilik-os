@@ -58,6 +58,8 @@ enum EksiEndpoint {
     case messageThread(id: String)
     case sendMessage
     case replyMessage
+    /// The action of a server-rendered message form, kept to `/mesaj/...`.
+    case submitMessageForm(path: String)
 
     // Topic tracking
     case trackTopic(id: String)
@@ -126,6 +128,7 @@ enum EksiEndpoint {
         case .messageThread(let id): return "/mesaj/\(id)"
         case .sendMessage: return "/mesaj/sendajax"
         case .replyMessage: return "/mesaj/yolla"
+        case .submitMessageForm(let path): return path
         case .trackTopic(let id): return "/baslik/takip-et/\(id)"
         case .untrackTopic(let id): return "/baslik/takip-etme/\(id)"
         case .login: return "/giris"
@@ -137,7 +140,7 @@ enum EksiEndpoint {
     var method: HTTPMethod {
         switch self {
         case .createEntry, .deleteEntry, .favoriteEntry, .unfavoriteEntry,
-             .voteEntry, .removeVote, .blockUser, .sendMessage, .replyMessage, .commentVote,
+             .voteEntry, .removeVote, .blockUser, .sendMessage, .replyMessage, .submitMessageForm, .commentVote,
              .channelFollow, .channelUnfollow, .trackTopic, .untrackTopic:
             return .post
         default:
