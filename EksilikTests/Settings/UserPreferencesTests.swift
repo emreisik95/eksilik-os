@@ -103,18 +103,35 @@ final class UserPreferencesTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let preferences = UserPreferences(defaults: defaults)
-        preferences.selectedFont = "Avenir Next"
+        preferences.readingFont = .sourceSerif
         preferences.openLinksInSafari = false
         preferences.hideEntriesEnabled = true
         preferences.baseURL = "https://eksisozluk.com"
         preferences.useIconFilters = true
 
         let restored = UserPreferences(defaults: defaults)
-        XCTAssertEqual(restored.selectedFont, "Avenir Next")
+        XCTAssertEqual(restored.readingFont, .sourceSerif)
         XCTAssertFalse(restored.openLinksInSafari)
         XCTAssertTrue(restored.hideEntriesEnabled)
         XCTAssertEqual(restored.baseURL, "https://eksisozluk.com")
         XCTAssertTrue(restored.useIconFilters)
+    }
+
+    func testReadingFontDefaultsToSystemAndIgnoresLegacyFontNames() throws {
+        let suiteName = "UserPreferencesTests.readingFont"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("Helvetica", forKey: "selectedFont")
+
+        let preferences = UserPreferences(defaults: defaults)
+        XCTAssertEqual(preferences.readingFont, .system)
+
+        preferences.readingFont = .newYork
+        XCTAssertEqual(defaults.string(forKey: "readingFont"), ReadingFont.newYork.rawValue)
+
+        defaults.set("future-font", forKey: "readingFont")
+        XCTAssertEqual(UserPreferences(defaults: defaults).readingFont, .system)
     }
 
     func testAllVisibleLegacyTabsMigrateToIncludeEksiSeyler() throws {

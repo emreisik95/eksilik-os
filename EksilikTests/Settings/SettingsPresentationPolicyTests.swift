@@ -18,7 +18,7 @@ final class SettingsPresentationPolicyTests: XCTestCase {
         XCTAssertEqual(
             items,
             [
-                .theme, .entryLayout, .fontSize, .filterStyle, .appIcon,
+                .theme, .entryLayout, .fontSize, .readingFont, .filterStyle, .appIcon,
                 .homeNavigation, .homeTabs,
                 .offlineLibrary, .blockedTopics,
                 .login,
