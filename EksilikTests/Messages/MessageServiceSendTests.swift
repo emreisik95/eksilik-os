@@ -71,9 +71,8 @@ final class MessageServiceSendTests: XCTestCase {
 
         do {
             try await service.sendMessage(recipient: "", subject: "", body: "b", threadID: nil, csrfToken: nil)
-            XCTFail("empty recipient should be ignored before any request")
         } catch {
-            XCTFail("unexpected error \(error)")
+            XCTFail("empty recipient should be ignored before any request, got \(error)")
         }
         XCTAssertTrue(transport.fetched.isEmpty)
 
