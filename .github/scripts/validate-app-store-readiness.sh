@@ -120,13 +120,27 @@ primary_alpha="$(sips -g hasAlpha "$primary_icon" 2>/dev/null | awk '/hasAlpha/ 
     || fail "$primary_icon must be 1024x1024"
 [[ "$primary_alpha" == "no" ]] || fail "$primary_icon must not contain transparency"
 
-for family in \
-    AlternateIcon \
-    AlternateKlasik \
-    AlternateNoir \
-    AlternateAurora \
-    AlternateDepth \
-    AlternateForest; do
+alternate_families=(
+    AlternateIcon
+    AlternateDictionary
+    AlternateNoir
+    AlternateTerminal
+    AlternateNeon
+    AlternateAurora
+    AlternateBosphorus
+    AlternateForest
+    AlternateLemon
+    AlternateCoffee
+    AlternateGold
+    AlternateDepth
+    AlternatePixel
+    AlternateKlasik
+)
+(( ${#alternate_families[@]} >= 12 )) || fail "at least twelve alternate app icons are required"
+
+for family in "${alternate_families[@]}"; do
+    grep -Fq "iconName: \"$family\"" Core/Presentation/AppIconPresentationPolicy.swift \
+        || fail "$family must be selectable in AppIconPresentationPolicy"
     for scale in 1 2 3; do
         file="Resources/AlternateIcons/${family}@${scale}x.png"
         expected=$((60 * scale))

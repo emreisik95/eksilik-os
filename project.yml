@@ -57,21 +57,45 @@ targets:
             AlternateIcon:
               CFBundleIconFiles:
                 - AlternateIcon
-            AlternateKlasik:
+            AlternateDictionary:
               CFBundleIconFiles:
-                - AlternateKlasik
+                - AlternateDictionary
             AlternateNoir:
               CFBundleIconFiles:
                 - AlternateNoir
+            AlternateTerminal:
+              CFBundleIconFiles:
+                - AlternateTerminal
+            AlternateNeon:
+              CFBundleIconFiles:
+                - AlternateNeon
             AlternateAurora:
               CFBundleIconFiles:
                 - AlternateAurora
-            AlternateDepth:
+            AlternateBosphorus:
               CFBundleIconFiles:
-                - AlternateDepth
+                - AlternateBosphorus
             AlternateForest:
               CFBundleIconFiles:
                 - AlternateForest
+            AlternateLemon:
+              CFBundleIconFiles:
+                - AlternateLemon
+            AlternateCoffee:
+              CFBundleIconFiles:
+                - AlternateCoffee
+            AlternateGold:
+              CFBundleIconFiles:
+                - AlternateGold
+            AlternateDepth:
+              CFBundleIconFiles:
+                - AlternateDepth
+            AlternatePixel:
+              CFBundleIconFiles:
+                - AlternatePixel
+            AlternateKlasik:
+              CFBundleIconFiles:
+                - AlternateKlasik
         "CFBundleIcons~ipad":
           CFBundlePrimaryIcon:
             CFBundleIconFiles: []
@@ -79,21 +103,45 @@ targets:
             AlternateIcon:
               CFBundleIconFiles:
                 - AlternateIcon
-            AlternateKlasik:
+            AlternateDictionary:
               CFBundleIconFiles:
-                - AlternateKlasik
+                - AlternateDictionary
             AlternateNoir:
               CFBundleIconFiles:
                 - AlternateNoir
+            AlternateTerminal:
+              CFBundleIconFiles:
+                - AlternateTerminal
+            AlternateNeon:
+              CFBundleIconFiles:
+                - AlternateNeon
             AlternateAurora:
               CFBundleIconFiles:
                 - AlternateAurora
-            AlternateDepth:
+            AlternateBosphorus:
               CFBundleIconFiles:
-                - AlternateDepth
+                - AlternateBosphorus
             AlternateForest:
               CFBundleIconFiles:
                 - AlternateForest
+            AlternateLemon:
+              CFBundleIconFiles:
+                - AlternateLemon
+            AlternateCoffee:
+              CFBundleIconFiles:
+                - AlternateCoffee
+            AlternateGold:
+              CFBundleIconFiles:
+                - AlternateGold
+            AlternateDepth:
+              CFBundleIconFiles:
+                - AlternateDepth
+            AlternatePixel:
+              CFBundleIconFiles:
+                - AlternatePixel
+            AlternateKlasik:
+              CFBundleIconFiles:
+                - AlternateKlasik
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: emre.isik.Eksilik

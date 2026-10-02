@@ -6,22 +6,35 @@ struct AppIconChoice: Identifiable, Equatable, Sendable {
     let imageName: String
 
     var id: String { iconName ?? "primary" }
+
+    /// An alternate icon registered under `CFBundleAlternateIcons`; previews load the @2x file.
+    static func alternate(_ title: String, iconName: String) -> AppIconChoice {
+        AppIconChoice(title: title, iconName: iconName, imageName: "\(iconName)@2x")
+    }
 }
 
 enum AppIconPresentationPolicy {
     static let choices: [AppIconChoice] = [
         AppIconChoice(title: "oldschool", iconName: nil, imageName: "AppIcon"),
-        AppIconChoice(title: "light", iconName: "AlternateIcon", imageName: "AlternateIcon@2x"),
-        AppIconChoice(
-            title: "ornament",
-            iconName: "AlternateKlasik",
-            imageName: "AlternateKlasik@2x"
-        ),
-        AppIconChoice(title: "noir", iconName: "AlternateNoir", imageName: "AlternateNoir@2x"),
-        AppIconChoice(title: "aurora", iconName: "AlternateAurora", imageName: "AlternateAurora@2x"),
-        AppIconChoice(title: "depth", iconName: "AlternateDepth", imageName: "AlternateDepth@2x"),
-        AppIconChoice(title: "forest", iconName: "AlternateForest", imageName: "AlternateForest@2x"),
+        .alternate("kağıt", iconName: "AlternateIcon"),
+        .alternate("sözlük", iconName: "AlternateDictionary"),
+        .alternate("noir", iconName: "AlternateNoir"),
+        .alternate("terminal", iconName: "AlternateTerminal"),
+        .alternate("neon", iconName: "AlternateNeon"),
+        .alternate("aurora", iconName: "AlternateAurora"),
+        .alternate("boğaz", iconName: "AlternateBosphorus"),
+        .alternate("orman", iconName: "AlternateForest"),
+        .alternate("limon", iconName: "AlternateLemon"),
+        .alternate("kahve", iconName: "AlternateCoffee"),
+        .alternate("altın", iconName: "AlternateGold"),
+        .alternate("kil", iconName: "AlternateDepth"),
+        .alternate("8-bit", iconName: "AlternatePixel"),
+        .alternate("ornament", iconName: "AlternateKlasik"),
     ]
+
+    static var alternates: [AppIconChoice] {
+        choices.filter { $0.iconName != nil }
+    }
 
     static func title(for iconName: String?) -> String {
         choices.first(where: { $0.iconName == iconName })?.title ?? choices[0].title

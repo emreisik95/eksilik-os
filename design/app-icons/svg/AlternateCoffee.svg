@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- kahve: top-down coffee cup with drop latte art on terracotta -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D8723F"/>
+      <stop offset="1" stop-color="#B5502A"/>
+    </linearGradient>
+    <radialGradient id="saucer" cx="0.42" cy="0.38" r="0.7">
+      <stop offset="0" stop-color="#FFFBF4"/>
+      <stop offset="1" stop-color="#EADCC8"/>
+    </radialGradient>
+    <radialGradient id="cup" cx="0.4" cy="0.36" r="0.7">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EFE4D4"/>
+    </radialGradient>
+    <radialGradient id="coffee" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#B8733A"/>
+      <stop offset="0.72" stop-color="#94531F"/>
+      <stop offset="0.92" stop-color="#6A3612"/>
+      <stop offset="1" stop-color="#4A230B"/>
+    </radialGradient>
+    <filter id="shadow" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="26"/></filter>
+    <filter id="b6" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="6"/></filter>
+    <filter id="b3" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="b2" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="1.6"/></filter>
+    <radialGradient id="foam" cx="0.42" cy="0.62" r="0.6">
+      <stop offset="0" stop-color="#FFF9EE"/>
+      <stop offset="0.75" stop-color="#F6E8D3"/>
+      <stop offset="1" stop-color="#E2C39C"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="516" cy="562" r="372" fill="#5A1F0B" opacity="0.4" filter="url(#shadow)"/>
+  <circle cx="486" cy="520" r="372" fill="url(#saucer)"/>
+  <circle cx="486" cy="520" r="292" fill="none" stroke="#DCCDB7" stroke-width="6" opacity="0.8"/>
+  <g filter="url(#shadow)" opacity="0.35" fill="#6B4A2A">
+    <circle cx="508" cy="548" r="262"/>
+    <rect x="716" y="504" width="170" height="80" rx="40"/>
+  </g>
+  <rect x="706" y="480" width="170" height="80" rx="40" fill="url(#cup)"/>
+  <rect x="748" y="506" width="96" height="28" rx="14" fill="#E3D3BE"/>
+  <circle cx="486" cy="520" r="262" fill="url(#cup)"/>
+  <circle cx="486" cy="520" r="224" fill="url(#coffee)"/>
+  <circle cx="486" cy="520" r="216" fill="none" stroke="#D9A066" stroke-width="10" opacity="0.45" filter="url(#b3)"/>
+  <g filter="url(#b2)">
+    <path d="M486,324 C521.4,394.8 604,463.2 604,560 A118,118 0 0 1 368,560 C368,463.2 450.6,394.8 486,324 Z" fill="url(#foam)"/>
+  </g>
+  <path d="M316,400 A210,210 0 0 1 526,298" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity="0.25" filter="url(#b6)"/>
+</svg>

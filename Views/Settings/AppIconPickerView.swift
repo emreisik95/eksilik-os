@@ -6,7 +6,7 @@ struct AppIconPickerView: View {
     @State private var iconError: String?
 
     private let columns = [
-        GridItem(.adaptive(minimum: 138), spacing: 14),
+        GridItem(.adaptive(minimum: 100), spacing: 12),
     ]
 
     private let choices = AppIconPresentationPolicy.choices
@@ -23,7 +23,7 @@ struct AppIconPickerView: View {
                         .foregroundColor(themeManager.current.dateColor)
                 }
 
-                LazyVGrid(columns: columns, spacing: 14) {
+                LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(choices) { choice in
                         iconButton(choice)
                     }
@@ -50,39 +50,32 @@ struct AppIconPickerView: View {
         return Button {
             changeAppIcon(to: choice.iconName)
         } label: {
-            VStack(spacing: 14) {
-                if let image = UIImage(named: choice.imageName) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 82, height: 82)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .stroke(.white.opacity(0.18), lineWidth: 1)
-                        }
-                        .shadow(color: .black.opacity(0.16), radius: 8, y: 4)
-                }
+            VStack(spacing: 10) {
+                iconPreview(choice)
 
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Text(choice.title)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.footnote.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.footnote)
                 }
                 .foregroundColor(isSelected
                     ? themeManager.current.backgroundColor
                     : themeManager.current.labelColor)
             }
-            .frame(maxWidth: .infinity, minHeight: 142)
-            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 112)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
             .background(
                 isSelected
                     ? themeManager.current.accentColor
                     : themeManager.current.cellPrimaryColor,
-                in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(
                         isSelected
                             ? themeManager.current.accentColor
@@ -94,6 +87,23 @@ struct AppIconPickerView: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(choice.title) uygulama ikonu")
         .accessibilityValue(isSelected ? "seçili" : "")
+    }
+
+    @ViewBuilder
+    private func iconPreview(_ choice: AppIconChoice) -> some View {
+        if let image = UIImage(named: choice.imageName) {
+            Image(uiImage: image)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 68, height: 68)
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(.white.opacity(0.18), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+        }
     }
 
     private func changeAppIcon(to iconName: String?) {

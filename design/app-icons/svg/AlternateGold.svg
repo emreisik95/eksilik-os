@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- altın: gold foil serif $ on burgundy with a guilloche rosette (Abril Fatface, OFL) -->
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.75">
+      <stop offset="0" stop-color="#7A1A35"/>
+      <stop offset="0.6" stop-color="#4A0E21"/>
+      <stop offset="1" stop-color="#2A0712"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFF0B8"/>
+      <stop offset="0.18" stop-color="#E6B94E"/>
+      <stop offset="0.38" stop-color="#9A6A1E"/>
+      <stop offset="0.52" stop-color="#F8DA86"/>
+      <stop offset="0.62" stop-color="#FFF6D2"/>
+      <stop offset="0.78" stop-color="#C8922F"/>
+      <stop offset="1" stop-color="#7C5214"/>
+    </linearGradient>
+    <linearGradient id="goldLine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F5D27A"/>
+      <stop offset="1" stop-color="#B07A28"/>
+    </linearGradient>
+    <filter id="bevel" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/>
+      <feSpecularLighting in="b" surfaceScale="6" specularConstant="1.1" specularExponent="22" lighting-color="#FFF4D0" result="spec">
+        <feDistantLight azimuth="235" elevation="42"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="SourceAlpha" operator="in" result="specIn"/>
+      <feComposite in="SourceGraphic" in2="specIn" operator="arithmetic" k1="0" k2="1" k3="0.75" k4="0"/>
+    </filter>
+    <filter id="shadow" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#goldLine)" stroke-width="2.2" opacity="0.2"><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(0.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(7.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(15.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(22.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(30.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(37.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(45.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(52.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(60.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(67.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(75.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(82.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(90.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(97.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(105.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(112.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(120.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(127.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(135.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(142.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(150.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(157.5 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(165.0 512 512)"/><ellipse cx="512" cy="512" rx="420" ry="150" transform="rotate(172.5 512 512)"/></g>
+  <circle cx="512" cy="512" r="436" fill="none" stroke="url(#goldLine)" stroke-width="6" opacity="0.32"/>
+  <circle cx="512" cy="512" r="452" fill="none" stroke="url(#goldLine)" stroke-width="2" opacity="0.28"/>
+  <path d="M485.02 258.46000000000004 502.5 257.70000000000005Q518.46 257.70000000000005 532.14 259.98V198.41999999999996H553.4200000000001V263.02Q567.86 266.05999999999995 592.1800000000001 273.28Q616.5 280.5 627.52 280.5Q638.54 280.5 645.38 265.29999999999995H652.98L658.3 415.02H646.9Q599.02 323.06 553.4200000000001 292.66V449.22Q615.74 469.74 651.84 506.22Q687.94 542.7 687.94 613.38Q687.94 684.06 651.84 730.8Q615.74 777.54 553.4200000000001 788.18V837.58H532.14V790.46Q527.58 791.22 514.28 791.22Q500.98 791.22 485.02 788.94V837.58H463.74V786.66L373.3 769.18Q361.14 769.18 352.78 791.22H342.9L336.06 614.9H348.22Q395.34000000000003 717.5 463.74 757.02V586.02Q402.94 564.74 370.64 527.12Q338.34 489.5 338.34 425.28Q338.34 361.06 371.4 316.98Q404.46 272.9 463.74 261.5V198.41999999999996H485.02ZM526.06 775.26H532.14V608.8199999999999Q515.42 601.98 485.78 592.86H485.02V766.9Q505.53999999999996 775.26 526.06 775.26ZM485.02 428.7Q515.42 438.58 532.14 442.38V281.26Q513.14 272.9 500.22 272.9Q487.3 272.9 485.02 273.66ZM615.74 697.74Q615.74 646.8199999999999 553.4200000000001 617.1800000000001V772.22Q580.78 765.38 598.26 746.38Q615.74 727.38 615.74 697.74ZM406.74 348.14Q406.74 396.02 463.74 420.34V276.7Q437.9 284.3 422.32 303.3Q406.74 322.3 406.74 348.14Z" fill="#12020A" opacity="0.6" filter="url(#shadow)" transform="translate(10 22)"/>
+  <path d="M485.02 258.46000000000004 502.5 257.70000000000005Q518.46 257.70000000000005 532.14 259.98V198.41999999999996H553.4200000000001V263.02Q567.86 266.05999999999995 592.1800000000001 273.28Q616.5 280.5 627.52 280.5Q638.54 280.5 645.38 265.29999999999995H652.98L658.3 415.02H646.9Q599.02 323.06 553.4200000000001 292.66V449.22Q615.74 469.74 651.84 506.22Q687.94 542.7 687.94 613.38Q687.94 684.06 651.84 730.8Q615.74 777.54 553.4200000000001 788.18V837.58H532.14V790.46Q527.58 791.22 514.28 791.22Q500.98 791.22 485.02 788.94V837.58H463.74V786.66L373.3 769.18Q361.14 769.18 352.78 791.22H342.9L336.06 614.9H348.22Q395.34000000000003 717.5 463.74 757.02V586.02Q402.94 564.74 370.64 527.12Q338.34 489.5 338.34 425.28Q338.34 361.06 371.4 316.98Q404.46 272.9 463.74 261.5V198.41999999999996H485.02ZM526.06 775.26H532.14V608.8199999999999Q515.42 601.98 485.78 592.86H485.02V766.9Q505.53999999999996 775.26 526.06 775.26ZM485.02 428.7Q515.42 438.58 532.14 442.38V281.26Q513.14 272.9 500.22 272.9Q487.3 272.9 485.02 273.66ZM615.74 697.74Q615.74 646.8199999999999 553.4200000000001 617.1800000000001V772.22Q580.78 765.38 598.26 746.38Q615.74 727.38 615.74 697.74ZM406.74 348.14Q406.74 396.02 463.74 420.34V276.7Q437.9 284.3 422.32 303.3Q406.74 322.3 406.74 348.14Z" fill="url(#gold)" filter="url(#bevel)"/>
+</svg>
