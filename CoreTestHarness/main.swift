@@ -497,6 +497,35 @@ private struct Harness {
             "a deliberately reduced visible-tab selection should stay reduced"
         )
 
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(["today", "popular", "debe", "eksiSeyler"]).prefix(4)
+                == ["today", "eksiSeyler", "popular", "debe"],
+            "a customized order should get Şeyler right before Gündem and keep everything else in place"
+        )
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(defaultIDs) == defaultIDs,
+            "the default order already has Şeyler right before Gündem"
+        )
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(["popular"]).prefix(2) == ["eksiSeyler", "popular"],
+            "an order without Şeyler should gain it before Gündem"
+        )
+        expect(
+            HomeTabCatalog.revealingSeyler(["today", "popular"]) == ["today", "popular", "eksiSeyler"]
+                && HomeTabCatalog.revealingSeyler([]) == []
+                && HomeTabCatalog.revealingSeyler(["eksiSeyler"]) == ["eksiSeyler"],
+            "a reduced selection from before the move should show Şeyler; an empty one already shows all"
+        )
+        let placedTabs = HomeTabCatalog.availableTabs(
+            order: HomeTabCatalog.placingSeylerBeforeGundem(["today", "popular"]),
+            visible: [],
+            isLoggedIn: false
+        ).map(\.id)
+        expect(
+            HomeNavigationPolicy.adjacentTabID(in: placedTabs, selected: "popular", step: -1) == "eksiSeyler",
+            "one swipe from Gündem should open Şeyler"
+        )
+
         let moved = HomeTabCatalog.moving(
             defaultIDs,
             fromOffsets: IndexSet(integer: 0),
@@ -1443,8 +1472,89 @@ private extension Harness {
             MessageSendPolicy.requestBody(
                 payload: ["To": "a", "Message": "b", "ThreadId": "slug", "IsReply": "True"],
                 form: replyForm
-            ) == ["To": "a", "Message": "b", "ThreadId": "2541826", "IsReply": "True"],
-            "reply bodies should use the server conversation id and drop the duplicated token field"
+            ) == ["To": "altere ses", "Message": "b", "ThreadId": "2541826", "IsReply": "True"],
+            "reply bodies should use the server recipient and conversation id and drop the duplicated token field"
+        )
+        expect(
+            MessageSendPolicy.requestBody(
+                payload: ["To": "a", "Message": "b", "ThreadId": "altere-ses", "IsReply": "True"],
+                form: MessageForm(id: nil, action: "/mesaj/yolla", hiddenFields: ["__RequestVerificationToken": "t"])
+            ) == ["To": "a", "Message": "b"],
+            "a thread link slug must never be sent as a conversation id"
+        )
+        expect(
+            MessageSendPolicy.requestBody(
+                payload: ["To": "a", "Message": "b"],
+                form: MessageForm(id: nil, action: nil, hiddenFields: [:], messageFieldName: "Content")
+            ) == ["To": "a", "Content": "b"],
+            "the composed text should travel under the form's own textarea name"
+        )
+        expect(
+            MessageSendPolicy.submitEndpoint(
+                form: MessageForm(id: nil, action: "https://eksisozluk.com/mesaj/gonder", hiddenFields: [:]),
+                isReply: true
+            ).path == "/mesaj/gonder",
+            "sends should go where the rendered form submits"
+        )
+        expect(
+            MessageSendPolicy.submitEndpoint(
+                form: MessageForm(id: nil, action: "https://example.com/mesaj/gonder", hiddenFields: [:]),
+                isReply: false
+            ).path == "/mesaj/sendajax",
+            "form actions off this site must be ignored"
+        )
+        expect(
+            MessageSendPolicy.outcome(responseBody: Data()) == .unconfirmed
+                && MessageSendPolicy.outcome(responseBody: Data("<div>tamam</div>".utf8)) == .unconfirmed,
+            "responses without an explicit result must be confirmed against the conversation"
+        )
+        expect(
+            MessageSendPolicy.outcome(
+                responseBody: Data(#"<div class="validation-summary-errors"><ul><li>çok kısa</li></ul></div>"#.utf8)
+            ) == .rejected(reason: "çok kısa"),
+            "rendered validation errors should be shown"
+        )
+
+        func message(_ text: String, _ direction: MessageDirection) -> Message {
+            Message(id: text, contentHTML: text, contentText: text, sender: "", date: "", direction: direction)
+        }
+        let before = [message("tamam", .outgoing), message("selam", .incoming)]
+        expect(
+            !MessageDeliveryPolicy.isDelivered(sent: "tamam", before: before, after: before),
+            "an earlier identical message must not confirm a new send"
+        )
+        expect(
+            MessageDeliveryPolicy.isDelivered(
+                sent: "tamam",
+                before: before,
+                after: before + [message("tamam", .outgoing)]
+            ),
+            "a new outgoing message with the sent text confirms the send"
+        )
+        expect(
+            !MessageDeliveryPolicy.isDelivered(
+                sent: "naber",
+                before: before,
+                after: before + [message("naber", .incoming)]
+            ),
+            "incoming messages never confirm a send"
+        )
+        expect(
+            MessageDeliveryPolicy.matches(sent: "selam,\n\nnasılsın?", text: "selam, nasılsın?"),
+            "rendering differences in spacing and line breaks should still match"
+        )
+        let inboxThread = MessageThread(
+            id: "x",
+            username: "Altere Ses",
+            preview: "",
+            date: "",
+            messageCount: "",
+            link: "x",
+            isUnread: false
+        )
+        expect(
+            MessageDeliveryPolicy.thread(for: "altere ses", in: [inboxThread])?.link == "x",
+            "the recipient's conversation should be found in the inbox"
         )
         expect(
             MessageSendPolicy.retainedToken(current: "old", incoming: nil) == "old",

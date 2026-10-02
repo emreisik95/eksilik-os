@@ -90,6 +90,7 @@ let package = Package(
                 "Core/Messages/MessageBubblePresentation.swift",
                 "Core/Messages/MessageNotificationPolicy.swift",
                 "Core/Messages/MessageSendPolicy.swift",
+                "Core/Messages/MessageDeliveryPolicy.swift",
                 "Core/Presentation/EntryLayoutStyle.swift",
                 "Core/Presentation/AppIconPresentationPolicy.swift",
                 "Core/Presentation/EntryFilterPresentation.swift",

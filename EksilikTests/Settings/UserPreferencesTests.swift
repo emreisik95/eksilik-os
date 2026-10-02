@@ -148,4 +148,29 @@ final class UserPreferencesTests: XCTestCase {
         XCTAssertEqual(Array(preferences.homeTabOrder.prefix(2)), ["eksiSeyler", "popular"])
         XCTAssertEqual(HomeTabCatalog.initialID, "popular")
     }
+
+    func testCustomizedOrderSavedBeforeThePlacementGetsSeylerBeforeGundemOnce() throws {
+        let suiteName = "UserPreferencesTests.seylerPlacement"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let customized = [
+            "today", "popular", "debe", "todayInHistory", "latest",
+            "following", "kenar", "caylaklar", "cop", "eksiSeyler",
+        ]
+        defaults.set(try JSONEncoder().encode(customized), forKey: "homeTabOrder")
+        defaults.set(try JSONEncoder().encode(["today", "popular"]), forKey: "visibleHomeTabs")
+
+        let preferences = UserPreferences(defaults: defaults)
+        XCTAssertEqual(Array(preferences.homeTabOrder.prefix(4)), ["today", "eksiSeyler", "popular", "debe"])
+        XCTAssertEqual(preferences.visibleHomeTabs, ["today", "popular", "eksiSeyler"])
+
+        preferences.homeTabOrder = customized
+        preferences.visibleHomeTabs = ["today", "popular"]
+
+        let restored = UserPreferences(defaults: defaults)
+        XCTAssertEqual(restored.homeTabOrder, customized)
+        XCTAssertEqual(restored.visibleHomeTabs, ["today", "popular"])
+    }
 }
