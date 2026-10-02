@@ -170,4 +170,37 @@ final class MessageSendPolicyTests: XCTestCase {
         XCTAssertEqual(MessageSendPolicy.retainedToken(current: "old", incoming: "new"), "new")
         XCTAssertNil(MessageSendPolicy.retainedToken(current: nil, incoming: nil))
     }
+
+    func testSubmissionsTryTheRenderedFormBeforeTheOtherRoute() {
+        let replyForm = MessageForm(
+            id: "message-send-form",
+            action: "/mesaj/yolla",
+            hiddenFields: ["__RequestVerificationToken": "t", "ThreadId": "2541826", "To": "altere ses"],
+            messageFieldName: "Message"
+        )
+        let reply = ["To": "altere-ses", "Message": "selam", "ThreadId": "altere-ses", "IsReply": "True"]
+
+        XCTAssertEqual(MessageSendPolicy.submissions(payload: reply, form: replyForm, isReply: true), [
+            MessageSubmission(
+                endpoint: .replyMessage,
+                body: ["To": "altere ses", "Message": "selam", "ThreadId": "2541826", "IsReply": "True"]
+            ),
+            MessageSubmission(endpoint: .sendMessage, body: ["To": "altere ses", "Message": "selam"]),
+        ])
+
+        let newMessage = ["To": "altere ses", "Message": "ilk"]
+        XCTAssertEqual(MessageSendPolicy.submissions(payload: newMessage, form: nil, isReply: false), [
+            MessageSubmission(endpoint: .sendMessage, body: newMessage),
+            MessageSubmission(endpoint: .replyMessage, body: newMessage),
+        ])
+    }
+
+    func testOnlyMissingRoutesAndServerFailuresJustifyAnotherRoute() {
+        for status in [404, 405, 500, 502, 504] {
+            XCTAssertTrue(MessageSendPolicy.allowsAnotherRoute(afterStatus: status), "\(status)")
+        }
+        for status in [400, 401, 403, 409, 422, 429] {
+            XCTAssertFalse(MessageSendPolicy.allowsAnotherRoute(afterStatus: status), "\(status)")
+        }
+    }
 }

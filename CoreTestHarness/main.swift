@@ -1154,6 +1154,21 @@ private struct Harness {
             "message sending should keep its POST contract"
         )
         expect(
+            EksiEndpoint.replyMessage.omitsAjaxHeader
+                && EksiEndpoint.submitMessageForm(path: "/mesaj/gonder").omitsAjaxHeader,
+            "message form posts should be document requests because the live server fails them as AJAX"
+        )
+        expect(
+            MessageSendPolicy.submissions(payload: ["To": "a", "Message": "b"], form: nil, isReply: false)
+                .map(\.endpoint.path) == ["/mesaj/sendajax", "/mesaj/yolla"],
+            "a new message should keep a second route for when the server fails on the first"
+        )
+        expect(
+            MessageSendPolicy.allowsAnotherRoute(afterStatus: 500)
+                && !MessageSendPolicy.allowsAnotherRoute(afterStatus: 403),
+            "only server failures and missing routes should lead to another route"
+        )
+        expect(
             FormURLEncoder.encode(["Message": "a&b = c+d", "To": "altere ses"])
                 == "Message=a%26b%20%3D%20c%2Bd&To=altere%20ses",
             "message form fields should safely encode reserved characters"

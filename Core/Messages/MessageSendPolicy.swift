@@ -10,6 +10,13 @@ enum MessageSendOutcome: Equatable {
     case unconfirmed
 }
 
+/// One route for handing a message to the server: where it is posted and
+/// the fields that travel with it.
+struct MessageSubmission: Equatable {
+    let endpoint: EksiEndpoint
+    let body: [String: String]
+}
+
 enum MessageSendPolicy {
     static func isReply(threadID: String?) -> Bool {
         threadID?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
@@ -56,6 +63,37 @@ enum MessageSendPolicy {
         case EksiEndpoint.sendMessage.path.lowercased(): return .sendMessage
         default: return .submitMessageForm(path: path)
         }
+    }
+
+    /// Routes for this message, best first. The first mirrors the browser:
+    /// the rendered form's own action and fields. The second is the other
+    /// message endpoint, addressed by recipient alone, for when the server
+    /// fails on the first route. It is only taken once the conversation shows
+    /// the first attempt stored nothing.
+    static func submissions(payload: [String: String], form: MessageForm?, isReply: Bool) -> [MessageSubmission] {
+        let primary = MessageSubmission(
+            endpoint: submitEndpoint(form: form, isReply: isReply),
+            body: requestBody(payload: payload, form: form)
+        )
+
+        if primary.endpoint.path.caseInsensitiveCompare(EksiEndpoint.sendMessage.path) == .orderedSame {
+            return [primary, MessageSubmission(endpoint: .replyMessage, body: requestBody(payload: payload, form: nil))]
+        }
+
+        var direct = payload
+        direct.removeValue(forKey: "ThreadId")
+        direct.removeValue(forKey: "IsReply")
+        if let rendered = value(forKey: form?.recipientFieldName ?? "To", in: primary.body) {
+            direct["To"] = rendered
+        }
+        return [primary, MessageSubmission(endpoint: .sendMessage, body: requestBody(payload: direct, form: nil))]
+    }
+
+    /// A missing route or a server failure says nothing was accepted on that
+    /// route, so another route may be tried once the conversation confirms
+    /// the message is absent. Rejections and session problems end the send.
+    static func allowsAnotherRoute(afterStatus statusCode: Int) -> Bool {
+        statusCode == 404 || statusCode == 405 || (500...599).contains(statusCode)
     }
 
     /// Mirrors a browser submit: the fields the server rendered travel with

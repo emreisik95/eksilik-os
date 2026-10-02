@@ -2,7 +2,8 @@ import XCTest
 @testable import EksilikApp
 
 final class MessageServiceSendTests: XCTestCase {
-    private let loggedInNav = #"<li class="buddy mobile-only"><a href="/biri/ben" title="ben">ben</a></li>"#
+    private typealias Page = MessagePageFixture
+    private let loggedInNav = Page.loggedInNav
 
     func testReplyFetchesFreshThreadTokenInsteadOfStaleCache() async throws {
         let transport = MessageTransportSpy(pages: [
@@ -139,8 +140,8 @@ final class MessageServiceSendTests: XCTestCase {
             pages: [:],
             sequences: [
                 "/mesaj/altere-ses": [
-                    loggedInNav + Self.thread(earlier) + Self.replyFormWithThread,
-                    loggedInNav + Self.thread(earlier + [("merhaba", "outgoing")]),
+                    loggedInNav + Page.thread(earlier) + Page.replyFormWithThread,
+                    loggedInNav + Page.thread(earlier + [("merhaba", "outgoing")]),
                 ],
             ],
             response: ""
@@ -163,8 +164,8 @@ final class MessageServiceSendTests: XCTestCase {
 
     func testResponsePageShowingTheMessageNeedsNoExtraRead() async throws {
         let transport = MessageTransportSpy(
-            pages: ["/mesaj/9": loggedInNav + Self.thread([("eski", "incoming")]) + Self.replyFormWithThread],
-            response: loggedInNav + Self.thread([("eski", "incoming"), ("yeni", "outgoing")])
+            pages: ["/mesaj/9": loggedInNav + Page.thread([("eski", "incoming")]) + Page.replyFormWithThread],
+            response: loggedInNav + Page.thread([("eski", "incoming"), ("yeni", "outgoing")])
         )
         let service = MessageService(transport: transport) { _ in }
 
@@ -174,8 +175,8 @@ final class MessageServiceSendTests: XCTestCase {
     }
 
     func testReplyMissingFromConversationIsReportedAsNotSent() async {
-        let conversation = Self.thread([("merhaba", "outgoing"), ("selam", "incoming")])
-        let page = loggedInNav + conversation + Self.replyFormWithThread
+        let conversation = Page.thread([("merhaba", "outgoing"), ("selam", "incoming")])
+        let page = loggedInNav + conversation + Page.replyFormWithThread
         let transport = MessageTransportSpy(pages: ["/mesaj/9": page], response: loggedInNav + "<div>ok</div>")
         var pauses = 0
         let service = MessageService(transport: transport, observePage: { _ in }, pauseBeforeRecheck: { pauses += 1 })
@@ -194,7 +195,7 @@ final class MessageServiceSendTests: XCTestCase {
     func testUnreadableConversationIsReportedAsUnverified() async {
         let transport = MessageTransportSpy(
             pages: [:],
-            sequences: ["/mesaj/9": [loggedInNav + Self.replyFormWithThread]],
+            sequences: ["/mesaj/9": [loggedInNav + Page.replyFormWithThread]],
             response: "",
             exhaustedSequencesFail: true
         )
@@ -217,8 +218,8 @@ final class MessageServiceSendTests: XCTestCase {
         """
         let transport = MessageTransportSpy(
             pages: [
-                "/mesaj": inbox + Self.newMessageForm,
-                "/mesaj/altere-ses": loggedInNav + Self.thread([("ilk mesaj", "outgoing")]),
+                "/mesaj": inbox + Page.newMessageForm,
+                "/mesaj/altere-ses": loggedInNav + Page.thread([("ilk mesaj", "outgoing")]),
             ],
             response: ""
         )
@@ -239,7 +240,7 @@ final class MessageServiceSendTests: XCTestCase {
 
     func testRenderedValidationErrorIsShownToTheUser() async {
         let transport = MessageTransportSpy(
-            pages: ["/mesaj/9": loggedInNav + Self.replyFormWithThread],
+            pages: ["/mesaj/9": loggedInNav + Page.replyFormWithThread],
             response: loggedInNav + #"<div class="validation-summary-errors"><ul><li>mesaj çok uzun</li></ul></div>"#
         )
         let service = MessageService(transport: transport) { _ in }
@@ -253,29 +254,6 @@ final class MessageServiceSendTests: XCTestCase {
         XCTAssertEqual(transport.fetched, ["/mesaj/9"])
     }
 
-    private static func thread(_ messages: [(text: String, direction: String)]) -> String {
-        let articles = messages
-            .map { #"<article class="\#($0.direction)"><p>\#($0.text)</p></article>"# }
-            .joined()
-        return #"<section id="message-thread">"# + articles + "</section>"
-    }
-
-    private static let replyFormWithThread = """
-    <form id="message-send-form" action="/mesaj/yolla" method="post">
-      <input type="hidden" name="__RequestVerificationToken" value="t" />
-      <input type="hidden" name="ThreadId" value="2541826" />
-      <textarea name="Message"></textarea>
-    </form>
-    """
-
-    private static let newMessageForm = """
-    <form id="message-send-form" action="/mesaj/sendajax" method="post">
-      <input type="hidden" name="__RequestVerificationToken" value="t" />
-      <input type="text" name="To" />
-      <textarea name="Message"></textarea>
-    </form>
-    """
-
     private static func isUnauthorized(_ error: Error) -> Bool {
         guard case NetworkError.unauthorized = error else { return false }
         return true
@@ -284,57 +262,4 @@ final class MessageServiceSendTests: XCTestCase {
     private static let replyForm = """
     <form action="/mesaj/yolla"><input type="hidden" name="__RequestVerificationToken" value="t" /></form>
     """
-}
-
-private final class MessageTransportSpy: MessageTransport {
-    struct Post {
-        let path: String
-        let body: [String: String]
-        let token: String?
-    }
-
-    private let pages: [String: String]
-    /// Pages that change between reads, served in order; the last one repeats
-    /// unless `exhaustedSequencesFail` is set.
-    private var sequences: [String: [String]]
-    private let exhaustedSequencesFail: Bool
-    private let response: String
-    private(set) var fetched: [String] = []
-    private(set) var posts: [Post] = []
-
-    init(
-        pages: [String: String],
-        sequences: [String: [String]] = [:],
-        response: String = #"{"Success":true}"#,
-        exhaustedSequencesFail: Bool = false
-    ) {
-        self.pages = pages
-        self.sequences = sequences
-        self.exhaustedSequencesFail = exhaustedSequencesFail
-        self.response = response
-    }
-
-    func fetchHTML(for endpoint: EksiEndpoint) async throws -> String {
-        fetched.append(endpoint.path)
-        if let sequence = sequences[endpoint.path] {
-            guard let html = sequence.first else { throw NetworkError.cloudflareBlocked }
-            if sequence.count > 1 || exhaustedSequencesFail {
-                sequences[endpoint.path] = Array(sequence.dropFirst())
-            }
-            return html
-        }
-        guard let html = pages[endpoint.path] else { throw NetworkError.cloudflareBlocked }
-        return html
-    }
-
-    func post(
-        endpoint: EksiEndpoint,
-        body: [String: String],
-        csrfToken: String?
-    ) async throws -> (Data, HTTPURLResponse) {
-        posts.append(Post(path: endpoint.path, body: body, token: csrfToken))
-        let url = try XCTUnwrap(URL(string: "https://eksisozluk.com" + endpoint.path))
-        let http = try XCTUnwrap(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil))
-        return (Data(response.utf8), http)
-    }
 }
