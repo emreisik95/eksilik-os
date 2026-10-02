@@ -20,7 +20,29 @@ final class MessageRequestTests: XCTestCase {
     func testReplyUsesTheConversationEndpoint() {
         XCTAssertEqual(EksiEndpoint.replyMessage.method, .post)
         XCTAssertEqual(EksiEndpoint.replyMessage.path, "/mesaj/yolla")
-        XCTAssertFalse(EksiEndpoint.replyMessage.omitsAjaxHeader)
+    }
+
+    func testMessageFormPostsAreSentAsDocumentRequests() throws {
+        let body = ["To": "altere ses", "Message": "selam"]
+        let reply = try EksiRouter.buildRequest(for: .replyMessage, body: body, csrfToken: "t")
+        let form = try EksiRouter.buildRequest(
+            for: .submitMessageForm(path: "/mesaj/gonder"),
+            body: body,
+            csrfToken: "t"
+        )
+        let ajax = try EksiRouter.buildRequest(for: .sendMessage, body: body, csrfToken: "t")
+
+        XCTAssertNil(reply.value(forHTTPHeaderField: "X-Requested-With"))
+        XCTAssertNil(form.value(forHTTPHeaderField: "X-Requested-With"))
+        XCTAssertEqual(ajax.value(forHTTPHeaderField: "X-Requested-With"), "XMLHttpRequest")
+        XCTAssertEqual(
+            reply.value(forHTTPHeaderField: "Content-Type"),
+            "application/x-www-form-urlencoded; charset=utf-8"
+        )
+        XCTAssertEqual(
+            String(data: try XCTUnwrap(reply.httpBody), encoding: .utf8),
+            "Message=selam&To=altere%20ses&__RequestVerificationToken=t"
+        )
     }
 
     func testMessageServiceSelectsEndpointFromConversationState() {

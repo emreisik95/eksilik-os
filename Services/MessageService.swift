@@ -6,6 +6,7 @@ enum MessageSendError: LocalizedError, Equatable {
     case rejected(reason: String?)
     case notDelivered
     case unverified
+    case serverFailed(statusCode: Int)
 
     var errorDescription: String? {
         switch self {
@@ -21,6 +22,9 @@ enum MessageSendError: LocalizedError, Equatable {
                 + "taslağın duruyor, tekrar deneyebilirsin"
         case .unverified:
             return "mesajın ulaştığı doğrulanamadı; konuşmayı yenileyip kontrol et"
+        case .serverFailed(let statusCode):
+            return "mesaj gönderilemedi; ekşi sözlük isteği işleyemedi (\(statusCode)). "
+                + "taslağın duruyor, biraz sonra tekrar deneyebilirsin"
         }
     }
 }
@@ -112,72 +116,143 @@ struct MessageService: MessageSending {
             throw MessageSendError.missingCSRFToken
         }
 
-        let (data, _) = try await transport.post(
-            endpoint: MessageSendPolicy.submitEndpoint(form: fresh.form, isReply: isReply),
-            body: MessageSendPolicy.requestBody(payload: payload, form: fresh.form),
-            csrfToken: token
+        let pending = PendingSend(
+            text: payload["Message"] ?? body,
+            recipient: recipient,
+            threadID: isReply ? threadID : nil,
+            conversationBefore: fresh.conversation,
+            token: token
         )
+        var failedStatus: Int?
+        for submission in MessageSendPolicy.submissions(payload: payload, form: fresh.form, isReply: isReply) {
+            switch try await submit(submission, for: pending) {
+            case .delivered: return
+            case .failed(let statusCode): failedStatus = statusCode
+            }
+        }
+        throw MessageSendError.serverFailed(statusCode: failedStatus ?? 500)
+    }
+
+    private struct PendingSend {
+        let text: String
+        let recipient: String
+        /// The conversation being replied to; nil for a new message.
+        let threadID: String?
+        let conversationBefore: [Message]?
+        let token: String
+    }
+
+    private enum RouteResult {
+        case delivered
+        /// The server failed on this route and the conversation shows the
+        /// message did not arrive, so another route is safe to try.
+        case failed(statusCode: Int)
+    }
+
+    private func submit(_ submission: MessageSubmission, for pending: PendingSend) async throws -> RouteResult {
+        let data: Data
+        do {
+            data = try await transport.post(
+                endpoint: submission.endpoint,
+                body: submission.body,
+                csrfToken: pending.token
+            ).0
+        } catch NetworkError.requestFailed(let statusCode)
+                    where MessageSendPolicy.allowsAnotherRoute(afterStatus: statusCode) {
+            print("✉️ \(submission.endpoint.path) failed with \(statusCode)")
+            // The server can fail after storing the message, so another route
+            // is only safe once the conversation shows it is absent.
+            switch try await deliveryState(of: pending) {
+            case .delivered: return .delivered
+            case .missing: return .failed(statusCode: statusCode)
+            case .unknown: throw MessageSendError.unverified
+            }
+        }
 
         switch MessageSendPolicy.outcome(responseBody: data) {
         case .delivered:
-            return
+            return .delivered
         case .signedOut:
             throw NetworkError.unauthorized
         case .rejected(let reason):
             throw MessageSendError.rejected(reason: reason)
         case .unconfirmed:
-            try await confirmDelivery(
-                of: payload["Message"] ?? body,
-                response: data,
-                recipient: recipient,
-                threadID: isReply ? threadID : nil,
-                before: fresh.conversation
-            )
+            try await confirmDelivery(of: pending, response: data)
+            return .delivered
         }
     }
 
     /// Reads the conversation back until it shows the sent message. A send
     /// is never reported as done on the strength of an empty or unrelated
     /// response alone.
-    private func confirmDelivery(
-        of sent: String,
-        response: Data,
-        recipient: String,
-        threadID: String?,
-        before: [Message]?
-    ) async throws {
+    private func confirmDelivery(of pending: PendingSend, response: Data) async throws {
         if let html = String(data: response, encoding: .utf8) {
             let shown = MessageContentParser.parse(html: html)
-            if MessageDeliveryPolicy.isDelivered(sent: sent, before: before, after: shown) { return }
+            if MessageDeliveryPolicy.isDelivered(
+                sent: pending.text,
+                before: pending.conversationBefore,
+                after: shown
+            ) { return }
         }
 
-        var sawConversation = false
-        for attempt in 0..<2 {
-            if attempt > 0 { await pauseBeforeRecheck() }
-            guard let after = try await readConversation(recipient: recipient, threadID: threadID),
-                  !after.isEmpty else { continue }
-            sawConversation = true
-            if MessageDeliveryPolicy.isDelivered(sent: sent, before: before, after: after) { return }
+        switch try await deliveryState(of: pending) {
+        case .delivered: return
+        case .missing: throw MessageSendError.notDelivered
+        case .unknown: throw MessageSendError.unverified
         }
-        throw sawConversation ? MessageSendError.notDelivered : MessageSendError.unverified
     }
 
-    /// The conversation with the recipient as the server shows it now, or
-    /// nil when it could not be read.
-    private func readConversation(recipient: String, threadID: String?) async throws -> [Message]? {
+    private enum DeliveryState {
+        case delivered
+        /// The conversation was read and the message is not in it.
+        case missing
+        /// The conversation could not be read.
+        case unknown
+    }
+
+    private func deliveryState(of pending: PendingSend) async throws -> DeliveryState {
+        var state = DeliveryState.unknown
+        for attempt in 0..<2 {
+            if attempt > 0 { await pauseBeforeRecheck() }
+            switch try await readConversation(recipient: pending.recipient, threadID: pending.threadID) {
+            case .unreadable:
+                continue
+            case .notStarted:
+                state = .missing
+            case .messages(let after):
+                if MessageDeliveryPolicy.isDelivered(
+                    sent: pending.text,
+                    before: pending.conversationBefore,
+                    after: after
+                ) { return .delivered }
+                state = .missing
+            }
+        }
+        return state
+    }
+
+    private enum ConversationRead {
+        case messages([Message])
+        /// The inbox lists conversations, none of them with the recipient.
+        case notStarted
+        case unreadable
+    }
+
+    /// The conversation with the recipient as the server shows it now.
+    private func readConversation(recipient: String, threadID: String?) async throws -> ConversationRead {
         let threadPage: String
         if let threadID = threadID?.trimmingCharacters(in: .whitespacesAndNewlines), !threadID.isEmpty {
             threadPage = threadID
         } else {
-            guard let inbox = try await readPage(.messages(page: nil)),
-                  let thread = MessageDeliveryPolicy.thread(
-                    for: recipient,
-                    in: MessageParser.parseThreadList(html: inbox)
-                  ) else { return nil }
+            guard let inbox = try await readPage(.messages(page: nil)) else { return .unreadable }
+            let threads = MessageParser.parseThreadList(html: inbox)
+            guard !threads.isEmpty else { return .unreadable }
+            guard let thread = MessageDeliveryPolicy.thread(for: recipient, in: threads) else { return .notStarted }
             threadPage = thread.link
         }
-        guard let html = try await readPage(.messageThread(id: threadPage)) else { return nil }
-        return MessageContentParser.parse(html: html)
+        guard let html = try await readPage(.messageThread(id: threadPage)) else { return .unreadable }
+        let messages = MessageContentParser.parse(html: html)
+        return messages.isEmpty ? .unreadable : .messages(messages)
     }
 
     private func readPage(_ endpoint: EksiEndpoint) async throws -> String? {
