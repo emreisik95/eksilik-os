@@ -497,6 +497,35 @@ private struct Harness {
             "a deliberately reduced visible-tab selection should stay reduced"
         )
 
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(["today", "popular", "debe", "eksiSeyler"]).prefix(4)
+                == ["today", "eksiSeyler", "popular", "debe"],
+            "a customized order should get Şeyler right before Gündem and keep everything else in place"
+        )
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(defaultIDs) == defaultIDs,
+            "the default order already has Şeyler right before Gündem"
+        )
+        expect(
+            HomeTabCatalog.placingSeylerBeforeGundem(["popular"]).prefix(2) == ["eksiSeyler", "popular"],
+            "an order without Şeyler should gain it before Gündem"
+        )
+        expect(
+            HomeTabCatalog.revealingSeyler(["today", "popular"]) == ["today", "popular", "eksiSeyler"]
+                && HomeTabCatalog.revealingSeyler([]) == []
+                && HomeTabCatalog.revealingSeyler(["eksiSeyler"]) == ["eksiSeyler"],
+            "a reduced selection from before the move should show Şeyler; an empty one already shows all"
+        )
+        let placedTabs = HomeTabCatalog.availableTabs(
+            order: HomeTabCatalog.placingSeylerBeforeGundem(["today", "popular"]),
+            visible: [],
+            isLoggedIn: false
+        ).map(\.id)
+        expect(
+            HomeNavigationPolicy.adjacentTabID(in: placedTabs, selected: "popular", step: -1) == "eksiSeyler",
+            "one swipe from Gündem should open Şeyler"
+        )
+
         let moved = HomeTabCatalog.moving(
             defaultIDs,
             fromOffsets: IndexSet(integer: 0),

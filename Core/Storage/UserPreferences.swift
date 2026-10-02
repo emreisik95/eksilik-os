@@ -12,6 +12,7 @@ final class UserPreferences: ObservableObject {
     private static let legacyHomeTabBarPositionKey = "homeTabBarPosition"
     private static let visibleHomeTabsKey = "visibleHomeTabs"
     private static let homeTabOrderKey = "homeTabOrder"
+    private static let homeTabPlacementRevisionKey = "homeTabPlacementRevision"
 
     private let defaults: UserDefaults
 
@@ -91,18 +92,25 @@ final class UserPreferences: ObservableObject {
             storedValue: defaults.string(forKey: Self.homeNavigationStyleKey),
             legacyPosition: defaults.string(forKey: Self.legacyHomeTabBarPositionKey)
         )
-        visibleHomeTabs = HomeTabCatalog.migratedVisibility(
+        var visibleTabs = HomeTabCatalog.migratedVisibility(
             Self.decode(defaults.data(forKey: Self.visibleHomeTabsKey))
         )
-        homeTabOrder = HomeTabCatalog.migratedOrder(
+        var tabOrder = HomeTabCatalog.migratedOrder(
             Self.decode(defaults.data(forKey: Self.homeTabOrderKey))
         )
+        if defaults.integer(forKey: Self.homeTabPlacementRevisionKey) < HomeTabCatalog.placementRevision {
+            visibleTabs = HomeTabCatalog.revealingSeyler(visibleTabs)
+            tabOrder = HomeTabCatalog.placingSeylerBeforeGundem(tabOrder)
+        }
+        visibleHomeTabs = visibleTabs
+        homeTabOrder = tabOrder
 
         if defaults.string(forKey: Self.homeNavigationStyleKey) == nil {
             defaults.set(homeNavigationStyle.rawValue, forKey: Self.homeNavigationStyleKey)
         }
         defaults.set(Self.encode(visibleHomeTabs), forKey: Self.visibleHomeTabsKey)
         defaults.set(Self.encode(homeTabOrder), forKey: Self.homeTabOrderKey)
+        defaults.set(HomeTabCatalog.placementRevision, forKey: Self.homeTabPlacementRevisionKey)
     }
 
     private static func encode(_ values: [String]) -> Data {

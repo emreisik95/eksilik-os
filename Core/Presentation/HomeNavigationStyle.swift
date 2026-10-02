@@ -90,6 +90,26 @@ enum HomeTabCatalog {
         return storedVisible.filter(Set(defaultOrder).contains)
     }
 
+    /// Raised when a release moves a destination for everyone. Preferences
+    /// saved under an older revision get the move applied once; after that
+    /// the order is whatever the user arranges.
+    static let placementRevision = 1
+
+    /// Şeyler sits right before Gündem, one swipe or tap away from the
+    /// initial tab, while the rest of a customized order stays as it was.
+    static func placingSeylerBeforeGundem(_ order: [String]) -> [String] {
+        var result = normalizedOrder(order).filter { $0 != "eksiSeyler" }
+        result.insert("eksiSeyler", at: result.firstIndex(of: "popular") ?? 0)
+        return result
+    }
+
+    /// A reduced visible-tab selection that predates the move gains Şeyler;
+    /// an empty selection already shows everything.
+    static func revealingSeyler(_ visible: [String]) -> [String] {
+        guard !visible.isEmpty, !visible.contains("eksiSeyler") else { return visible }
+        return visible + ["eksiSeyler"]
+    }
+
     static func normalizedOrder(_ storedOrder: [String]) -> [String] {
         let known = Set(defaultOrder)
         var seen = Set<String>()
