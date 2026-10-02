@@ -9,7 +9,7 @@ struct TopicRowView: View {
     var body: some View {
         HStack {
             Text(topic.title)
-                .font(.system(size: CGFloat(preferences.selectedFontSize)))
+                .font(preferences.readingFont.font(size: CGFloat(preferences.selectedFontSize)))
                 .foregroundColor(themeManager.current.labelColor)
                 .lineLimit(2)
 

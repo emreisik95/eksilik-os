@@ -33,7 +33,7 @@ struct DebeView: View {
                         } label: {
                             HStack {
                                 Text(entry.topicTitle)
-                                    .font(.system(size: CGFloat(preferences.selectedFontSize)))
+                                    .font(preferences.readingFont.font(size: CGFloat(preferences.selectedFontSize)))
                                     .foregroundColor(themeManager.current.labelColor)
                                     .multilineTextAlignment(.leading)
                                 Spacer()

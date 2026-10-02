@@ -177,7 +177,7 @@ final class UserProfileViewModel: ObservableObject {
     }
 
     private func preParseEntries(_ raw: [UserProfile.ProfileEntry]) -> [UserProfile.ProfileEntry] {
-        let theme = ThemeManager().current
+        let theme = ThemeManager.activePalette()
         let prefs = UserPreferences()
 
         return raw.map { entry in
@@ -185,9 +185,9 @@ final class UserProfileViewModel: ObservableObject {
             e.parsedContent = HTMLContentRenderer.render(
                 html: entry.contentHTML,
                 fontSize: prefs.selectedFontSize,
-                fontName: prefs.selectedFont,
-                textColorHex: theme.entryTextColor.hexString,
-                linkColorHex: theme.linkColor.hexString,
+                readingFont: prefs.readingFont,
+                textColorHex: theme.entryText.hexString,
+                linkColorHex: theme.link.hexString,
                 spoilerBgHex: theme.spoilerBackgroundHex
             )
             return e

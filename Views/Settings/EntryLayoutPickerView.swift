@@ -132,10 +132,7 @@ private struct EntryLayoutPreview: View {
     private var sampleEntry: Entry {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = CGFloat(max(3, preferences.selectedFontSize / 4))
-        let font = UIFont(
-            name: preferences.selectedFont,
-            size: CGFloat(preferences.selectedFontSize)
-        ) ?? .systemFont(ofSize: CGFloat(preferences.selectedFontSize))
+        let font = preferences.readingFont.uiFont(size: CGFloat(preferences.selectedFontSize))
         let sample = "adam 4 kişiyi paketledi. 38 yaşında dünya kupasında yapıyor bunu."
         let attributed = NSAttributedString(
             string: sample,

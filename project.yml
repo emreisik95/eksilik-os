@@ -39,6 +39,19 @@ targets:
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
+        UIAppFonts:
+          - AtkinsonHyperlegibleNext-Regular.ttf
+          - AtkinsonHyperlegibleNext-Italic.ttf
+          - AtkinsonHyperlegibleNext-Bold.ttf
+          - SourceSerif4-Regular.ttf
+          - SourceSerif4-It.ttf
+          - SourceSerif4-Bold.ttf
+          - IBMPlexSans-Regular.ttf
+          - IBMPlexSans-Italic.ttf
+          - IBMPlexSans-Bold.ttf
+          - JetBrainsMonoNL-Regular.ttf
+          - JetBrainsMonoNL-Italic.ttf
+          - JetBrainsMonoNL-Bold.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         "UISupportedInterfaceOrientations~ipad":

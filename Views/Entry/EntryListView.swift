@@ -95,12 +95,12 @@ struct EntryListView: View {
         }
         .background(themeManager.current.backgroundColor.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(themeManager.current.backgroundColor, for: .navigationBar)
+        .toolbarBackground(themeManager.current.navBarColor, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbar(content: {
             ToolbarItem(placement: .principal) {
                 Text(viewModel.title.isEmpty ? title : viewModel.title)
-                    .font(.subheadline.bold())
+                    .font(preferences.readingFont.font(.subheadline, basePointSize: 15, bold: true))
                     .foregroundColor(themeManager.current.labelColor)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)

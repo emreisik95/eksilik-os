@@ -925,7 +925,7 @@ extension String {
 
 private struct EntryScreenshotRenderer {
     let entry: Entry
-    let theme: AppTheme
+    let theme: ThemePalette
 
     func render() -> UIImage? {
         let width: CGFloat = 375

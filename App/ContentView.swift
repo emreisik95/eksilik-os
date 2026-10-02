@@ -10,6 +10,8 @@ struct ContentView: View {
         TabView(selection: mainTabSelection) {
             ForEach(MainTab.visibleTabs(isLoggedIn: session.isLoggedIn)) { tab in
                 tabContent(for: tab)
+                    // The tab bar takes its own token; screens inside keep the accent.
+                    .tint(themeManager.current.accentColor)
                     .tabItem {
                         Label(tabTitle(for: tab), systemImage: tab.systemImage)
                     }
@@ -22,7 +24,7 @@ struct ContentView: View {
                     )
             }
         }
-        .tint(themeManager.current.accentColor)
+        .tint(themeManager.current.tabBarTintColor)
         .task(id: scenePhase) {
             await refreshUnreadMessageBadgeIfNeeded()
         }

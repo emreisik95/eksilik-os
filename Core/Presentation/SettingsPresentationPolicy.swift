@@ -37,6 +37,7 @@ enum SettingsItem: String, Identifiable, Hashable, Sendable {
     case theme
     case entryLayout
     case fontSize
+    case readingFont
     case filterStyle
     case appIcon
     case homeNavigation
@@ -68,7 +69,7 @@ enum SettingsPresentationPolicy {
         [
             SettingsSectionDescriptor(
                 kind: .appearance,
-                items: [.theme, .entryLayout, .fontSize, .filterStyle, .appIcon]
+                items: [.theme, .entryLayout, .fontSize, .readingFont, .filterStyle, .appIcon]
             ),
             SettingsSectionDescriptor(
                 kind: .home,
