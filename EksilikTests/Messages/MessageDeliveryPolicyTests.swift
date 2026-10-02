@@ -77,6 +77,14 @@ final class MessageDeliveryPolicyTests: XCTestCase {
     }
 
     private func thread(username: String, link: String) -> MessageThread {
-        MessageThread(id: link, username: username, preview: "", date: "", messageCount: "", link: link, isUnread: false)
+        MessageThread(
+            id: link,
+            username: username,
+            preview: "",
+            date: "",
+            messageCount: "",
+            link: link,
+            isUnread: false
+        )
     }
 }

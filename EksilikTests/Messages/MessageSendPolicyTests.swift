@@ -95,9 +95,15 @@ final class MessageSendPolicyTests: XCTestCase {
         }
         XCTAssertEqual(MessageSendPolicy.submitEndpoint(form: nil, isReply: true).path, "/mesaj/yolla")
         XCTAssertEqual(MessageSendPolicy.submitEndpoint(form: nil, isReply: false).path, "/mesaj/sendajax")
-        XCTAssertEqual(MessageSendPolicy.submitEndpoint(form: form("/Mesaj/Yolla"), isReply: false).path, "/mesaj/yolla")
         XCTAssertEqual(
-            MessageSendPolicy.submitEndpoint(form: form("https://eksisozluk.com/mesaj/gonder?ref=1"), isReply: true).path,
+            MessageSendPolicy.submitEndpoint(form: form("/Mesaj/Yolla"), isReply: false).path,
+            "/mesaj/yolla"
+        )
+        XCTAssertEqual(
+            MessageSendPolicy.submitEndpoint(
+                form: form("https://eksisozluk.com/mesaj/gonder?ref=1"),
+                isReply: true
+            ).path,
             "/mesaj/gonder?ref=1"
         )
         XCTAssertEqual(MessageSendPolicy.submitEndpoint(form: form("/mesaj/gonder"), isReply: true).method, .post)
@@ -138,7 +144,10 @@ final class MessageSendPolicyTests: XCTestCase {
             messageFieldName: "Message"
         )
         let slug = ["To": "altere ses", "Message": "selam", "ThreadId": "altere-ses", "IsReply": "True"]
-        XCTAssertEqual(MessageSendPolicy.requestBody(payload: slug, form: form), ["To": "altere ses", "Message": "selam"])
+        XCTAssertEqual(
+            MessageSendPolicy.requestBody(payload: slug, form: form),
+            ["To": "altere ses", "Message": "selam"]
+        )
 
         var numeric = slug
         numeric["ThreadId"] = "2541826"

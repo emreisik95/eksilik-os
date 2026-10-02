@@ -55,40 +55,17 @@ enum MessageFormParser {
                 || action?.lowercased().contains("/mesaj") == true
             guard isMessageForm else { return nil }
 
-            var hiddenFields: [String: String] = [:]
-            var visibleFields: [String: String] = [:]
-            var recipientFieldName: String?
-            for input in form.css("input") {
-                guard let name = fieldName(input) else { continue }
-                let type = input["type"]?.lowercased() ?? "text"
-                guard !unsubmittedInputTypes.contains(type) else { continue }
-                if recipientFieldName == nil, recipientFieldNames.contains(name.lowercased()) {
-                    recipientFieldName = name
-                }
-                if (type == "checkbox" || type == "radio") && input["checked"] == nil { continue }
-                guard let value = input["value"]?.trimmingCharacters(in: .whitespacesAndNewlines),
-                      !value.isEmpty else { continue }
-                if type == "hidden" {
-                    hiddenFields[name] = value
-                } else {
-                    visibleFields[name] = value
-                }
+            var controls = inputControls(in: form)
+            for (name, value) in selectedOptions(in: form) {
+                controls.visible[name] = value
             }
-            for select in form.css("select") {
-                guard let name = fieldName(select),
-                      let value = (select.at_css("option[selected]") ?? select.at_css("option"))?["value"]?
-                        .trimmingCharacters(in: .whitespacesAndNewlines),
-                      !value.isEmpty else { continue }
-                visibleFields[name] = value
-            }
-
             return MessageForm(
                 id: id,
                 action: action,
-                hiddenFields: hiddenFields,
-                visibleFields: visibleFields,
+                hiddenFields: controls.hidden,
+                visibleFields: controls.visible,
                 messageFieldName: form.css("textarea").lazy.compactMap(fieldName).first,
-                recipientFieldName: recipientFieldName
+                recipientFieldName: controls.recipientFieldName
             )
         }
     }
@@ -101,6 +78,47 @@ enum MessageFormParser {
         let candidates = forms(html: html).filter { $0.token != nil }
         return candidates.first { isReply ? $0.isReplyForm : $0.isNewMessageForm }
             ?? candidates.first { $0.hasComposer && (isReply || !$0.isReplyForm) }
+    }
+
+    private struct Controls {
+        var hidden: [String: String] = [:]
+        var visible: [String: String] = [:]
+        var recipientFieldName: String?
+    }
+
+    /// Inputs a browser would submit, split into hidden and visible ones,
+    /// plus the recipient field's name even while it is still empty.
+    private static func inputControls(in form: Kanna.XMLElement) -> Controls {
+        var controls = Controls()
+        for input in form.css("input") {
+            guard let name = fieldName(input) else { continue }
+            let type = input["type"]?.lowercased() ?? "text"
+            guard !unsubmittedInputTypes.contains(type) else { continue }
+            if controls.recipientFieldName == nil, recipientFieldNames.contains(name.lowercased()) {
+                controls.recipientFieldName = name
+            }
+            if (type == "checkbox" || type == "radio") && input["checked"] == nil { continue }
+            guard let value = input["value"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty else { continue }
+            if type == "hidden" {
+                controls.hidden[name] = value
+            } else {
+                controls.visible[name] = value
+            }
+        }
+        return controls
+    }
+
+    private static func selectedOptions(in form: Kanna.XMLElement) -> [String: String] {
+        var values: [String: String] = [:]
+        for select in form.css("select") {
+            guard let name = fieldName(select),
+                  let value = (select.at_css("option[selected]") ?? select.at_css("option"))?["value"]?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty else { continue }
+            values[name] = value
+        }
+        return values
     }
 
     private static func fieldName(_ element: Kanna.XMLElement) -> String? {

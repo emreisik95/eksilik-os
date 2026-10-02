@@ -1474,22 +1474,36 @@ private extension Harness {
             "an earlier identical message must not confirm a new send"
         )
         expect(
-            MessageDeliveryPolicy.isDelivered(sent: "tamam", before: before, after: before + [message("tamam", .outgoing)]),
+            MessageDeliveryPolicy.isDelivered(
+                sent: "tamam",
+                before: before,
+                after: before + [message("tamam", .outgoing)]
+            ),
             "a new outgoing message with the sent text confirms the send"
         )
         expect(
-            !MessageDeliveryPolicy.isDelivered(sent: "naber", before: before, after: before + [message("naber", .incoming)]),
+            !MessageDeliveryPolicy.isDelivered(
+                sent: "naber",
+                before: before,
+                after: before + [message("naber", .incoming)]
+            ),
             "incoming messages never confirm a send"
         )
         expect(
             MessageDeliveryPolicy.matches(sent: "selam,\n\nnasılsın?", text: "selam, nasılsın?"),
             "rendering differences in spacing and line breaks should still match"
         )
+        let inboxThread = MessageThread(
+            id: "x",
+            username: "Altere Ses",
+            preview: "",
+            date: "",
+            messageCount: "",
+            link: "x",
+            isUnread: false
+        )
         expect(
-            MessageDeliveryPolicy.thread(
-                for: "altere ses",
-                in: [MessageThread(id: "x", username: "Altere Ses", preview: "", date: "", messageCount: "", link: "x", isUnread: false)]
-            )?.link == "x",
+            MessageDeliveryPolicy.thread(for: "altere ses", in: [inboxThread])?.link == "x",
             "the recipient's conversation should be found in the inbox"
         )
         expect(

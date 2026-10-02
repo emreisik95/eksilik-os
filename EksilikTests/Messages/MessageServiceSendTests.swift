@@ -134,12 +134,15 @@ final class MessageServiceSendTests: XCTestCase {
     }
 
     func testUnconfirmedReplyIsReadBackFromTheConversation() async throws {
+        let earlier: [(text: String, direction: String)] = [("tamam", "outgoing"), ("selam", "incoming")]
         let transport = MessageTransportSpy(
             pages: [:],
-            sequences: ["/mesaj/altere-ses": [
-                loggedInNav + Self.thread([("tamam", "outgoing"), ("selam", "incoming")]) + Self.replyFormWithThread,
-                loggedInNav + Self.thread([("tamam", "outgoing"), ("selam", "incoming"), ("merhaba", "outgoing")]),
-            ]],
+            sequences: [
+                "/mesaj/altere-ses": [
+                    loggedInNav + Self.thread(earlier) + Self.replyFormWithThread,
+                    loggedInNav + Self.thread(earlier + [("merhaba", "outgoing")]),
+                ],
+            ],
             response: ""
         )
         var pauses = 0
@@ -171,7 +174,8 @@ final class MessageServiceSendTests: XCTestCase {
     }
 
     func testReplyMissingFromConversationIsReportedAsNotSent() async {
-        let page = loggedInNav + Self.thread([("merhaba", "outgoing"), ("selam", "incoming")]) + Self.replyFormWithThread
+        let conversation = Self.thread([("merhaba", "outgoing"), ("selam", "incoming")])
+        let page = loggedInNav + conversation + Self.replyFormWithThread
         let transport = MessageTransportSpy(pages: ["/mesaj/9": page], response: loggedInNav + "<div>ok</div>")
         var pauses = 0
         let service = MessageService(transport: transport, observePage: { _ in }, pauseBeforeRecheck: { pauses += 1 })
@@ -220,7 +224,13 @@ final class MessageServiceSendTests: XCTestCase {
         )
         let service = MessageService(transport: transport, observePage: { _ in }, pauseBeforeRecheck: {})
 
-        try await service.sendMessage(recipient: "altere ses", subject: "", body: "ilk mesaj", threadID: nil, csrfToken: nil)
+        try await service.sendMessage(
+            recipient: "altere ses",
+            subject: "",
+            body: "ilk mesaj",
+            threadID: nil,
+            csrfToken: nil
+        )
 
         XCTAssertEqual(transport.fetched, ["/mesaj", "/mesaj", "/mesaj/altere-ses"])
         XCTAssertEqual(transport.posts.first?.path, "/mesaj/sendajax")

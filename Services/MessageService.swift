@@ -193,13 +193,17 @@ struct MessageService: MessageSending {
         return html
     }
 
+    private struct FormPage {
+        let form: MessageForm?
+        let pageToken: String?
+        /// The conversation as it was before the send, when the page shows it.
+        let conversation: [Message]?
+    }
+
     /// Loads the page that renders the matching message form so the send
     /// carries a token issued for the current session, not a cached one. A
     /// reply's page is also the conversation as it was before the send.
-    private func freshForm(
-        recipient: String,
-        threadID: String?
-    ) async throws -> (form: MessageForm?, pageToken: String?, conversation: [Message]?) {
+    private func freshForm(recipient: String, threadID: String?) async throws -> FormPage {
         let isReply = MessageSendPolicy.isReply(threadID: threadID)
         var pageToken: String?
         var conversation: [Message]?
@@ -223,10 +227,10 @@ struct MessageService: MessageSending {
                 conversation = MessageContentParser.parse(html: html)
             }
             if let form = MessageFormParser.sendForm(html: html, isReply: isReply) {
-                return (form, form.token, conversation)
+                return FormPage(form: form, pageToken: form.token, conversation: conversation)
             }
             pageToken = pageToken ?? MessageSendPolicy.usableToken(auth.csrfToken)
         }
-        return (nil, pageToken, conversation)
+        return FormPage(form: nil, pageToken: pageToken, conversation: conversation)
     }
 }
