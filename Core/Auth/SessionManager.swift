@@ -26,7 +26,10 @@ final class SessionManager: ObservableObject {
         let state = AuthParser.parseAuthState(html: html)
 
         // Pages without authentication navigation cannot prove a logout.
-        guard !state.isIndeterminate else { return }
+        guard !state.isIndeterminate else {
+            csrfToken = MessageSendPolicy.retainedToken(current: csrfToken, incoming: state.csrfToken)
+            return
+        }
 
         if isLoggedIn && !state.isLoggedIn {
             clearSession()
@@ -46,7 +49,7 @@ final class SessionManager: ObservableObject {
         username = state.username
         hasUnreadMessages = state.hasUnreadMessages
         hasUnreadEvents = state.hasUnreadEvents
-        csrfToken = state.csrfToken
+        csrfToken = MessageSendPolicy.retainedToken(current: csrfToken, incoming: state.csrfToken)
 
         // Detect paid membership: free users see subscription prompts
         if state.isLoggedIn {

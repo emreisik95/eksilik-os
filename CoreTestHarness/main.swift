@@ -1370,6 +1370,86 @@ private struct Harness {
     }
 }
 
+private extension Harness {
+    // swiftlint:disable:next function_body_length
+    mutating func runMessageSendChecks() {
+        let threadPage = """
+        <form id="message-delete-form" action="/mesaj/sil" method="post">
+          <input type="hidden" name="__RequestVerificationToken" value="delete-token" />
+        </form>
+        <form id="message-send-form-42" action="/mesaj/yolla" method="post">
+          <input type="hidden" name="__RequestVerificationToken" value=" reply-token " />
+          <input type="hidden" name="ThreadId" value="2541826" />
+          <input type="text" name="To" value="altere ses" />
+        </form>
+        """
+        let replyForm = MessageFormParser.sendForm(html: threadPage, isReply: true)
+        expect(replyForm?.token == "reply-token", "reply sends should use the token rendered in the reply form")
+        expect(replyForm?.threadID == "2541826", "reply sends should keep the server conversation id")
+        expect(replyForm?.hiddenFields["To"] == nil, "visible message inputs are composed by the app")
+        expect(
+            MessageFormParser.sendForm(html: threadPage, isReply: false) == nil,
+            "delete or reply forms must never be used for a new message"
+        )
+        let ajaxForm = """
+        <form action="/mesaj/sendajax">
+          <input type="hidden" name="__RequestVerificationToken" value="n" />
+        </form>
+        """
+        expect(
+            MessageFormParser.sendForm(html: ajaxForm, isReply: false)?.token == "n",
+            "new message forms should be found by their ajax action"
+        )
+
+        expect(
+            MessageSendPolicy.formPages(recipient: "altere ses", threadID: "42").map(\.path) == ["/mesaj/42"],
+            "replies should load their conversation for a fresh token"
+        )
+        expect(
+            MessageSendPolicy.formPages(recipient: "altere ses", threadID: nil).map(\.path)
+                == ["/mesaj", "/biri/altere%20ses"],
+            "new messages should try the inbox then the recipient profile for a fresh token"
+        )
+        expect(
+            MessageSendPolicy.token(form: replyForm, pageToken: "page", cachedToken: "stale") == "reply-token",
+            "a fresh form token should replace a stale cached token"
+        )
+        expect(
+            MessageSendPolicy.token(form: nil, pageToken: nil, cachedToken: " cached ") == "cached",
+            "the cached token should remain a fallback when form pages are unreachable"
+        )
+        expect(
+            MessageSendPolicy.requestBody(
+                payload: ["To": "a", "Message": "b", "ThreadId": "slug", "IsReply": "True"],
+                form: replyForm
+            ) == ["To": "a", "Message": "b", "ThreadId": "2541826", "IsReply": "True"],
+            "reply bodies should use the server conversation id and drop the duplicated token field"
+        )
+        expect(
+            MessageSendPolicy.retainedToken(current: "old", incoming: nil) == "old",
+            "pages without a token must not erase the session token"
+        )
+        expect(
+            MessageSendPolicy.retainedToken(current: "old", incoming: "new") == "new",
+            "newer page tokens should replace the session token"
+        )
+        expect(
+            MessageSendPolicy.outcome(responseBody: Data(#"{"Success":false,"Message":"dolu"}"#.utf8))
+                == .rejected(reason: "dolu"),
+            "explicit server rejections should surface their reason"
+        )
+        expect(
+            MessageSendPolicy.outcome(responseBody: Data(#"{"Success":true}"#.utf8)) == .delivered,
+            "successful sends should be reported as delivered"
+        )
+        expect(
+            MessageSendPolicy.outcome(responseBody: Data(#"<a id="top-login-link" href="/giris">giriş</a>"#.utf8))
+                == .signedOut,
+            "login page responses should be reported as signed out"
+        )
+    }
+}
+
 private var harness = Harness()
 harness.runBaselineParserChecks()
 harness.runWebBootstrapChecks()
@@ -1394,6 +1474,7 @@ harness.runProfilePaginationChecks()
 harness.runProfileConnectionChecks()
 harness.runProfileConnectionRequestChecks()
 harness.runMessageParsingChecks()
+harness.runMessageSendChecks()
 harness.runWidgetAndNotificationChecks()
 harness.runSeylerChecks()
 harness.runOfflineSeylerChecks()
