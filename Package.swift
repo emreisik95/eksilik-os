@@ -58,6 +58,7 @@ let package = Package(
                 "README.md",
                 "SECURITY.md",
                 "SUPPORT.md",
+                "design",
                 "docs",
                 "metadata",
                 "project.yml",

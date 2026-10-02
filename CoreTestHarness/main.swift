@@ -878,8 +878,29 @@ private struct Harness {
     mutating func runAppIconChecks() {
         expect(
             AppIconPresentationPolicy.choices.map(\.title)
-                == ["oldschool", "light", "ornament", "noir", "aurora", "depth", "forest"],
-            "app icon choices should expose the oldschool primary icon and every generated alternate"
+                == [
+                    "oldschool", "kağıt", "sözlük", "noir", "terminal", "neon", "aurora", "boğaz",
+                    "orman", "limon", "kahve", "altın", "kil", "8-bit", "ornament",
+                ],
+            "app icon choices should expose the oldschool primary icon and every alternate"
+        )
+        let primary = AppIconPresentationPolicy.choices.first
+        expect(
+            primary?.iconName == nil && primary?.imageName == "AppIcon",
+            "the oldschool primary icon should stay first"
+        )
+        let alternates = AppIconPresentationPolicy.alternates
+        expect(alternates.count >= 12, "the picker should offer at least twelve alternate icons")
+        let titles = AppIconPresentationPolicy.choices.map(\.title)
+        expect(Set(titles).count == titles.count, "app icon titles should be unique")
+        let iconNames = alternates.compactMap(\.iconName)
+        expect(
+            iconNames.count == alternates.count && Set(iconNames).count == iconNames.count,
+            "alternate icon names should be present and unique"
+        )
+        expect(
+            alternates.allSatisfy { $0.imageName == "\($0.iconName ?? "")@2x" },
+            "alternate icon previews should load the registered @2x artwork"
         )
         expect(
             AppIconPresentationPolicy.choices.allSatisfy {

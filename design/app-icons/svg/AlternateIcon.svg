@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- kağıt: ruled notebook paper, fountain pen with a drop-shaped breather hole and a falling ink drop -->
+  <defs>
+    <filter id="grain" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.32  0 0 0 0 0.27  0 0 0 0 0.2  0.16 0 0 0 0"/>
+    </filter>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7F3E8"/>
+      <stop offset="1" stop-color="#ECE5D4"/>
+    </linearGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#050505"/>
+      <stop offset="0.16" stop-color="#3C3D38"/>
+      <stop offset="0.3" stop-color="#151613"/>
+      <stop offset="0.7" stop-color="#0A0A09"/>
+      <stop offset="0.9" stop-color="#22231F"/>
+      <stop offset="1" stop-color="#070707"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6B5320"/>
+      <stop offset="0.2" stop-color="#F3DB97"/>
+      <stop offset="0.45" stop-color="#B98F3A"/>
+      <stop offset="0.8" stop-color="#7E6125"/>
+      <stop offset="1" stop-color="#4B3A16"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#55564F"/>
+      <stop offset="0.24" stop-color="#E9E9E3"/>
+      <stop offset="0.42" stop-color="#B9BAB3"/>
+      <stop offset="0.62" stop-color="#8C8D86"/>
+      <stop offset="1" stop-color="#3E3F3A"/>
+    </linearGradient>
+    <radialGradient id="ink" cx="0.36" cy="0.64" r="0.62">
+      <stop offset="0" stop-color="#3B3D36"/>
+      <stop offset="1" stop-color="#101110"/>
+    </radialGradient>
+    <filter id="soft" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="16"/></filter>
+    <clipPath id="nibClip"><path d="M382.1,300 L641.9,300 C667.4,360 672.1,432 655.8,492 C639.6,550 609.4,592 586.2,630 L520.1,778 Q512,794 503.9,778 L437.8,630 C414.6,592 384.4,550 368.2,492 C351.9,432 356.6,360 382.1,300 Z"/></clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#paper)"/>
+    <rect x="0" y="112" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="192" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="272" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="352" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="432" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="512" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="592" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="672" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="752" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="832" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="912" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+    <rect x="0" y="992" width="1024" height="5" fill="#9FBAD8" opacity="0.7"/>
+  <rect x="170" y="0" width="6" height="1024" fill="#E2786C" opacity="0.85"/>
+  <rect width="1024" height="1024" filter="url(#grain)"/>
+  <!-- cast shadow -->
+  <g opacity="0.3" filter="url(#soft)" transform="translate(26 30)">
+    <path d="M382.1,300 L641.9,300 C667.4,360 672.1,432 655.8,492 C639.6,550 609.4,592 586.2,630 L520.1,778 Q512,794 503.9,778 L437.8,630 C414.6,592 384.4,550 368.2,492 C351.9,432 356.6,360 382.1,300 Z" fill="#3B3426"/>
+    <rect x="366" y="-60" width="292" height="370" rx="40" fill="#3B3426"/>
+  </g>
+  <!-- nib -->
+  <path d="M382.1,300 L641.9,300 C667.4,360 672.1,432 655.8,492 C639.6,550 609.4,592 586.2,630 L520.1,778 Q512,794 503.9,778 L437.8,630 C414.6,592 384.4,550 368.2,492 C351.9,432 356.6,360 382.1,300 Z" fill="url(#steel)"/>
+  <g clip-path="url(#nibClip)">
+    <path d="M442,340 C482,410 542,410 582,340" fill="none" stroke="#5E5F58" stroke-width="5" opacity="0.7"/>
+    <path d="M420,370 C472,460 552,460 604,370" fill="none" stroke="#5E5F58" stroke-width="5" opacity="0.5"/>
+    <rect x="507" y="514" width="10" height="400" fill="#191A17"/>
+  </g>
+  <path d="M382.1,300 L641.9,300 C667.4,360 672.1,432 655.8,492 C639.6,550 609.4,592 586.2,630 L520.1,778 Q512,794 503.9,778 L437.8,630 C414.6,592 384.4,550 368.2,492 C351.9,432 356.6,360 382.1,300 Z" fill="none" stroke="#2B2C28" stroke-width="5" opacity="0.65"/>
+  <path d="M512,428 C524,453.8 552,481.2 552,514 A40,40 0 0 1 472,514 C472,481.2 500,453.8 512,428 Z" fill="#191A17"/>
+  <!-- section -->
+  <path d="M366,-40 H658 V296 Q512,328 366,296 Z" fill="url(#barrel)"/>
+  <path d="M366,254 Q512,286 658,254 V296 Q512,328 366,296 Z" fill="url(#ring)"/>
+  <!-- ink -->
+  <path d="M512,790 C524.6,815.2 554,839.6 554,874 A42,42 0 0 1 470,874 C470,839.6 499.4,815.2 512,790 Z" fill="url(#ink)"/>
+  <ellipse cx="500" cy="860" rx="7" ry="11" fill="#FFFFFF" opacity="0.5"/>
+</svg>

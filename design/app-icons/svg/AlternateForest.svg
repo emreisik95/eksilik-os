@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- orman: drop-shaped leaf with veins on deep forest green -->
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#1F5E37"/>
+      <stop offset="0.6" stop-color="#103C23"/>
+      <stop offset="1" stop-color="#082515"/>
+    </radialGradient>
+    <linearGradient id="lightHalf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D6FF8F"/>
+      <stop offset="1" stop-color="#8FD24E"/>
+    </linearGradient>
+    <linearGradient id="darkHalf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8BD44A"/>
+      <stop offset="1" stop-color="#4B9A2C"/>
+    </linearGradient>
+    <filter id="b24" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="24"/></filter>
+    <filter id="shadow" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="26"/></filter>
+    <clipPath id="leafClip"><path d="M0,-470 C96.6,-366.6 230,-218.5 230,0 A230,230 0 0 1 -230,0 C-230,-218.5 -96.6,-366.6 0,-470 Z"/></clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+    <circle cx="169" cy="706" r="91" fill="#D8FF9A" opacity="0.07" filter="url(#b24)"/>
+    <circle cx="221" cy="812" r="105" fill="#D8FF9A" opacity="0.07" filter="url(#b24)"/>
+    <circle cx="517" cy="242" r="40" fill="#D8FF9A" opacity="0.06" filter="url(#b24)"/>
+    <circle cx="599" cy="71" r="104" fill="#D8FF9A" opacity="0.05" filter="url(#b24)"/>
+    <circle cx="238" cy="43" r="120" fill="#D8FF9A" opacity="0.08" filter="url(#b24)"/>
+    <circle cx="896" cy="631" r="43" fill="#D8FF9A" opacity="0.06" filter="url(#b24)"/>
+    <circle cx="509" cy="119" r="116" fill="#D8FF9A" opacity="0.06" filter="url(#b24)"/>
+    <circle cx="159" cy="837" r="50" fill="#D8FF9A" opacity="0.10" filter="url(#b24)"/>
+    <circle cx="464" cy="565" r="67" fill="#D8FF9A" opacity="0.07" filter="url(#b24)"/>
+  <g transform="translate(540 520) rotate(38) scale(0.92)">
+    <path d="M0,-470 C96.6,-366.6 230,-218.5 230,0 A230,230 0 0 1 -230,0 C-230,-218.5 -96.6,-366.6 0,-470 Z" fill="#03140A" opacity="0.55" filter="url(#shadow)" transform="translate(-30 40)"/>
+    <path d="M0,224 C0,310 -26,380 -70,440" fill="none" stroke="#7CC243" stroke-width="22" stroke-linecap="round"/>
+    <path d="M0,-470 C96.6,-366.6 230,-218.5 230,0 A230,230 0 0 1 -230,0 C-230,-218.5 -96.6,-366.6 0,-470 Z" fill="url(#lightHalf)"/>
+    <g clip-path="url(#leafClip)">
+      <path d="M0,-470 C96.6,-366.6 230,-218.5 230,0 A230,230 0 0 1 0,230 Z" fill="url(#darkHalf)"/>
+      <path d="M4,105.1 Q98,75.1 200.3,-50.1" fill="none" stroke="#2F7A22" stroke-width="9" stroke-linecap="round" opacity="0.55"/>
+      <path d="M-4,105.1 Q-98,75.1 -200.3,-50.1" fill="none" stroke="#E9FFC9" stroke-width="9" stroke-linecap="round" opacity="0.55"/>
+      <path d="M4,-18.6 Q95.3,-48.6 194.9,-165" fill="none" stroke="#2F7A22" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+      <path d="M-4,-18.6 Q-95.3,-48.6 -194.9,-165" fill="none" stroke="#E9FFC9" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+      <path d="M4,-142.2 Q90.2,-172.2 184.4,-279.8" fill="none" stroke="#2F7A22" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+      <path d="M-4,-142.2 Q-90.2,-172.2 -184.4,-279.8" fill="none" stroke="#E9FFC9" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+      <path d="M4,-254.6 Q83.4,-284.6 170.5,-384.2" fill="none" stroke="#2F7A22" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+      <path d="M-4,-254.6 Q-83.4,-284.6 -170.5,-384.2" fill="none" stroke="#E9FFC9" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+    </g>
+    <path d="M0,224 L0,-430" fill="none" stroke="#F2FFD9" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

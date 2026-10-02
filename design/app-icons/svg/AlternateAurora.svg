@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- aurora: aurora ribbons behind a frosted glass drop -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#02041A"/>
+      <stop offset="0.6" stop-color="#061334"/>
+      <stop offset="1" stop-color="#0A2748"/>
+    </linearGradient>
+    <linearGradient id="gTeal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2BF59A"/>
+      <stop offset="0.5" stop-color="#17E3D3"/>
+      <stop offset="1" stop-color="#55F77A"/>
+    </linearGradient>
+    <linearGradient id="gViolet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7A4DFF"/>
+      <stop offset="0.55" stop-color="#D24CF0"/>
+      <stop offset="1" stop-color="#6A5BFF"/>
+    </linearGradient>
+    <filter id="b9" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="9"/></filter>
+    <filter id="b34" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="34"/></filter>
+    <filter id="b46" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="46"/></filter>
+    <filter id="b90" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="90"/></filter>
+    <filter id="frost" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="30"/></filter>
+    <filter id="glowF" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="34"/></filter>
+    <filter id="b3" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="rays" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.0008" numOctaves="2" seed="9" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.4 0 0 0 -0.62" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in"/>
+    </filter>
+    <clipPath id="dropClip"><path d="M512,326 C564.8,426.8 688,517.7 688,662 A176,176 0 0 1 336,662 C336,517.7 459.2,426.8 512,326 Z"/></clipPath>
+    <linearGradient id="glassTint" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.10"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#B9FFF0" stop-opacity="0.85"/>
+    </linearGradient>
+    <g id="aurora">
+      <path d="M-160,640 C100,420 300,720 540,500 S860,300 1180,400" fill="none" stroke="url(#gTeal)" stroke-width="170" filter="url(#b34)"/>
+      <path d="M-160,560 C100,340 300,640 540,420 S860,220 1180,320" fill="none" stroke="url(#gTeal)" stroke-width="300" filter="url(#b90)" opacity="0.6"/>
+      <path d="M-160,300 C160,150 380,400 620,260 S920,120 1180,230" fill="none" stroke="url(#gViolet)" stroke-width="170" filter="url(#b46)" opacity="0.95"/>
+      <path d="M-160,230 C160,80 380,330 620,190 S920,50 1180,160" fill="none" stroke="url(#gViolet)" stroke-width="260" filter="url(#b90)" opacity="0.5"/>
+      <path d="M-160,672 C100,452 300,752 540,532 S860,332 1180,432" fill="none" stroke="#D5FFEE" stroke-width="22" filter="url(#b9)" opacity="0.95"/>
+      <path d="M-160,336 C160,186 380,436 620,296 S920,156 1180,266" fill="none" stroke="#F3DBFF" stroke-width="16" filter="url(#b9)" opacity="0.75"/>
+    </g>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+    <circle cx="263" cy="91" r="2.3" fill="#FFFFFF" opacity="0.39"/>
+    <circle cx="103" cy="267" r="3.3" fill="#FFFFFF" opacity="0.74"/>
+    <circle cx="762" cy="161" r="2.6" fill="#FFFFFF" opacity="0.45"/>
+    <circle cx="203" cy="93" r="2.0" fill="#FFFFFF" opacity="0.81"/>
+    <circle cx="823" cy="506" r="3.0" fill="#FFFFFF" opacity="0.41"/>
+    <circle cx="332" cy="400" r="2.9" fill="#FFFFFF" opacity="0.77"/>
+    <circle cx="871" cy="81" r="2.7" fill="#FFFFFF" opacity="0.67"/>
+    <circle cx="518" cy="135" r="2.5" fill="#FFFFFF" opacity="0.35"/>
+    <circle cx="922" cy="541" r="2.6" fill="#FFFFFF" opacity="0.47"/>
+    <circle cx="898" cy="368" r="3.2" fill="#FFFFFF" opacity="0.77"/>
+    <circle cx="520" cy="274" r="2.7" fill="#FFFFFF" opacity="0.54"/>
+    <circle cx="192" cy="210" r="3.1" fill="#FFFFFF" opacity="0.32"/>
+    <circle cx="84" cy="400" r="2.1" fill="#FFFFFF" opacity="0.59"/>
+    <circle cx="485" cy="232" r="3.4" fill="#FFFFFF" opacity="0.41"/>
+    <circle cx="430" cy="150" r="2.7" fill="#FFFFFF" opacity="0.45"/>
+    <circle cx="376" cy="471" r="2.2" fill="#FFFFFF" opacity="0.61"/>
+    <circle cx="894" cy="90" r="1.7" fill="#FFFFFF" opacity="0.43"/>
+    <circle cx="762" cy="393" r="2.0" fill="#FFFFFF" opacity="0.48"/>
+    <circle cx="208" cy="301" r="1.7" fill="#FFFFFF" opacity="0.68"/>
+    <circle cx="886" cy="593" r="2.9" fill="#FFFFFF" opacity="0.83"/>
+    <circle cx="57" cy="201" r="3.3" fill="#FFFFFF" opacity="0.73"/>
+    <circle cx="427" cy="587" r="2.7" fill="#FFFFFF" opacity="0.75"/>
+    <circle cx="317" cy="143" r="2.4" fill="#FFFFFF" opacity="0.38"/>
+    <circle cx="400" cy="597" r="2.2" fill="#FFFFFF" opacity="0.31"/>
+    <circle cx="82" cy="130" r="3.0" fill="#FFFFFF" opacity="0.50"/>
+    <circle cx="314" cy="87" r="3.4" fill="#FFFFFF" opacity="0.53"/>
+    <circle cx="236" cy="65" r="1.7" fill="#FFFFFF" opacity="0.39"/>
+    <circle cx="679" cy="118" r="1.7" fill="#FFFFFF" opacity="0.57"/>
+    <circle cx="275" cy="619" r="1.8" fill="#FFFFFF" opacity="0.59"/>
+    <circle cx="770" cy="271" r="3.4" fill="#FFFFFF" opacity="0.56"/>
+    <circle cx="268" cy="272" r="1.7" fill="#FFFFFF" opacity="0.53"/>
+    <circle cx="275" cy="555" r="3.1" fill="#FFFFFF" opacity="0.57"/>
+    <circle cx="70" cy="180" r="2.0" fill="#FFFFFF" opacity="0.41"/>
+    <circle cx="259" cy="543" r="1.9" fill="#FFFFFF" opacity="0.33"/>
+    <circle cx="916" cy="364" r="3.4" fill="#FFFFFF" opacity="0.52"/>
+    <circle cx="890" cy="416" r="3.0" fill="#FFFFFF" opacity="0.71"/>
+    <circle cx="507" cy="85" r="2.0" fill="#FFFFFF" opacity="0.78"/>
+    <circle cx="889" cy="576" r="2.2" fill="#FFFFFF" opacity="0.66"/>
+    <circle cx="795" cy="409" r="3.1" fill="#FFFFFF" opacity="0.59"/>
+    <circle cx="658" cy="435" r="2.1" fill="#FFFFFF" opacity="0.81"/>
+    <circle cx="943" cy="74" r="3.3" fill="#FFFFFF" opacity="0.83"/>
+    <circle cx="671" cy="56" r="3.2" fill="#FFFFFF" opacity="0.37"/>
+    <circle cx="954" cy="424" r="1.7" fill="#FFFFFF" opacity="0.39"/>
+    <circle cx="640" cy="366" r="2.9" fill="#FFFFFF" opacity="0.81"/>
+    <circle cx="246" cy="32" r="3.3" fill="#FFFFFF" opacity="0.31"/>
+    <circle cx="867" cy="98" r="3.1" fill="#FFFFFF" opacity="0.73"/>
+    <circle cx="869" cy="355" r="3.2" fill="#FFFFFF" opacity="0.41"/>
+    <circle cx="674" cy="225" r="3.2" fill="#FFFFFF" opacity="0.73"/>
+    <circle cx="485" cy="341" r="1.6" fill="#FFFFFF" opacity="0.32"/>
+    <circle cx="601" cy="318" r="3.2" fill="#FFFFFF" opacity="0.63"/>
+  <use xlink:href="#aurora" opacity="0.6"/>
+  <g filter="url(#rays)"><use xlink:href="#aurora"/></g>
+  <!-- frosted glass drop -->
+  <path d="M512,326 C564.8,426.8 688,517.7 688,662 A176,176 0 0 1 336,662 C336,517.7 459.2,426.8 512,326 Z" fill="#1FE6C8" opacity="0.4" filter="url(#glowF)"/>
+  <g clip-path="url(#dropClip)">
+    <rect width="1024" height="1024" fill="#123060"/>
+    <g filter="url(#frost)" transform="translate(512 640) scale(1.5) translate(-512 -560)">
+      <use xlink:href="#aurora"/>
+    </g>
+    <path d="M512,326 C564.8,426.8 688,517.7 688,662 A176,176 0 0 1 336,662 C336,517.7 459.2,426.8 512,326 Z" fill="url(#glassTint)"/>
+    <path d="M512,326 C564.8,426.8 688,517.7 688,662 A176,176 0 0 1 336,662 C336,517.7 459.2,426.8 512,326 Z" fill="none" stroke="url(#edge)" stroke-width="12"/>
+    <path d="M396,632 C398,552 442,472 490,412" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" opacity="0.8" filter="url(#b3)"/>
+  </g>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- kil: soft coral clay drop with clay balls on pale periwinkle -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DDEBFF"/>
+      <stop offset="1" stop-color="#C3D2FF"/>
+    </linearGradient>
+    <radialGradient id="clayFill" cx="0.36" cy="0.30" r="0.85">
+      <stop offset="0" stop-color="#FFD3DE"/>
+      <stop offset="0.45" stop-color="#FF8FAE"/>
+      <stop offset="1" stop-color="#F2557F"/>
+    </radialGradient>
+    <radialGradient id="ballFill" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#FFF6C8"/>
+      <stop offset="1" stop-color="#FFCE3D"/>
+    </radialGradient>
+    <radialGradient id="ball2Fill" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#E2FFF3"/>
+      <stop offset="1" stop-color="#6FDDB8"/>
+    </radialGradient>
+    <filter id="clay" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="24" result="blur"/>
+      <feOffset in="blur" dx="-26" dy="-34" result="up"/>
+      <feComposite in="SourceAlpha" in2="up" operator="out" result="lowRim"/>
+      <feFlood flood-color="#A8204A" flood-opacity="0.55"/>
+      <feComposite in2="lowRim" operator="in" result="shade"/>
+      <feOffset in="blur" dx="26" dy="34" result="down"/>
+      <feComposite in="SourceAlpha" in2="down" operator="out" result="highRim"/>
+      <feFlood flood-color="#FFFFFF" flood-opacity="0.9"/>
+      <feComposite in2="highRim" operator="in" result="light"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/><feMergeNode in="light"/></feMerge>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="ballClay" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur"/>
+      <feOffset in="blur" dx="-10" dy="-14" result="up"/>
+      <feComposite in="SourceAlpha" in2="up" operator="out" result="lowRim"/>
+      <feFlood flood-color="#B9860A" flood-opacity="0.5"/>
+      <feComposite in2="lowRim" operator="in" result="shade"/>
+      <feOffset in="blur" dx="10" dy="14" result="down"/>
+      <feComposite in="SourceAlpha" in2="down" operator="out" result="highRim"/>
+      <feFlood flood-color="#FFFFFF" flood-opacity="0.85"/>
+      <feComposite in2="highRim" operator="in" result="light"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/><feMergeNode in="light"/></feMerge>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="ball2Clay" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="blur"/>
+      <feOffset in="blur" dx="-7" dy="-10" result="up"/>
+      <feComposite in="SourceAlpha" in2="up" operator="out" result="lowRim"/>
+      <feFlood flood-color="#23896A" flood-opacity="0.5"/>
+      <feComposite in2="lowRim" operator="in" result="shade"/>
+      <feOffset in="blur" dx="7" dy="10" result="down"/>
+      <feComposite in="SourceAlpha" in2="down" operator="out" result="highRim"/>
+      <feFlood flood-color="#FFFFFF" flood-opacity="0.85"/>
+      <feComposite in2="highRim" operator="in" result="light"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/><feMergeNode in="light"/></feMerge>
+      <feComposite in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="shadow" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="30"/></filter>
+    <filter id="spec" filterUnits="userSpaceOnUse" x="-300" y="-300" width="1624" height="1624"><feGaussianBlur stdDeviation="9"/></filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="rotate(-14 520 598)">
+    <path d="M520,206 C583.6,323.6 732,424.2 732,598 A212,212 0 0 1 308,598 C308,424.2 456.4,323.6 520,206 Z" fill="#6F7FC8" opacity="0.5" filter="url(#shadow)" transform="translate(40 58)"/>
+    <path d="M520,206 C583.6,323.6 732,424.2 732,598 A212,212 0 0 1 308,598 C308,424.2 456.4,323.6 520,206 Z" fill="url(#clayFill)" filter="url(#clay)"/>
+    <ellipse cx="424" cy="510" rx="46" ry="30" fill="#FFFFFF" opacity="0.85" filter="url(#spec)" transform="rotate(-35 424 510)"/>
+  </g>
+  <circle cx="272" cy="792" r="68" fill="#6F7FC8" opacity="0.42" filter="url(#shadow)" transform="translate(18 28)"/>
+  <circle cx="272" cy="792" r="68" fill="url(#ballFill)" filter="url(#ballClay)"/>
+  <ellipse cx="250" cy="766" rx="16" ry="11" fill="#FFFFFF" opacity="0.8" filter="url(#spec)"/>
+  <circle cx="790" cy="250" r="40" fill="#6F7FC8" opacity="0.35" filter="url(#shadow)" transform="translate(12 18)"/>
+  <circle cx="790" cy="250" r="40" fill="url(#ball2Fill)" filter="url(#ball2Clay)"/>
+</svg>

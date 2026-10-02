@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- noir: pure black, single white hairline drop and one specular glint -->
+  <defs>
+    <linearGradient id="rim" x1="0.85" y1="0.1" x2="0.15" y2="0.95">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.55" stop-color="#E6E6E6"/>
+      <stop offset="1" stop-color="#6E6E6E"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="0.22" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="#000000"/>
+  <path d="M512,228 C570.8,339.6 708,439.3 708,600 A196,196 0 0 1 316,600 C316,439.3 453.2,339.6 512,228 Z" fill="none" stroke="url(#rim)" stroke-width="20" stroke-linejoin="miter" stroke-miterlimit="12"/>
+  <circle cx="657.7" cy="468.9" r="64" fill="url(#glow)"/>
+  <path d="M657.7,360.9 Q664.7,461.9 765.7,468.9 Q664.7,475.9 657.7,576.9 Q650.7,475.9 549.7,468.9 Q650.7,461.9 657.7,360.9 Z" fill="#FFFFFF"/>
+</svg>
