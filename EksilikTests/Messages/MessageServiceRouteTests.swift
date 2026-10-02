@@ -21,12 +21,10 @@ final class MessageServiceRouteTests: XCTestCase {
     }
 
     func testServerFailureAfterTheMessageWasStoredIsNotSentAgain() async throws {
+        let stored = Page.loggedInNav + Page.thread([("eski", "incoming"), ("yeni", "outgoing")])
         let transport = MessageTransportSpy(
             pages: [:],
-            sequences: ["/mesaj/9": [
-                Self.replyPage,
-                Page.loggedInNav + Page.thread([("eski", "incoming"), ("yeni", "outgoing")]),
-            ]],
+            sequences: ["/mesaj/9": [Self.replyPage, stored]],
             failures: ["/mesaj/yolla": 500]
         )
         let service = MessageService(transport: transport, observePage: { _ in }, pauseBeforeRecheck: {})
